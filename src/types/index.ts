@@ -58,6 +58,7 @@ export interface User {
   id: string;
   username: string;
   customerId: string;
+  companyName: string;
 }
 
 export interface InvoiceFile {

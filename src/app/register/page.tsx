@@ -12,7 +12,8 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    companyName: ''
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -28,11 +29,13 @@ export default function RegisterPage() {
     try {
       const response = await authService.register({
         username: formData.username,
-        password: formData.password
+        password: formData.password,
+        companyName: formData.companyName
       });
+    //   console.log(response);
 
       if (response.status) {
-        setSuccess(`تم إنشاء الحساب بنجاح! معرفك هو: ${response.data.customerId}`);
+        setSuccess(`تم إنشاء الحساب بنجاح! اسم الشركة: ${response.data.companyName}`);
         toast.success('تم إنشاء الحساب بنجاح');
         // Optional: auto login or redirect after delay
       } else {
@@ -72,6 +75,24 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">اسم الشركة</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                  <UserPlus size={18} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  className="block w-full pr-10 pl-3 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                  placeholder="أدخل اسم الشركة"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}   
+                />
+              </div>
+            </div>
+            {/* user name */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">اسم المستخدم</label>
               <div className="relative">
@@ -104,6 +125,7 @@ export default function RegisterPage() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
+
             </div>
 
             <div>

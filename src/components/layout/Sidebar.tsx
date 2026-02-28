@@ -68,7 +68,7 @@ export default function Sidebar() {
           <div className="p-6">
             <h1 className="text-2xl font-bold text-blue-400">نظام الإدارة</h1>
             {user && (
-              <p className="mt-2 text-sm text-gray-400">مرحباً، {user.username}</p>
+              <p className="mt-2 text-sm text-gray-400">مرحباً، {user.companyName}</p>
             )}
           </div>
 
