@@ -1,0 +1,19 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  transpilePackages: ['lucide-react'],
+  webpack: (config, { isServer, dev }) => {
+    // Disable persistent caching in development to avoid "Array buffer allocation failed"
+    if (dev) {
+      config.cache = false;
+    }
+    return config;
+  },
+  // Reduce memory footprint by limiting parallel processing
+  experimental: {
+    webpackBuildWorker: true,
+    parallelServerCompiles: false,
+  },
+};
+
+export default nextConfig;
