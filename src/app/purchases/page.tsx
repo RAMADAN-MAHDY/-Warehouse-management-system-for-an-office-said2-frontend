@@ -115,57 +115,59 @@ export default function PurchasesPage() {
           <p className="text-gray-400">جاري تحميل المشتريات...</p>
         </div>
       ) : (
-        <Table data={purchases}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>التاريخ</TableHead>
-              <TableHead>الوصف</TableHead>
-              <TableHead>المورد</TableHead>
-              <TableHead>الكمية</TableHead>
-              <TableHead>السعر</TableHead>
-              <TableHead>الإجمالي</TableHead>
-              <TableHead className="text-center">إجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {purchases.length > 0 ? (
-              purchases.map((p) => {
-                const quantity = (p.itemId && p.itemId.price) ? (Number(p.amount) / p.itemId.price).toFixed(0) : '-';
-                const price = p.itemId?.price ? formatCurrency(p.itemId.price) : '-';
-                const supplier = p.itemId?.customer || p.supplier || '-';
-                
-                return (
-                  <TableRow key={p._id}>
-                    <TableCell>{formatDate(p.date || p.createdAt)}</TableCell>
-                    <TableCell className="font-medium text-white">{p.description || p.reason || '-'}</TableCell>
-                    <TableCell>{supplier}</TableCell>
-                    <TableCell>{quantity}</TableCell>
-                    <TableCell>{price}</TableCell>
-                    <TableCell className="font-bold text-green-400">
-                      {formatCurrency(p.amount)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleDelete(p._id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            ) : (
+        <div className="w-full">
+          <Table data={purchases}>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-gray-500">
-                  لا توجد مشتريات مسجلة
-                </TableCell>
+                <TableHead>التاريخ</TableHead>
+                <TableHead>الوصف</TableHead>
+                <TableHead>المورد</TableHead>
+                <TableHead>الكمية</TableHead>
+                <TableHead>السعر</TableHead>
+                <TableHead>الإجمالي</TableHead>
+                <TableHead className="text-center">إجراءات</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {purchases.length > 0 ? (
+                purchases.map((p) => {
+                  const quantity = (p.itemId && p.itemId.price) ? (Number(p.amount) / p.itemId.price).toFixed(0) : '-';
+                  const price = p.itemId?.price ? formatCurrency(p.itemId.price) : '-';
+                  const supplier = p.itemId?.customer || p.supplier || '-';
+                  
+                  return (
+                    <TableRow key={p._id}>
+                      <TableCell>{formatDate(p.date || p.createdAt)}</TableCell>
+                      <TableCell className="font-medium text-white">{p.description || p.reason || '-'}</TableCell>
+                      <TableCell>{supplier}</TableCell>
+                      <TableCell>{quantity}</TableCell>
+                      <TableCell>{price}</TableCell>
+                      <TableCell className="font-bold text-green-400">
+                        {formatCurrency(p.amount)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDelete(p._id)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10 text-gray-500">
+                    لا توجد مشتريات مسجلة
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {/* Modal */}
@@ -183,8 +185,8 @@ export default function PurchasesPage() {
                   step="0.01"
                   placeholder="أدخل المبلغ (+/-)"
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                  value={formData.amount || ''}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                 />
               </div>
 

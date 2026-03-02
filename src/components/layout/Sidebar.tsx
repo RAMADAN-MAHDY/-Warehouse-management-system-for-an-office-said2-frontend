@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { 
   LayoutDashboard, 
   ShoppingCart, 
@@ -66,9 +67,20 @@ export default function Sidebar() {
       )}>
         <div className="flex flex-col h-full">
           <div className="p-6">
-            <h1 className="text-2xl font-bold text-blue-400">نظام الإدارة</h1>
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <Image 
+                src="/logo.png" 
+                alt="Logo" 
+                width={40} 
+                height={40} 
+                className="rounded-lg shadow-lg"
+              />
+              <h1 className="text-xl font-bold text-blue-400">نظام الإدارة</h1>
+            </Link>
             {user && (
-              <p className="mt-2 text-sm text-gray-400">مرحباً، {user.companyName}</p>
+              <p className="mt-3 text-sm text-gray-400 border-t border-gray-700 pt-3">
+                مرحباً، {user.companyName}
+              </p>
             )}
           </div>
 

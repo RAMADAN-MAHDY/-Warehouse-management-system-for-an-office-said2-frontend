@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { 
   ShieldCheck, 
@@ -23,6 +24,16 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-900/30 border border-blue-500/30 rounded-full text-blue-400 text-sm font-semibold mb-8">
             <Zap size={16} />
             <span>نظام حديث ومطور لإدارة المخازن</span>
+          </div>
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <Image 
+              src="/logo.png" 
+              alt="Logo" 
+              width={120} 
+              height={120} 
+              className="rounded-2xl shadow-2xl animate-fade-in"
+            />
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-extrabold text-white mb-6 leading-tight">

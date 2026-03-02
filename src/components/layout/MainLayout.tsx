@@ -33,10 +33,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-900 text-gray-100">
+    <div className="flex min-h-screen bg-gray-900 text-gray-100 overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 lg:mr-64 p-4 lg:p-8 animate-in">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 w-full lg:mr-64 p-4 lg:p-8 animate-in overflow-x-hidden">
+        <div className="max-w-7xl mx-auto w-full">
           {children}
         </div>
       </main>

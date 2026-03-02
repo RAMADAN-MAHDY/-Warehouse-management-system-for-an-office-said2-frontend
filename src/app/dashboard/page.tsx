@@ -210,7 +210,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardCard 
           title="إجمالي المبيعات" 
           value={summary?.financials?.totalSales || 0} 
@@ -236,7 +236,7 @@ export default function DashboardPage() {
           loading={summaryLoading}
           isProfit
         />
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
@@ -273,6 +273,7 @@ export default function DashboardPage() {
                   <TableHead>القطعة</TableHead>
                   <TableHead>الكمية</TableHead>
                   <TableHead>السعر</TableHead>
+                  <TableHead>الإجمالي</TableHead>
                   <TableHead className="text-center">إجراءات</TableHead>
                 </TableRow>
               </TableHeader>
@@ -287,6 +288,7 @@ export default function DashboardPage() {
                       </span>
                     </TableCell>
                     <TableCell>{formatCurrency(item.price)}</TableCell>
+                    <TableCell>{formatCurrency(item.quantity * item.price)}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-blue-400">
@@ -367,7 +369,7 @@ export default function DashboardPage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-xl p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
+          <div className="glass-card w-full max-w-xl p-8 rounded-3xl mt-[-350px] sm:mt-[10px] shadow-2xl border border-gray-700 animate-in">
             <h2 className="text-2xl font-bold text-white mb-6">
               {editingItem ? 'تعديل منتج' : 'إضافة منتج جديد'}
             </h2>
@@ -415,8 +417,8 @@ export default function DashboardPage() {
                     required
                     min="1"
                     className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                    value={formData.quantity || ''}
+                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -427,9 +429,16 @@ export default function DashboardPage() {
                     min="0"
                     step="0.01"
                     className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                    value={formData.price || ''}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   />
+                </div>
+                {/*  */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">الاجمالي</label>
+                  <p className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    {formatCurrency(formData.quantity * formData.price)}
+                  </p>
                 </div>
               </div>
 

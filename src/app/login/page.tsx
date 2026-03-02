@@ -8,6 +8,7 @@ import { authService } from '@/services/api';
 import { RootState } from '@/store';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import Image from 'next/image';
 import { LogIn, User, Lock, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -49,6 +50,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="glass-card p-8 rounded-2xl shadow-2xl border border-gray-700">
           <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+              <Image 
+                src="/logo.png" 
+                alt="Logo" 
+                width={120} 
+                height={120} 
+                className="rounded-2xl shadow-2xl animate-fade-in"
+              />
+            </div>
             <h1 className="text-3xl font-bold text-white mb-2">تسجيل الدخول</h1>
             <p className="text-gray-400">أهلاً بك مجدداً في نظام إدارة المخازن</p>
           </div>

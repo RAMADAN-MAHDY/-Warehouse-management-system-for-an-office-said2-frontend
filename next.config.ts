@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ['lucide-react'],
+  turbopack: {}, // Added to silence Turbopack configuration warning
   webpack: (config, { isServer, dev }) => {
     // Disable persistent caching in development to avoid "Array buffer allocation failed"
     if (dev) {

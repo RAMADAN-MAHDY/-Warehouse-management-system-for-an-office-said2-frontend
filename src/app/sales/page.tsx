@@ -271,87 +271,89 @@ export default function SalesPage() {
           <p className="text-gray-400">جاري تحميل الفواتير...</p>
         </div>
       ) : (
-        <Table data={sales}>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <input 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
-                  checked={sales.length > 0 && selectedIds.length === sales.length}
-                  onChange={toggleSelectAll}
-                />
-              </TableHead>
-              <TableHead>التاريخ</TableHead>
-              <TableHead>رقم الموديل</TableHead>
-              <TableHead>اسم المشتري</TableHead>
-              <TableHead>اسم القطعة</TableHead>
-              <TableHead>الكمية</TableHead>
-              <TableHead>السعر</TableHead>
-              <TableHead>الإجمالي</TableHead>
-              <TableHead className="text-center">إجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sales.length > 0 ? (
-              sales.map((sale) => (
-                <TableRow key={sale._id}>
-                  <TableCell>
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
-                      checked={selectedIds.includes(sale._id)}
-                      onChange={() => toggleSelect(sale._id)}
-                    />
-                  </TableCell>
-                  <TableCell>{formatDate(sale.createdAt || '')}</TableCell>
-                  <TableCell className="font-medium text-blue-400">{sale.modelNumber}</TableCell>
-                  <TableCell>{sale.sellerName || '-'}</TableCell>
-                  <TableCell>{sale.name}</TableCell>
-                  <TableCell>{sale.quantity}</TableCell>
-                  <TableCell>{formatCurrency(sale.price)}</TableCell>
-                  <TableCell className="font-bold text-green-400">
-                    {formatCurrency(sale.total)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-center gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => {
-                          setEditingSale(sale);
-                          setSaleData({
-                            sellerName: sale.sellerName,
-                            quantity: sale.quantity,
-                            price: sale.price
-                          });
-                          setIsEditModalOpen(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                      >
-                        <Edit2 size={16} />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleDeleteSale(sale._id)}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    </div>
+        <div className="w-full">
+          <Table data={sales}>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                    checked={sales.length > 0 && selectedIds.length === sales.length}
+                    onChange={toggleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>التاريخ</TableHead>
+                <TableHead>رقم الموديل</TableHead>
+                <TableHead>اسم المشتري</TableHead>
+                <TableHead>اسم القطعة</TableHead>
+                <TableHead>الكمية</TableHead>
+                <TableHead>السعر</TableHead>
+                <TableHead>الإجمالي</TableHead>
+                <TableHead className="text-center">إجراءات</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sales.length > 0 ? (
+                sales.map((sale) => (
+                  <TableRow key={sale._id}>
+                    <TableCell>
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                        checked={selectedIds.includes(sale._id)}
+                        onChange={() => toggleSelect(sale._id)}
+                      />
+                    </TableCell>
+                    <TableCell>{formatDate(sale.createdAt || '')}</TableCell>
+                    <TableCell className="font-medium text-blue-400">{sale.modelNumber}</TableCell>
+                    <TableCell>{sale.sellerName || '-'}</TableCell>
+                    <TableCell>{sale.name}</TableCell>
+                    <TableCell>{sale.quantity}</TableCell>
+                    <TableCell>{formatCurrency(sale.price)}</TableCell>
+                    <TableCell className="font-bold text-green-400">
+                      {formatCurrency(sale.total)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => {
+                            setEditingSale(sale);
+                            setSaleData({
+                              sellerName: sale.sellerName,
+                              quantity: sale.quantity,
+                              price: sale.price
+                            });
+                            setIsEditModalOpen(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                        >
+                          <Edit2 size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDeleteSale(sale._id)}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-10 text-gray-500">
+                    لا توجد فواتير في هذه الفترة
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-10 text-gray-500">
-                  لا توجد فواتير في هذه الفترة
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {/* Add Sale Modal */}
@@ -421,8 +423,8 @@ export default function SalesPage() {
                         min="1"
                         max={selectedProduct.quantity}
                         className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={saleData.quantity}
-                        onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) })}
+                        value={saleData.quantity || ''}
+                        onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) || 0 })}
                       />
                     </div>
                     <div className="space-y-2">
@@ -433,8 +435,8 @@ export default function SalesPage() {
                         min="0"
                         step="0.01"
                         className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={saleData.price}
-                        onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) })}
+                        value={saleData.price || ''}
+                        onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
                       />
                     </div>
                   </div>

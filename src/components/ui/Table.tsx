@@ -12,8 +12,8 @@ const TableContext = createContext<TableContextType | undefined>(undefined);
 export function Table({ children, data, className, ...props }: React.TableHTMLAttributes<HTMLTableElement> & { data: any[] }) {
   return (
     <TableContext.Provider value={{ data }}>
-      <div className={cn("overflow-x-auto glass rounded-xl border border-gray-700", className)}>
-        <table className="w-full text-right border-collapse" {...props}>
+      <div className={cn("w-full overflow-x-auto glass rounded-xl border border-gray-700", className)}>
+        <table className="w-full text-right border-collapse min-w-[600px] md:min-w-full" {...props}>
           {children}
         </table>
       </div>

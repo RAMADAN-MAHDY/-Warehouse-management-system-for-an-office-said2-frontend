@@ -227,8 +227,8 @@ export default function ExpensesPage() {
                   min="0"
                   step="0.01"
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                  value={formData.amount || ''}
+                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                 />
               </div>
 
