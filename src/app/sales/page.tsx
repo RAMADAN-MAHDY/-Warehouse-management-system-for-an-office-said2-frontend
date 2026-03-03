@@ -118,12 +118,16 @@ export default function SalesPage() {
 
   const handleUpdateSale = async (e: React.FormEvent) => {
     e.preventDefault();
+    // console.log('Update Sale Form Submitted -----------------');
+    // console.log(editingSale?._id);
+    // console.log(saleData.price, saleData.quantity);
+
     if (!editingSale) return;
 
     try {
-      const response = await saleService.update(editingSale._id, {
+      const response = await saleService.update(editingSale?._id, {
         price: saleData.price,
-        quantity: saleData.quantity
+        quantity: saleData.quantity,
       });
 
       if (response.status) {
@@ -321,11 +325,11 @@ export default function SalesPage() {
                           size="icon" 
                           onClick={() => {
                             setEditingSale(sale);
-                            setSaleData({
-                              sellerName: sale.sellerName,
-                              quantity: sale.quantity,
-                              price: sale.price
-                            });
+                          setSaleData({
+                            sellerName: sale.sellerName || '',
+                            quantity: sale.quantity,
+                            price: sale.price
+                          });
                             setIsEditModalOpen(true);
                           }}
                           className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
@@ -466,6 +470,15 @@ export default function SalesPage() {
             
             <form onSubmit={handleUpdateSale} className="space-y-4">
               <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">اسم المشتري</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.sellerName}
+                  onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">الكمية</label>
                 <input
                   type="number"
@@ -484,9 +497,16 @@ export default function SalesPage() {
                   min="0"
                   step="0.01"
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={saleData.price}
-                  onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) })}
+                  value={saleData.price || ''}
+                  onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
                 />
+              </div>
+
+              <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
+                <span className="text-gray-400">الإجمالي الكلي:</span>
+                <span className="text-2xl font-bold text-green-400">
+                  {formatCurrency(saleData.price * saleData.quantity)}
+                </span>
               </div>
 
               <div className="pt-4 flex gap-3">
