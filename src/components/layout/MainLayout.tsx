@@ -12,11 +12,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    if (!loading && !isAuthenticated && pathname !== '/login' && pathname !== '/register') {
-      router.push('/login');
-    }
-  }, [isAuthenticated, loading, router, pathname]);
+//   useEffect(() => {
+//     if (!loading && !isAuthenticated && pathname !== '/login' && pathname !== '/register') {
+//       router.push('/login');
+//     }
+//   }, [isAuthenticated, loading, router, pathname]);
 
   if (loading) {
     return (
