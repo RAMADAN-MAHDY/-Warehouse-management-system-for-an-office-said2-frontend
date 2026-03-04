@@ -368,8 +368,8 @@ export default function DashboardPage() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-xl p-8 rounded-3xl mt-[-350px] sm:mt-[10px] shadow-2xl border border-gray-700 animate-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-card w-full max-w-xl p-3 sm:p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
             <h2 className="text-2xl font-bold text-white mb-6">
               {editingItem ? 'تعديل منتج' : 'إضافة منتج جديد'}
             </h2>
