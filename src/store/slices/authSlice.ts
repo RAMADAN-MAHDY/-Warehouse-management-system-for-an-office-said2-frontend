@@ -3,7 +3,7 @@ import { AuthState, User } from '@/types';
 import Cookies from 'js-cookie';
 
 const initialState: AuthState = {
-  user: null,
+  user: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null,
   token: Cookies.get('token') || null,
   isAuthenticated: !!Cookies.get('token'),
   loading: false,
@@ -25,6 +25,9 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.error = null;
       Cookies.set('token', action.payload.token, { expires: 7 });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
+      }
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
@@ -37,10 +40,16 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       Cookies.remove('token');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user');
+      }
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      }
     },
   },
 });

@@ -59,6 +59,7 @@ export interface User {
   username: string;
   customerId: string;
   companyName: string;
+  role: 'superadmin' | 'admin' | 'editor' | 'viewer';
 }
 
 export interface InvoiceFile {

@@ -15,9 +15,11 @@ import {
   TrendingUp, 
   TrendingDown, 
   DollarSign,
-  ShoppingCart
+  ShoppingCart,
+  ShieldCheck,
+  CreditCard
 } from 'lucide-react';
-import { itemService, reportService } from '@/services/api';
+import { itemService, reportService, subscriptionService } from '@/services/api';
 import { Item } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -35,6 +37,7 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [summary, setSummary] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,9 +82,19 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchSubscription = async () => {
+    try {
+      const response = await subscriptionService.getStatus();
+      if (response.status) setSubscription(response.data);
+    } catch (error) {
+      console.error('Failed to fetch subscription');
+    }
+  };
+
   useEffect(() => {
     fetchItems();
     fetchSummary();
+    fetchSubscription();
   }, []);
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,11 +192,25 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Package className="text-blue-500" />
-            إدارة المخزون
+          <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
+            لوحة التحكم
+            {subscription && (
+              <Link 
+                href="/subscription" 
+                className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1 transition-all hover:scale-105 ${
+                  subscription.daysLeft < 5 
+                    ? 'border-red-500/50 bg-red-500/10 text-red-400' 
+                    : 'border-blue-500/50 bg-blue-500/10 text-blue-400'
+                }`}
+              >
+                <CreditCard size={12} />
+                {subscription.plan === 'free' ? 'تجريبي' : subscription.plan === 'basic' ? 'أساسي' : 'احترافي'}
+                {' - '}
+                {subscription.daysLeft} يوم متبقي
+              </Link>
+            )}
           </h1>
           <p className="text-gray-400 mt-1">عرض وإدارة كافة المنتجات في مخزنك</p>
         </div>
@@ -210,17 +237,19 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <DashboardCard 
+          title="حالة الاشتراك" 
+          value={subscription?.status === 'active' ? 'نشط' : 'منتهي'} 
+          icon={<ShieldCheck className={subscription?.status === 'active' ? "text-green-500" : "text-red-500"} />}
+          loading={!subscription}
+          subtitle={`${subscription?.daysLeft || 0} يوم متبقي`}
+          href="/subscription"
+        />
         <DashboardCard 
           title="إجمالي المبيعات" 
           value={summary?.financials?.totalSales || 0} 
           icon={<TrendingUp className="text-green-500" />}
-          loading={summaryLoading}
-        />
-        <DashboardCard 
-          title="إجمالي المشتريات" 
-          value={summary?.financials?.totalPurchases || 0} 
-          icon={<ShoppingCart className="text-blue-500" />}
           loading={summaryLoading}
         />
         <DashboardCard 
@@ -236,7 +265,7 @@ export default function DashboardPage() {
           loading={summaryLoading}
           isProfit
         />
-      </div> */}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
@@ -463,11 +492,27 @@ export default function DashboardPage() {
   );
 }
 
-function DashboardCard({ title, value, icon, loading, isProfit }: { title: string, value: number, icon: React.ReactNode, loading?: boolean, isProfit?: boolean }) {
-  return (
-    <div className="glass p-6 rounded-2xl border border-gray-700 shadow-xl transition-all hover:scale-[1.02]">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-400 font-medium">{title}</p>
+function DashboardCard({ 
+  title, 
+  value, 
+  icon, 
+  loading, 
+  isProfit, 
+  subtitle, 
+  href 
+}: { 
+  title: string; 
+  value: any; 
+  icon: React.ReactNode; 
+  loading?: boolean; 
+  isProfit?: boolean;
+  subtitle?: string;
+  href?: string;
+}) {
+  const content = (
+    <div className={`glass-card p-6 rounded-2xl border border-gray-700/50 hover:border-gray-600 transition-all ${href ? 'cursor-pointer hover:bg-gray-800/50' : ''}`}>
+      <div className="flex justify-between items-start mb-4">
+        <p className="text-gray-400 text-sm font-medium">{title}</p>
         <div className="p-2 bg-gray-800 rounded-lg border border-gray-700">
           {icon}
         </div>
@@ -475,10 +520,15 @@ function DashboardCard({ title, value, icon, loading, isProfit }: { title: strin
       {loading ? (
         <div className="h-8 w-24 bg-gray-800 animate-pulse rounded"></div>
       ) : (
-        <p className={`text-2xl font-bold ${isProfit ? (value >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white'}`}>
-          {formatCurrency(value)}
-        </p>
+        <>
+          <p className={`text-2xl font-bold ${isProfit ? (value >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white'}`}>
+            {typeof value === 'number' ? formatCurrency(value) : value}
+          </p>
+          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+        </>
       )}
     </div>
   );
+
+  return href ? <Link href={href}>{content}</Link> : content;
 }

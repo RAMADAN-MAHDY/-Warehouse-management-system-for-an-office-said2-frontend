@@ -13,7 +13,13 @@ import {
   LogOut, 
   Menu, 
   X,
-  ShoppingBag
+  ShoppingBag,
+  CreditCard,
+  Home,
+  ShieldCheck,
+  Users,
+  CreditCard as PaymentIcon,
+  ListRestart
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -22,20 +28,34 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+  { name: 'الرئيسية', href: '/', icon: Home },
   { name: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard },
   { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
   { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },
   { name: 'الأرباح والتقارير', href: '/profit', icon: TrendingUp },
   { name: 'المصروفات', href: '/expenses', icon: Wallet },
   { name: 'ملفات الإكسل', href: '/excel-files', icon: FileSpreadsheet },
+  { name: 'الاشتراك', href: '/subscription', icon: CreditCard },
+];
+
+const adminItems = [
+  { name: 'إدارة النظام', href: '/admin/dashboard', icon: ShieldCheck },
+  { name: 'المستخدمين', href: '/admin/users', icon: Users },
+  { name: 'الاشتراكات', href: '/admin/plans', icon: PaymentIcon },
+  { name: 'سجلات النظام', href: '/admin/audit', icon: ListRestart },
 ];
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -77,14 +97,14 @@ export default function Sidebar() {
               />
               <h1 className="text-xl font-bold text-blue-400">نظام الإدارة</h1>
             </Link>
-            {user && (
+            {mounted && user && (
               <p className="mt-3 text-sm text-gray-400 border-t border-gray-700 pt-3">
                 مرحباً، {user.companyName}
               </p>
             )}
           </div>
 
-          <nav className="flex-1 px-4 space-y-2">
+          <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -105,6 +125,34 @@ export default function Sidebar() {
                 </Link>
               );
             })}
+
+            {mounted && user?.role === 'superadmin' && (
+              <>
+                <div className="pt-4 pb-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-t border-gray-700 mt-4">
+                  إدارة النظام
+                </div>
+                {adminItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                        isActive 
+                          ? "bg-purple-600 text-white" 
+                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                      )}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Icon size={20} />
+                      <span>{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
           </nav>
 
           <div className="p-4 border-t border-gray-700">

@@ -96,6 +96,7 @@ export const purchaseService = {
   }
 };
 
+// Service for expense-related operations
 export const expenseService = {
   getAll: async () => {
     const response = await axiosInstance.get('/api/expenses');
@@ -115,7 +116,87 @@ export const expenseService = {
   }
 };
 
-export const excelService = {
+// Service for subscription-related operations
+export const subscriptionService = {
+  getStatus: async () => {
+    const response = await axiosInstance.get('/api/subscription/status');
+    return response.data;
+  },
+  submitPayment: async (paymentData: { amount: number; referenceNumber: string; planRequested: string }) => {
+    const response = await axiosInstance.post('/api/subscription/pay', paymentData);
+    return response.data;
+  }
+};
+
+export const superAdminService = {
+  getStats: async () => {
+    const response = await axiosInstance.get('/api/superadmin/stats');
+    return response.data;
+  },
+  getUsers: async () => {
+    const response = await axiosInstance.get('/api/superadmin/users');
+    return response.data;
+  },
+  updateUser: async (userId: string, data: { isBanned?: boolean; role?: string; reason?: string }) => {
+    const response = await axiosInstance.put(`/api/superadmin/users/${userId}`, data);
+    return response.data;
+  },
+  updateUserSubscription: async (userId: string, data: { planType?: string; status?: string; endDate?: string; reason: string }) => {
+    const response = await axiosInstance.put(`/api/superadmin/users/${userId}/subscription`, data);
+    return response.data;
+  },
+  deleteUser: async (userId: string, data: { reason: string }) => {
+    const response = await axiosInstance.delete(`/api/superadmin/users/${userId}`, { data });
+    return response.data;
+  },
+  getPlans: async () => {
+    const response = await axiosInstance.get('/api/superadmin/plans');
+    return response.data;
+  },
+  createPlan: async (data: any) => {
+    const response = await axiosInstance.post('/api/superadmin/plans', data);
+    return response.data;
+  },
+  updatePlan: async (id: string, data: any) => {
+    const response = await axiosInstance.put(`/api/superadmin/plans/${id}`, data);
+    return response.data;
+  },
+  deletePlan: async (id: string) => {
+    const response = await axiosInstance.delete(`/api/superadmin/plans/${id}`);
+    return response.data;
+  },
+  getTransactions: async () => {
+    const response = await axiosInstance.get('/api/superadmin/transactions');
+    return response.data;
+  },
+  approveTransaction: async (id: string, data?: { notes?: string }) => {
+    const response = await axiosInstance.post(`/api/superadmin/transactions/${id}/approve`, data);
+    return response.data;
+  },
+  rejectTransaction: async (id: string, data: { reason: string }) => {
+    const response = await axiosInstance.post(`/api/superadmin/transactions/${id}/reject`, data);
+    return response.data;
+  },
+  getAuditLogs: async () => {
+    const response = await axiosInstance.get('/api/superadmin/audit-logs');
+    return response.data;
+  },
+  exportUsers: async () => {
+    const response = await axiosInstance.get('/api/superadmin/users/export', {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+  exportTransactions: async () => {
+    const response = await axiosInstance.get('/api/superadmin/transactions/export', {
+      responseType: 'blob'
+    });
+    return response.data;
+  }
+};
+
+// export const reportService = {for Excel file-related operations
+export const excelService  = {
   getAll: async () => {
     const response = await axiosInstance.get('/api/excel-files');
     return response.data;
@@ -132,6 +213,7 @@ export const excelService = {
   }
 };
 
+// Service for profit-related operations
 export const profitService = {
   getSummary: async () => {
     const response = await axiosInstance.get('/api/profit');
@@ -139,6 +221,7 @@ export const profitService = {
   }
 };
 
+// Service for report-related operations
 export const reportService = {
   getSummary: async () => {
     const response = await axiosInstance.get('/api/reports/summary');

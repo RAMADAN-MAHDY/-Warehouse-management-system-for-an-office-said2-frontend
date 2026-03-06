@@ -239,8 +239,8 @@ export default function ProfitPage() {
                 labels: ['صافي الربح', 'المصروفات' , 'تكلفة البضاعة المباعة' , 'إجمالي المبيعات'],
                 datasets: [{
                   data: [Math.max(0, summary.netProfit), summary.totalExpenses, summary.totalCOGS, summary.totalSales],
-                  backgroundColor: ['rgba(16, 185, 129, 0.6)', 'rgba(239, 68, 68, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(245, 158, 11, 0.6)'],
-                  borderColor: ['rgba(16, 185, 129, 1)', 'rgba(239, 68, 68, 1)', 'rgba(59, 130, 246, 1)', 'rgba(245, 158, 11, 1)'],
+                  backgroundColor: ['rgba(245, 0, 19, 0.6)', 'rgba(245, 158, 11, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(19, 130, 26, 0.6)'],
+                  borderColor: ['rgba(245, 0, 19, 1)', 'rgba(245, 158, 11, 1)', 'rgba(59, 130, 246, 1)', 'rgba(19, 130, 26, 1)'],
                   borderWidth: 1,
                 }]
               }}

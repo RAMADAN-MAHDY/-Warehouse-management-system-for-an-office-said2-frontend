@@ -12,11 +12,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const pathname = usePathname();
 
-//   useEffect(() => {
-//     if (!loading && !isAuthenticated && pathname !== '/login' && pathname !== '/register') {
-//       router.push('/login');
-//     }
-//   }, [isAuthenticated, loading, router, pathname]);
+  useEffect(() => {
+    if (!loading) {
+      const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/' || 
+                     pathname === '/privacy-policy' || pathname === '/terms-of-use' || pathname === '/contact-us';
+      
+      if (!isAuthenticated && !isAuthPage) {
+        router.push('/login');
+      } else if (isAuthenticated && (pathname === '/login' || pathname === '/register')) {
+        router.push('/dashboard');
+      }
+    }
+  }, [isAuthenticated, loading, router, pathname]);
 
   if (loading) {
     return (
@@ -26,7 +33,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     );
   }
 
-  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/' || 
+                     pathname === '/privacy-policy' || pathname === '/terms-of-use' || pathname === '/contact-us';
 
   if (isAuthPage) {
     return <>{children}</>;
