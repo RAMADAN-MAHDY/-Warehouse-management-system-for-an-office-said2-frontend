@@ -97,9 +97,9 @@ export default function SubscriptionPage() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="max-w-6xl mx-auto sm:py-8 sm:px-4 p-2">
         {/* Current Subscription Status */}
-        <div className="glass-card p-8 rounded-3xl mb-12 border border-gray-700/50 bg-gradient-to-br from-gray-900 to-black">
+        <div className="glass-card sm:p-8 p-4 rounded-3xl mb-12 border border-gray-700/50 bg-gradient-to-br from-gray-900 to-black">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">حالة الاشتراك الحالي</h1>
