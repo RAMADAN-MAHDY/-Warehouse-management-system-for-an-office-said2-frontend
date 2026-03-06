@@ -181,6 +181,10 @@ export const superAdminService = {
     const response = await axiosInstance.get('/api/superadmin/audit-logs');
     return response.data;
   },
+  deleteAuditLogs: async (logIds: string[]) => {
+    const response = await axiosInstance.post('/api/superadmin/audit-logs/bulk-delete', { logIds });
+    return response.data;
+  },
   exportUsers: async () => {
     const response = await axiosInstance.get('/api/superadmin/users/export', {
       responseType: 'blob'

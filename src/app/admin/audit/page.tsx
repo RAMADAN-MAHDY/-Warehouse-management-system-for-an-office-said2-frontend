@@ -12,7 +12,10 @@ import {
   User as UserIcon,
   Activity,
   ArrowRight,
-  Info
+  Info,
+  Trash2,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,6 +23,8 @@ export default function AdminAudit() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchLogs();
@@ -41,13 +46,45 @@ export default function AdminAudit() {
     log.customerId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const toggleSelectLog = (id: string) => {
+    setSelectedLogs(prev => 
+      prev.includes(id) ? prev.filter(logId => logId !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedLogs.length === filteredLogs.length) {
+      setSelectedLogs([]);
+    } else {
+      setSelectedLogs(filteredLogs.map(log => log._id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedLogs.length === 0) return;
+    
+    if (!window.confirm(`هل أنت متأكد من حذف ${selectedLogs.length} سجل؟`)) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await superAdminService.deleteAuditLogs(selectedLogs);
+      if (response.status) {
+        toast.success(response.message);
+        setSelectedLogs([]);
+        fetchLogs();
+      }
+    } catch (error: any) {
+      toast.error('فشل حذف السجلات');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
-      <>
-        <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
-        </div>
-      </>
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+      </div>
     );
   }
 
@@ -59,22 +96,62 @@ export default function AdminAudit() {
             <h1 className="text-3xl font-bold text-white mb-2">سجلات النظام (Audit Logs)</h1>
             <p className="text-gray-400">متابعة كافة العمليات الحساسة التي تمت في النظام</p>
           </div>
-          <div className="relative w-full md:w-96">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
-            <input 
-              type="text" 
-              placeholder="بحث بالإجراء أو كود العميل..."
-              className="w-full pr-12 pl-4 py-3 bg-gray-800/50 border border-gray-700 rounded-2xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
+              <input 
+                type="text" 
+                placeholder="بحث بالإجراء أو كود العميل..."
+                className="w-full pr-12 pl-4 py-3 bg-gray-800/50 border border-gray-700 rounded-2xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all font-sans"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            {selectedLogs.length > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                disabled={isDeleting}
+                className="px-6 py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-2xl flex items-center justify-center gap-2 transition-all font-bold"
+              >
+                {isDeleting ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                حذف ({selectedLogs.length})
+              </button>
+            )}
           </div>
         </div>
 
         <div className="space-y-4">
+          {filteredLogs.length > 0 && (
+            <div className="flex justify-between items-center px-4 py-2 text-sm">
+              <button 
+                onClick={toggleSelectAll}
+                className="text-purple-400 hover:text-purple-300 flex items-center gap-2 "
+              >
+                {selectedLogs.length === filteredLogs.length ? <CheckSquare size={18} /> : <Square size={18} />}
+                <span>تحديد الكل</span>
+              </button>
+              <span className="text-gray-500">{filteredLogs.length} سجل متاح</span>
+            </div>
+          )}
+
           {filteredLogs.map((log) => (
-            <div key={log._id} className="glass-card p-6 rounded-2xl border border-gray-700/50 bg-gray-800/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-gray-700/20 transition-all">
+            <div 
+              key={log._id} 
+              onClick={() => toggleSelectLog(log._id)}
+              className={`glass-card p-6 rounded-2xl border transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-6 cursor-pointer ${
+                selectedLogs.includes(log._id) 
+                ? 'border-purple-500/50 bg-purple-500/5' 
+                : 'border-gray-700/50 bg-gray-800/10 hover:bg-gray-700/20'
+              }`}
+            >
               <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center">
+                  {selectedLogs.includes(log._id) ? (
+                    <CheckSquare size={20} className="text-purple-500" />
+                  ) : (
+                    <Square size={20} className="text-gray-600" />
+                  )}
+                </div>
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${
                   log.action.includes('delete') ? 'bg-red-500/20 border-red-500/30 text-red-400' :
                   log.action.includes('update') ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' :
@@ -98,7 +175,7 @@ export default function AdminAudit() {
                 </div>
               </div>
 
-              <div className="flex flex-col md:items-end gap-2 w-full md:w-auto">
+              <div className="flex flex-col md:items-end gap-2 w-full md:w-auto pr-8 md:pr-0">
                  <div className="px-3 py-1 bg-gray-800 rounded-lg border border-gray-700 text-xs font-mono text-gray-400 overflow-hidden text-ellipsis max-w-xs md:max-w-md">
                     {JSON.stringify(log.details)}
                  </div>
