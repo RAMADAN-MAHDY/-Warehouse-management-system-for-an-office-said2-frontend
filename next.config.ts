@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
     webpackBuildWorker: true,
     parallelServerCompiles: false,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://management-system-said2.vercel.app/api/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

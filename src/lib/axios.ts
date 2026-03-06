@@ -1,7 +1,11 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://management-system-said2.vercel.app';
+// استخدام رابط نسبي في المتصفح لدعم Next.js Rewrites (Proxy)
+// وفي السيرفر نستخدم الرابط الكامل
+const API_URL = typeof window !== 'undefined' 
+  ? '' 
+  : (process.env.NEXT_PUBLIC_API_URL || 'https://management-system-said2.vercel.app');
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
