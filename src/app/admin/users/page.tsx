@@ -203,14 +203,14 @@ export default function AdminUsers() {
               {isExporting ? <Loader2 size={20} className="animate-spin" /> : <FileDown size={20} />}
               تصدير Excel
             </Button>
-            <Button 
+            {/* <Button 
               variant="outline" 
               className="rounded-2xl border-gray-700 bg-gray-800/50 hover:bg-gray-700/50 text-red-400 font-bold px-6 py-3 flex items-center gap-2"
               onClick={handleExportPDF}
             >
               <FileText size={20} />
               تصدير PDF
-            </Button>
+            </Button> */}
             <div className="relative w-full md:w-96">
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input 
