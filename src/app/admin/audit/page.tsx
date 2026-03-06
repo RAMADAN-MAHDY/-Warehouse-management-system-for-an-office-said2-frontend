@@ -43,11 +43,11 @@ export default function AdminAudit() {
 
   if (loading) {
     return (
-      <MainLayout>
+      <>
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 

@@ -24,6 +24,8 @@ import {
   TableCell 
 } from '@/components/ui/Table';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import Modal from '@/components/ui/Modal';
+
 
 export default function PurchasesPage() {
   const [purchases, setPurchases] = useState<any[]>([]);
@@ -170,55 +172,54 @@ export default function PurchasesPage() {
         </div>
       )}
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
-            <h2 className="text-2xl font-bold text-white mb-6">إضافة مشتريات أو تعديل</h2>
-            
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">المبلغ</label>
-                <input
-                  type="number"
-                  required
-                  step="0.01"
-                  placeholder="أدخل المبلغ (+/-)"
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.amount || ''}
-                  onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">المشتريات / السبب</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="مثال: شراء بضاعة إضافية، تعديل يدوي..."
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
-                  حفظ
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  إلغاء
-                </Button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="إضافة مشتريات أو تعديل"
+        maxWidth="md"
+      >
+        <form onSubmit={handleSave} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">المبلغ</label>
+            <input
+              type="number"
+              required
+              step="0.01"
+              placeholder="أدخل المبلغ (+/-)"
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={formData.amount || ''}
+              onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+            />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">المشتريات / السبب</label>
+            <input
+              type="text"
+              required
+              placeholder="مثال: شراء بضاعة إضافية، تعديل يدوي..."
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+            />
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
+              حفظ
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setIsModalOpen(false)}
+            >
+              إلغاء
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
     </div>
   );
 }

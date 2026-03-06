@@ -25,6 +25,8 @@ import {
   TableCell 
 } from '@/components/ui/Table';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import Modal from '@/components/ui/Modal';
+
 
 export default function SalesPage() {
   const [sales, setSales] = useState<SaleInvoice[]>([]);
@@ -361,145 +363,84 @@ export default function SalesPage() {
       )}
 
       {/* Add Sale Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-xl p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">عملية بيع جديدة</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
-                <X size={24} />
-              </button>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="عملية بيع جديدة"
+        maxWidth="xl"
+      >
+        <div className="space-y-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
+              <Search size={18} />
             </div>
+            <input
+              type="text"
+              placeholder="ابحث عن منتج بالاسم أو الموديل..."
+              className="w-full pr-12 pl-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+              value={searchQuery}
+              onChange={(e) => handleSearchProduct(e.target.value)}
+            />
             
-            <div className="space-y-6">
-              <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
-                  <Search size={18} />
-                </div>
-                <input
-                  type="text"
-                  placeholder="ابحث عن منتج بالاسم أو الموديل..."
-                  className="w-full pr-12 pl-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
-                  value={searchQuery}
-                  onChange={(e) => handleSearchProduct(e.target.value)}
-                />
-                
-                {searchResults.length > 0 && (
-                  <div className="absolute top-full mt-2 w-full bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-10 max-h-60 overflow-y-auto">
-                    {searchResults.map((product) => (
-                      <button
-                        key={product._id}
-                        className="w-full px-4 py-3 text-right hover:bg-gray-700 transition flex justify-between items-center"
-                        onClick={() => handleSelectProduct(product)}
-                      >
-                        <span className="text-white">{product.name} ({product.modelNumber})</span>
-                        <span className="text-xs text-gray-400">متاح: {product.quantity}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+            {searchResults.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-20 max-h-60 overflow-y-auto">
+                {searchResults.map((product) => (
+                  <button
+                    key={product._id}
+                    className="w-full px-4 py-3 text-right hover:bg-gray-700 transition flex justify-between items-center"
+                    onClick={() => handleSelectProduct(product)}
+                  >
+                    <span className="text-white">{product.name} ({product.modelNumber})</span>
+                    <span className="text-xs text-gray-400">متاح: {product.quantity}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {selectedProduct && (
+            <form onSubmit={handleAddSale} className="space-y-4 border-t border-gray-700 pt-6 animate-in">
+              <div className="p-4 bg-blue-900/20 rounded-xl border border-blue-500/30">
+                <p className="text-sm text-blue-400 font-medium">المنتج المختار:</p>
+                <p className="text-lg font-bold text-white">{selectedProduct.name}</p>
+                <p className="text-sm text-gray-400">الموديل: {selectedProduct.modelNumber}</p>
               </div>
 
-              {selectedProduct && (
-                <form onSubmit={handleAddSale} className="space-y-4 border-t border-gray-700 pt-6 animate-in">
-                  <div className="p-4 bg-blue-900/20 rounded-xl border border-blue-500/30">
-                    <p className="text-sm text-blue-400 font-medium">المنتج المختار:</p>
-                    <p className="text-lg font-bold text-white">{selectedProduct.name}</p>
-                    <p className="text-sm text-gray-400">الموديل: {selectedProduct.modelNumber}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">اسم العميل (اختياري)</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                      value={saleData.sellerName}
-                      onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-300">الكمية</label>
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        max={selectedProduct.quantity}
-                        className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={saleData.quantity || ''}
-                        onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-300">السعر</label>
-                      <input
-                        type="number"
-                        required
-                        min="0"
-                        step="0.01"
-                        className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={saleData.price || ''}
-                        onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
-                    <span className="text-gray-400">الإجمالي الكلي:</span>
-                    <span className="text-2xl font-bold text-green-400">
-                      {formatCurrency(saleData.price * saleData.quantity)}
-                    </span>
-                  </div>
-
-                  <Button type="submit" variant="primary" className="w-full py-4 text-lg">
-                    تأكيد عملية البيع
-                  </Button>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Sale Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
-            <h2 className="text-2xl font-bold text-white mb-6">تعديل فاتورة البيع</h2>
-            
-            <form onSubmit={handleUpdateSale} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">اسم المشتري</label>
+                <label className="text-sm font-medium text-gray-300">اسم العميل (اختياري)</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   value={saleData.sellerName}
                   onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">الكمية</label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={saleData.quantity}
-                  onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) })}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">السعر</label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  step="0.01"
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={saleData.price || ''}
-                  onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">الكمية</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    max={selectedProduct.quantity}
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={saleData.quantity || ''}
+                    onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">السعر</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="0.01"
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={saleData.price || ''}
+                    onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
               </div>
 
               <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
@@ -509,23 +450,79 @@ export default function SalesPage() {
                 </span>
               </div>
 
-              <div className="pt-4 flex gap-3">
-                <Button type="submit" variant="primary" className="flex-1">
-                  حفظ التعديلات
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => setIsEditModalOpen(false)}
-                >
-                  إلغاء
-                </Button>
-              </div>
+              <Button type="submit" variant="primary" className="w-full py-4 text-lg">
+                تأكيد عملية البيع
+              </Button>
             </form>
-          </div>
+          )}
         </div>
-      )}
+      </Modal>
+
+
+      {/* Edit Sale Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="تعديل فاتورة البيع"
+        maxWidth="md"
+      >
+        <form onSubmit={handleUpdateSale} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">اسم المشتري</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.sellerName}
+              onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">الكمية</label>
+            <input
+              type="number"
+              required
+              min="1"
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.quantity}
+              onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">السعر</label>
+            <input
+              type="number"
+              required
+              min="0"
+              step="0.01"
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.price || ''}
+              onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+
+          <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
+            <span className="text-gray-400">الإجمالي الكلي:</span>
+            <span className="text-2xl font-bold text-green-400">
+              {formatCurrency(saleData.price * saleData.quantity)}
+            </span>
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <Button type="submit" variant="primary" className="flex-1">
+              حفظ التعديلات
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              إلغاء
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
     </div>
   );
 }

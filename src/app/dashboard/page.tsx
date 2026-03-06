@@ -33,6 +33,8 @@ import {
 } from '@/components/ui/Table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Link from 'next/link';
+import Modal from '@/components/ui/Modal';
+
 
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -406,99 +408,96 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-xl p-3 sm:p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              {editingItem ? 'تعديل منتج' : 'إضافة منتج جديد'}
-            </h2>
-            
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">رقم الموديل</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={formData.modelNumber}
-                    onChange={(e) => setFormData({ ...formData, modelNumber: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">اسم المورد</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={formData.customer}
-                    onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">اسم القطعة</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">الكمية</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={formData.quantity || ''}
-                    onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">سعر الوحدة</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={formData.price || ''}
-                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                  />
-                </div>
-                {/*  */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">الاجمالي</label>
-                  <p className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none">
-                    {formatCurrency(formData.quantity * formData.price)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
-                  حفظ
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  إلغاء
-                </Button>
-              </div>
-            </form>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingItem ? 'تعديل منتج' : 'إضافة منتج جديد'}
+        maxWidth="xl"
+      >
+        <form onSubmit={handleSave} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">رقم الموديل</label>
+              <input
+                type="text"
+                required
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.modelNumber}
+                onChange={(e) => setFormData({ ...formData, modelNumber: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">اسم المورد</label>
+              <input
+                type="text"
+                required
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.customer}
+                onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">اسم القطعة</label>
+            <input
+              type="text"
+              required
+              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الكمية</label>
+              <input
+                type="number"
+                required
+                min="1"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.quantity || ''}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">سعر الوحدة</label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.price || ''}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            {/*  */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الاجمالي</label>
+              <p className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                {formatCurrency(formData.quantity * formData.price)}
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-4 flex gap-3">
+            <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
+              حفظ
+            </Button>
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setIsModalOpen(false)}
+            >
+              إلغاء
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
     </div>
   );
 }

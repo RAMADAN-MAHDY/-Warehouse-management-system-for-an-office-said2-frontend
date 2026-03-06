@@ -7,6 +7,8 @@ import { useDispatch } from 'react-redux';
 import { logout } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 
+import Modal from './Modal';
+
 interface RestrictedAccessProps {
   type: 'expired' | 'banned' | 'required';
   message?: string;
@@ -40,8 +42,14 @@ export default function RestrictedAccess({ type, message }: RestrictedAccessProp
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900 px-4">
-      <div className="max-w-md w-full glass-card p-8 rounded-[2.5rem] border border-gray-700 text-center animate-in">
+    <Modal 
+      isOpen={true} 
+      onClose={() => {}} 
+      showCloseButton={false}
+      maxWidth="md"
+      className="bg-gray-900 border-none backdrop-blur-none"
+    >
+      <div className="text-center">
         <div className="inline-flex items-center justify-center p-4 bg-red-500/10 rounded-2xl mb-6">
           <ShieldAlert className="text-red-500" size={48} />
         </div>
@@ -86,6 +94,7 @@ export default function RestrictedAccess({ type, message }: RestrictedAccessProp
           إذا كنت تعتقد أن هذا الخطأ ظهر عن طريق الخطأ، يرجى تحديث الصفحة أو التواصل مع الدعم.
         </p>
       </div>
-    </div>
+    </Modal>
   );
 }
+

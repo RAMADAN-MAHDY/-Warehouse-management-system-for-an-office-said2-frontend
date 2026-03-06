@@ -1,6 +1,5 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState , useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { subscriptionService } from '@/services/api';
 import { Check, Crown, Zap, Shield, Loader2 } from 'lucide-react';
@@ -70,11 +69,11 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <MainLayout>
+      <>
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 

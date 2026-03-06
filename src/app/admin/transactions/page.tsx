@@ -23,6 +23,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
+import ApproveModal from './ApproveModal';
+
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -35,6 +38,7 @@ export default function AdminTransactions() {
   
   // Modal states
   const [rejectModal, setRejectModal] = useState<{show: boolean, transactionId: string}>({ show: false, transactionId: '' });
+  const [approveModal, setApproveModal] = useState<{show: boolean, transactionId: string}>({ show: false, transactionId: '' });
   const [rejectReason, setRejectReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -73,42 +77,45 @@ export default function AdminTransactions() {
     }
   };
 
-  const handleExportPDF = () => {
-    try {
-      const doc = new jsPDF();
-      doc.text("Transactions Report", 14, 15);
+//   const handleExportPDF = () => {
+//     try {
+//       const doc = new jsPDF();
+//       doc.text("Transactions Report", 14, 15);
       
-      const tableData = filteredTransactions.map(t => [
-        t.customerId,
-        t.amount,
-        t.referenceNumber,
-        t.planRequested,
-        t.status,
-        new Date(t.createdAt).toLocaleDateString()
-      ]);
+//       const tableData = filteredTransactions.map(t => [
+//         t.customerId,
+//         t.amount,
+//         t.referenceNumber,
+//         t.planRequested,
+//         t.status,
+//         new Date(t.createdAt).toLocaleDateString()
+//       ]);
 
-      (doc as any).autoTable({
-        head: [['CID', 'Amount', 'Ref #', 'Plan', 'Status', 'Date']],
-        body: tableData,
-        startY: 20,
-      });
+//       (doc as any).autoTable({
+//         head: [['CID', 'Amount', 'Ref #', 'Plan', 'Status', 'Date']],
+//         body: tableData,
+//         startY: 20,
+//       });
 
-      doc.save(`transactions-report-${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success('تم تصدير ملف PDF بنجاح');
-    } catch (error) {
-      toast.error('فشل في تصدير PDF');
-    }
-  };
+//       doc.save(`transactions-report-${new Date().toISOString().split('T')[0]}.pdf`);
+//       toast.success('تم تصدير ملف PDF بنجاح');
+//     } catch (error) {
+//       toast.error('فشل في تصدير PDF');
+//     }
+//   };
 
   const handleApprove = async (transactionId: string) => {
-    if (!confirm('هل تريد تأكيد استلام الدفعة وتفعيل الاشتراك؟')) return;
-    
+    setApproveModal({ show: true, transactionId });
+  };
+
+  const confirmApprove = async () => {
     setIsProcessing(true);
     try {
       // نرسل body فارغ لتجنب الأخطاء في الـ backend
-      const response = await superAdminService.approveTransaction(transactionId, {});
+      const response = await superAdminService.approveTransaction(approveModal.transactionId, {});
       if (response.status) {
         toast.success(response.message);
+        setApproveModal({ show: false, transactionId: '' });
         fetchTransactions();
       }
     } catch (error: any) {
@@ -149,16 +156,16 @@ export default function AdminTransactions() {
 
   if (loading) {
     return (
-      <MainLayout>
+      <>
         <div className="flex items-center justify-center h-[60vh]">
           <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-7xl mx-auto sm:py-8 sm:px-4 p-2 text-right" dir="rtl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div>
@@ -175,14 +182,14 @@ export default function AdminTransactions() {
               {isExporting ? <Loader2 size={20} className="animate-spin" /> : <FileDown size={20} />}
               Excel
             </Button>
-            <Button 
+            {/* <Button 
               variant="outline" 
               className="rounded-2xl border-gray-700 bg-gray-800/50 hover:bg-gray-700/50 text-red-400 font-bold px-6 py-3 flex items-center gap-2"
               onClick={handleExportPDF}
             >
               <FileText size={20} />
               PDF
-            </Button>
+            </Button> */}
             
             <div className="flex items-center gap-2 bg-gray-800/50 border border-gray-700 rounded-2xl px-4 py-2">
               <Filter size={18} className="text-gray-500" />
@@ -327,58 +334,69 @@ export default function AdminTransactions() {
           )}
         </div>
 
+        <ApproveModal 
+          isOpen={approveModal.show}
+          onClose={() => setApproveModal({ show: false, transactionId: '' })}
+          onConfirm={confirmApprove}
+          isProcessing={isProcessing}
+        />
+
         {/* Reject Modal */}
-        {rejectModal.show && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-card w-full max-w-md p-8 rounded-[2.5rem] border border-red-500/30 animate-in fade-in zoom-in duration-300">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-                  <AlertCircle size={32} className="text-red-500" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">رفض عملية الدفع</h2>
-                <p className="text-gray-400 text-sm">سيتم إخطار المستخدم برفض العملية مع السبب المذكور.</p>
-              </div>
+        <Modal
+          isOpen={rejectModal.show}
+          onClose={() => {
+            setRejectModal({ show: false, transactionId: '' });
+            setRejectReason('');
+          }}
+          title="رفض عملية الدفع"
+          maxWidth="md"
+        >
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+              <AlertCircle size={32} className="text-red-500" />
+            </div>
+            <p className="text-gray-400 text-sm">سيتم إخطار المستخدم برفض العملية مع السبب المذكور.</p>
+          </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2 text-right">
-                  <label className="text-sm text-gray-400 pr-2 flex items-center gap-2">
-                    <MessageCircle size={14} />
-                    سبب الرفض (إلزامي)
-                  </label>
-                  <textarea 
-                    rows={3}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
-                    placeholder="مثال: رقم العملية غير صحيح / المبلغ المحول ناقص..."
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                  />
-                </div>
+          <div className="space-y-4">
+            <div className="space-y-2 text-right">
+              <label className="text-sm text-gray-400 pr-2 flex items-center gap-2">
+                <MessageCircle size={14} />
+                سبب الرفض (إلزامي)
+              </label>
+              <textarea 
+                rows={3}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+                placeholder="مثال: رقم العملية غير صحيح / المبلغ المحول ناقص..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            </div>
 
-                <div className="flex gap-4">
-                  <Button 
-                    variant="primary" 
-                    className="flex-1 py-4 rounded-2xl bg-red-600 hover:bg-red-700 border-none font-bold"
-                    onClick={handleReject}
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <Loader2 className="animate-spin mx-auto" /> : 'تأكيد الرفض'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 py-4 rounded-2xl border-gray-700 font-bold"
-                    onClick={() => {
-                      setRejectModal({ show: false, transactionId: '' });
-                      setRejectReason('');
-                    }}
-                  >
-                    إلغاء
-                  </Button>
-                </div>
-              </div>
+            <div className="flex gap-4">
+              <Button 
+                variant="primary" 
+                className="flex-1 py-4 rounded-2xl bg-red-600 hover:bg-red-700 border-none font-bold"
+                onClick={handleReject}
+                disabled={isProcessing}
+              >
+                {isProcessing ? <Loader2 className="animate-spin mx-auto" /> : 'تأكيد الرفض'}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 py-4 rounded-2xl border-gray-700 font-bold"
+                onClick={() => {
+                  setRejectModal({ show: false, transactionId: '' });
+                  setRejectReason('');
+                }}
+              >
+                إلغاء
+              </Button>
             </div>
           </div>
-        )}
+        </Modal>
+
       </div>
-    </MainLayout>
+    </>
   );
 }

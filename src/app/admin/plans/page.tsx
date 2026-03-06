@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {Button} from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
+
 
 export default function AdminPlans() {
   const [plans, setPlans] = useState<any[]>([]);
@@ -154,47 +156,44 @@ export default function AdminPlans() {
         </div>
 
         {/* Add Plan Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-card w-full max-w-2xl p-8 rounded-[2.5rem] border border-gray-700 animate-in fade-in zoom-in duration-300">
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-white">إضافة خطة اشتراك جديدة</h2>
-                <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white">✕</button>
+        <Modal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          title="إضافة خطة اشتراك جديدة"
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">اسم الخطة</label>
+                <input type="text" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">اسم الخطة</label>
-                    <input type="text" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">كود الخطة (Unique ID)</label>
-                    <input type="text" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">السعر (ج.م)</label>
-                    <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">أقصى عدد منتجات</label>
-                    <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500" value={formData.limits.maxItems} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxItems: Number(e.target.value)}})} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">أقصى عدد مبيعات/مشتريات</label>
-                    <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500" value={formData.limits.maxSales} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxSales: Number(e.target.value)}})} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">أقصى عدد مصروفات</label>
-                    <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500" value={formData.limits.maxExpenses} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxExpenses: Number(e.target.value)}})} />
-                  </div>
-                </div>
-
-                <Button type="submit" variant="primary" className="w-full py-4 text-lg font-bold">حفظ الخطة الجديدة</Button>
-              </form>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">كود الخطة (Unique ID)</label>
+                <input type="text" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">السعر (ج.م)</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.price} onChange={(e) => setFormData({...formData, price: Number(e.target.value)})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">أقصى عدد منتجات</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxItems} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxItems: Number(e.target.value)}})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">أقصى عدد مبيعات/مشتريات</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxSales} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxSales: Number(e.target.value)}})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">أقصى عدد مصروفات</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxExpenses} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxExpenses: Number(e.target.value)}})} />
+              </div>
             </div>
-          </div>
-        )}
+
+            <Button type="submit" variant="primary" className="w-full py-4 text-lg font-bold">حفظ الخطة الجديدة</Button>
+          </form>
+        </Modal>
+
       </div>
     </>
   );

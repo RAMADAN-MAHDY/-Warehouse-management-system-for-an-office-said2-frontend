@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -332,154 +333,155 @@ export default function AdminUsers() {
         </div>
 
         {/* Delete Modal */}
-        {deleteModal.show && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-card w-full max-w-md p-8 rounded-[2.5rem] border border-red-500/30 animate-in fade-in zoom-in duration-300">
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
-                  <AlertTriangle size={40} className="text-red-500" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">تأكيد الحذف النهائي</h2>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  أنت على وشك حذف المستخدم <span className="text-red-400 font-bold">"{deleteModal.username}"</span> وكافة بياناته نهائياً.
-                  <br />
-                  <span className="text-red-500 font-bold mt-2 block italic">تحذير: هذا الإجراء لا يمكن التراجع عنه وسيمسح كافة الفواتير والمخزون والمصروفات!</span>
-                </p>
-              </div>
+        <Modal
+          isOpen={deleteModal.show}
+          onClose={() => setDeleteModal({ ...deleteModal, show: false })}
+          title="تأكيد الحذف النهائي"
+          maxWidth="md"
+        >
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30">
+              <AlertTriangle size={40} className="text-red-500" />
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              أنت على وشك حذف المستخدم <span className="text-red-400 font-bold">"{deleteModal.username}"</span> وكافة بياناته نهائياً.
+              <br />
+              <span className="text-red-500 font-bold mt-2 block italic">تحذير: هذا الإجراء لا يمكن التراجع عنه وسيمسح كافة الفواتير والمخزون والمصروفات!</span>
+            </p>
+          </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2 text-right">
-                  <label className="text-sm text-gray-400 pr-2">سبب الحذف النهائي (إلزامي)</label>
-                  <textarea 
-                    rows={3}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
-                    placeholder="مثال: طلب العميل حذف حسابه / انتهاك سياسات الاستخدام..."
-                    value={deleteReason}
-                    onChange={(e) => setDeleteReason(e.target.value)}
-                  />
-                </div>
+          <div className="space-y-4">
+            <div className="space-y-2 text-right">
+              <label className="text-sm text-gray-400 pr-2">سبب الحذف النهائي (إلزامي)</label>
+              <textarea 
+                rows={3}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+                placeholder="مثال: طلب العميل حذف حسابه / انتهاك سياسات الاستخدام..."
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+              />
+            </div>
 
-                <div className="flex gap-4">
-                  <Button 
-                    variant="primary" 
-                    className="flex-1 py-4 rounded-2xl bg-red-600 hover:bg-red-700 border-none font-bold"
-                    onClick={handlePermanentDelete}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? <Loader2 className="animate-spin mx-auto" /> : 'تأكيد الحذف النهائي'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 py-4 rounded-2xl border-gray-700 font-bold"
-                    onClick={() => {
-                      setDeleteModal({ show: false, userId: '', username: '' });
-                      setDeleteReason('');
-                    }}
-                  >
-                    إلغاء
-                  </Button>
-                </div>
-              </div>
+            <div className="flex gap-4">
+              <Button 
+                variant="primary" 
+                className="flex-1 py-4 rounded-2xl bg-red-600 hover:bg-red-700 border-none font-bold"
+                onClick={handlePermanentDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 className="animate-spin mx-auto" /> : 'تأكيد الحذف النهائي'}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 py-4 rounded-2xl border-gray-700 font-bold"
+                onClick={() => {
+                  setDeleteModal({ show: false, userId: '', username: '' });
+                  setDeleteReason('');
+                }}
+              >
+                إلغاء
+              </Button>
             </div>
           </div>
-        )}
+        </Modal>
 
         {/* Subscription Modal */}
-        {subModal.show && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-card w-full max-w-md p-8 rounded-[2.5rem] border border-purple-500/30 animate-in fade-in zoom-in duration-300">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/30">
-                  <Settings2 size={32} className="text-purple-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-1">إدارة اشتراك المستخدم</h2>
-                <p className="text-gray-400 text-sm font-medium">{subModal.username}</p>
-              </div>
+        <Modal
+          isOpen={subModal.show}
+          onClose={() => setSubModal({ ...subModal, show: false })}
+          title="إدارة اشتراك المستخدم"
+          maxWidth="md"
+        >
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/30">
+              <Settings2 size={32} className="text-purple-400" />
+            </div>
+            <p className="text-gray-400 text-sm font-medium">{subModal.username}</p>
+          </div>
 
-              <div className="space-y-5">
-                {/* Plan Type Selection */}
-                <div className="space-y-2 text-right">
-                  <label className="text-sm text-gray-400 pr-2 block">نوع الخطة</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['free', 'basic', 'professional'].map((plan) => (
-                      <button
-                        key={plan}
-                        type="button"
-                        onClick={() => setSubForm({ ...subForm, planType: plan })}
-                        className={`py-2 px-1 rounded-xl text-[10px] font-bold border transition-all capitalize flex flex-col items-center gap-1 ${
-                          subForm.planType === plan 
-                            ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/20' 
-                            : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'
-                        }`}
-                      >
-                        {plan === 'professional' ? <Crown size={14} /> : plan === 'basic' ? <Zap size={14} /> : <Info size={14} />}
-                        {plan}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Status Selection */}
-                <div className="space-y-2 text-right">
-                  <label className="text-sm text-gray-400 pr-2 block">حالة الاشتراك</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'active', label: 'نشط', icon: Check, color: 'text-green-400' },
-                      { id: 'expired', label: 'منتهي', icon: Clock, color: 'text-amber-400' },
-                      { id: 'cancelled', label: 'ملغي', icon: Ban, color: 'text-red-400' }
-                    ].map((status) => (
-                      <button
-                        key={status.id}
-                        type="button"
-                        onClick={() => setSubForm({ ...subForm, status: status.id })}
-                        className={`py-2 px-1 rounded-xl text-[10px] font-bold border transition-all flex flex-col items-center gap-1 ${
-                          subForm.status === status.id 
-                            ? 'bg-gray-700 border-gray-500 text-white shadow-lg shadow-black/20' 
-                            : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'
-                        }`}
-                      >
-                        <status.icon size={14} className={subForm.status === status.id ? 'text-white' : status.color} />
-                        {status.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2 text-right">
-                  <label className="text-sm text-gray-400 pr-2 block">سبب التعديل (إلزامي)</label>
-                  <textarea 
-                    rows={2}
-                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none"
-                    placeholder="مثال: ترقية الخطة بعد تأكيد الدفع / تمديد الاشتراك يدوياً..."
-                    value={subForm.reason}
-                    onChange={(e) => setSubForm({ ...subForm, reason: e.target.value })}
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <Button 
-                    variant="primary" 
-                    className="flex-1 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 border-none font-bold"
-                    onClick={handleUpdateSubscription}
-                    disabled={isUpdatingSub}
+          <div className="space-y-5">
+            {/* Plan Type Selection */}
+            <div className="space-y-2 text-right">
+              <label className="text-sm text-gray-400 pr-2 block">نوع الخطة</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['free', 'basic', 'professional'].map((plan) => (
+                  <button
+                    key={plan}
+                    type="button"
+                    onClick={() => setSubForm({ ...subForm, planType: plan })}
+                    className={`py-2 px-1 rounded-xl text-[10px] font-bold border transition-all capitalize flex flex-col items-center gap-1 ${
+                      subForm.planType === plan 
+                        ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/20' 
+                        : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
                   >
-                    {isUpdatingSub ? <Loader2 className="animate-spin mx-auto" /> : 'تحديث الاشتراك'}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 py-4 rounded-2xl border-gray-700 font-bold"
-                    onClick={() => {
-                      setSubModal({ ...subModal, show: false });
-                      setSubForm({ planType: '', status: '', reason: '' });
-                    }}
-                  >
-                    إلغاء
-                  </Button>
-                </div>
+                    {plan === 'professional' ? <Crown size={14} /> : plan === 'basic' ? <Zap size={14} /> : <Info size={14} />}
+                    {plan}
+                  </button>
+                ))}
               </div>
             </div>
+
+            {/* Status Selection */}
+            <div className="space-y-2 text-right">
+              <label className="text-sm text-gray-400 pr-2 block">حالة الاشتراك</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: 'active', label: 'نشط', icon: Check, color: 'text-green-400' },
+                  { id: 'expired', label: 'منتهي', icon: Clock, color: 'text-amber-400' },
+                  { id: 'cancelled', label: 'ملغي', icon: Ban, color: 'text-red-400' }
+                ].map((status) => (
+                  <button
+                    key={status.id}
+                    type="button"
+                    onClick={() => setSubForm({ ...subForm, status: status.id })}
+                    className={`py-2 px-1 rounded-xl text-[10px] font-bold border transition-all flex flex-col items-center gap-1 ${
+                      subForm.status === status.id 
+                        ? 'bg-gray-700 border-gray-500 text-white shadow-lg shadow-black/20' 
+                        : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600'
+                    }`}
+                  >
+                    <status.icon size={14} className={subForm.status === status.id ? 'text-white' : status.color} />
+                    {status.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2 text-right">
+              <label className="text-sm text-gray-400 pr-2 block">سبب التعديل (إلزامي)</label>
+              <textarea 
+                rows={2}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm outline-none focus:ring-2 focus:ring-purple-500 transition-all resize-none"
+                placeholder="مثال: ترقية الخطة بعد تأكيد الدفع / تمديد الاشتراك يدوياً..."
+                value={subForm.reason}
+                onChange={(e) => setSubForm({ ...subForm, reason: e.target.value })}
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <Button 
+                variant="primary" 
+                className="flex-1 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 border-none font-bold"
+                onClick={handleUpdateSubscription}
+                disabled={isUpdatingSub}
+              >
+                {isUpdatingSub ? <Loader2 className="animate-spin mx-auto" /> : 'تحديث الاشتراك'}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 py-4 rounded-2xl border-gray-700 font-bold"
+                onClick={() => {
+                  setSubModal({ ...subModal, show: false });
+                  setSubForm({ planType: '', status: '', reason: '' });
+                }}
+              >
+                إلغاء
+              </Button>
+            </div>
           </div>
-        )}
+        </Modal>
+
       </div>
     </>
   );
