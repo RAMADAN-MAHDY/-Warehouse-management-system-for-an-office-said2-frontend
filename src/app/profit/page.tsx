@@ -67,8 +67,11 @@ export default function ProfitPage() {
       if (response.status) {
         setSummary(response.data);
       }
-    } catch (error) {
-      toast.error('حدث خطأ أثناء جلب ملخص الأرباح');
+    } catch (error: any) {
+      if (error.response?.status !== 402 && error.response?.status !== 403) {
+        console.error('Failed to fetch profit summary', error);
+        toast.error('حدث خطأ أثناء جلب ملخص الأرباح');
+      }
     } finally {
       setLoading(false);
     }

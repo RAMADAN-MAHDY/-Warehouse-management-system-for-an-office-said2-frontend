@@ -21,6 +21,7 @@ import { logout } from '@/store/slices/authSlice';
 import { subscriptionService } from '@/services/api';
 import PricingCard, { PricingPlan } from '@/components/ui/PricingCard';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 /**
  * @description تعريف خطط الأسعار المتاحة في النظام
@@ -94,8 +95,15 @@ export default function LandingPage() {
     try {
       const response = await subscriptionService.getStatus();
       if (response.status) setSubscription(response.data);
-    } catch (error) {
-      console.error('Failed to fetch subscription status');
+    } catch (error: any) {
+      const status = error.response?.status;
+      const errorMessage = error.response?.data?.message || 'فشل التحقق من حالة الاشتراك';
+      
+      // Only handle errors NOT managed by global axios interceptor (401, 402, 403)
+      if (status !== 401 && status !== 402 && status !== 403) {
+        console.error('Failed to fetch subscription status', error);
+        toast.error(errorMessage);
+      }
     }
   };
 

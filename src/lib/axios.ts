@@ -27,15 +27,40 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    // Handle specific error statuses
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      // Handle refresh token logic here if available
-      // For now, just redirect to login or clear cookies
       Cookies.remove('token');
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
+    } else if (error.response?.status === 402) {
+      // Payment Required - Subscription ended
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('subscription-error', { 
+          detail: { type: 'expired', message: error.response.data?.message } 
+        }));
+        
+        if (window.location.pathname !== '/subscription') {
+          const errorMessage = error.response.data?.message || 'انتهت صلاحية اشتراكك، يرجى التجديد للمتابعة';
+          const { toast } = await import('sonner');
+          toast.error(errorMessage);
+        }
+      }
+    } else if (error.response?.status === 403) {
+      // Forbidden - Banned or unauthorized
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('subscription-error', { 
+          detail: { type: 'banned', message: error.response.data?.message } 
+        }));
+
+        const errorMessage = error.response.data?.message || 'تم حظر حسابك أو لا تملك الصلاحية للوصول';
+        const { toast } = await import('sonner');
+        toast.error(errorMessage);
+      }
     }
+    
     return Promise.reject(error);
   }
 );

@@ -47,7 +47,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto py-8 px-4 text-right" dir="rtl">
+      <div className="max-w-7xl mx-auto sm:py-8 sm:px-4 p-2 text-right" dir="rtl">
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 bg-purple-600/20 rounded-2xl border border-purple-500/30">
             <ShieldCheck className="text-purple-400" size={32} />

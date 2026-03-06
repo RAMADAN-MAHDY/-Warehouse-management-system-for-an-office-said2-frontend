@@ -75,8 +75,11 @@ export default function DashboardPage() {
       if (response.status) {
         setSummary(response.data);
       }
-    } catch (error) {
-      console.error('Failed to fetch summary');
+    } catch (error: any) {
+      if (error.response?.status !== 402 && error.response?.status !== 403) {
+        console.error('Failed to fetch summary', error);
+        toast.error('فشل تحميل ملخص البيانات');
+      }
     } finally {
       setSummaryLoading(false);
     }
@@ -85,9 +88,17 @@ export default function DashboardPage() {
   const fetchSubscription = async () => {
     try {
       const response = await subscriptionService.getStatus();
-      if (response.status) setSubscription(response.data);
-    } catch (error) {
-      console.error('Failed to fetch subscription');
+      if (response.status) {
+        setSubscription(response.data);
+      }
+    } catch (error: any) {
+      const status = error.response?.status;
+      // Suppress console error and local toast for statuses handled by axios interceptor (401, 402, 403)
+      if (status !== 401 && status !== 402 && status !== 403) {
+        console.error('Failed to fetch subscription', error);
+        const errorMessage = error.response?.data?.message || 'فشل التحقق من حالة الاشتراك';
+        toast.error(errorMessage);
+      }
     }
   };
 
