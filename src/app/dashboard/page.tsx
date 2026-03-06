@@ -257,25 +257,25 @@ export default function DashboardPage() {
           subtitle={`${subscription?.daysLeft || 0} يوم متبقي`}
           href="/subscription"
         />
-        <DashboardCard 
+        {/* <DashboardCard 
           title="إجمالي المبيعات" 
           value={summary?.financials?.totalSales || 0} 
           icon={<TrendingUp className="text-green-500" />}
           loading={summaryLoading}
-        />
-        <DashboardCard 
+        /> */}
+        {/* <DashboardCard 
           title="إجمالي المصروفات" 
           value={summary?.financials?.totalExpenses || 0} 
           icon={<TrendingDown className="text-orange-500" />}
           loading={summaryLoading}
-        />
-        <DashboardCard 
+        /> */}
+        {/* <DashboardCard 
           title="صافي الربح" 
           value={summary?.financials?.netProfit || 0} 
           icon={<DollarSign className="text-emerald-500" />}
           loading={summaryLoading}
           isProfit
-        />
+        /> */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
