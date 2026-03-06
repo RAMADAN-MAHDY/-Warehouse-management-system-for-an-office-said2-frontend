@@ -86,7 +86,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, currentPlanId, isLogged
       {!isLoggedIn ? (
         <Link href="/register" className="w-full">
           <Button variant="primary" className="w-full py-4 rounded-2xl text-lg font-bold">
-            ابدأ الآن مجاناً
+            {plan.price === 0 ? 'ابدأ الآن مجاناً' : 'اشترك الآن'}
           </Button>
         </Link>
       ) : isCurrentPlan ? (

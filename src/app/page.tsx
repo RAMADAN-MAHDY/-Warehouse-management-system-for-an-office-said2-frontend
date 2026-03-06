@@ -137,7 +137,7 @@ export default function LandingPage() {
                     <Button variant="outline" size="sm">دخول</Button>
                   </Link>
                   <Link href="/register">
-                    <Button variant="primary" size="sm">ابدأ مجاناً</Button>
+                    <Button variant="primary" size="sm">ابدأ الآن</Button>
                   </Link>
                 </div>
               )
@@ -173,7 +173,7 @@ export default function LandingPage() {
               <>
                 <Link href={isAuthenticated ? "/dashboard" : "/register"}>
                   <Button size="lg" className="px-10 h-16 text-lg" icon={<ArrowRight size={20} className="mr-2" />}>
-                    {isAuthenticated ? "انتقل للوحة التحكم" : "ابدأ الآن مجاناً"}
+                    {isAuthenticated ? "انتقل للوحة التحكم" : "ابدأ الآن"}
                   </Button>
                 </Link>
                 {!isAuthenticated && (
