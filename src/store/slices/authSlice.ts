@@ -1,11 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AuthState, User } from '@/types';
-import Cookies from 'js-cookie';
 
 const initialState: AuthState = {
   user: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null,
-  token: Cookies.get('token') || null,
-  isAuthenticated: !!Cookies.get('token'),
+  token: null, // التوكن الآن في HttpOnly cookie
+  isAuthenticated: typeof window !== 'undefined' ? !!localStorage.getItem('user') : false,
   loading: false,
   error: null,
 };
@@ -18,13 +17,11 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    loginSuccess: (state, action: PayloadAction<{ user: User }>) => {
       state.loading = false;
       state.user = action.payload.user;
-      state.token = action.payload.token;
       state.isAuthenticated = true;
       state.error = null;
-      Cookies.set('token', action.payload.token, { expires: 7 });
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(action.payload.user));
       }
@@ -39,7 +36,6 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
-      Cookies.remove('token');
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
       }

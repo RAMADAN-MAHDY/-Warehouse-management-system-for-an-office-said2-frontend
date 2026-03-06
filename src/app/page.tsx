@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/Button';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store';
 import { logout } from '@/store/slices/authSlice';
-import { subscriptionService } from '@/services/api';
+import { subscriptionService, authService } from '@/services/api';
 import PricingCard, { PricingPlan } from '@/components/ui/PricingCard';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -107,9 +107,15 @@ export default function LandingPage() {
     }
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    router.refresh();
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      dispatch(logout());
+      router.refresh();
+    }
   };
 
   return (

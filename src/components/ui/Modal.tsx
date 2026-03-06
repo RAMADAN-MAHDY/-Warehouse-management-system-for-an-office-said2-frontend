@@ -41,6 +41,9 @@ export default function Modal({
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {

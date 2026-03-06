@@ -26,6 +26,7 @@ import { RootState } from '@/store';
 import { logout } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { authService } from '@/services/api';
 
 const navItems = [
   { name: 'الرئيسية', href: '/', icon: Home },
@@ -57,9 +58,15 @@ export default function Sidebar() {
     setMounted(true);
   }, []);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      dispatch(logout());
+      router.push('/login');
+    }
   };
 
   return (

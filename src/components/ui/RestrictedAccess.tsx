@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { useDispatch } from 'react-redux';
 import { logout } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/api';
 
 import Modal from './Modal';
 
@@ -18,9 +19,15 @@ export default function RestrictedAccess({ type, message }: RestrictedAccessProp
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const handleLogout = () => {
-    dispatch(logout());
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      dispatch(logout());
+      router.push('/login');
+    }
   };
 
   const getTitle = () => {

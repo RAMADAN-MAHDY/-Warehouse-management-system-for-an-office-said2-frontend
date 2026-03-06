@@ -1,17 +1,21 @@
 import axiosInstance from '@/lib/axios';
-import { Item, SaleInvoice, Expense, Purchase, ProfitSummary, User } from '@/types';
+import { Item } from '@/types';
 
 export const authService = {
-  login: async (credentials: any) => {
+  login: async (credentials: Record<string, string>) => {
     const response = await axiosInstance.post('/api/auth/login', credentials);
     return response.data;
   },
-  register: async (userData: any) => {
+  register: async (userData: Record<string, string>) => {
     const response = await axiosInstance.post('/api/auth/register', userData);
     return response.data;
   },
   getProfile: async () => {
     const response = await axiosInstance.get('/api/auth/profile');
+    return response.data;
+  },
+  logout: async () => {
+    const response = await axiosInstance.post('/api/auth/logout');
     return response.data;
   }
 };
@@ -56,11 +60,11 @@ export const saleService = {
     const response = await axiosInstance.get('/api/sales', { params });
     return response.data;
   },
-  create: async (sale: any) => {
+  create: async (sale: Record<string, unknown>) => {
     const response = await axiosInstance.post('/api/sales', sale);
     return response.data;
   },
-  update: async (id: string, sale: any) => {
+  update: async (id: string, sale: Record<string, unknown>) => {
     const response = await axiosInstance.put(`/api/sales/${id}`, sale);
     return response.data;
   },
@@ -86,7 +90,7 @@ export const purchaseService = {
     const response = await axiosInstance.get('/api/purchases');
     return response.data;
   },
-  create: async (purchase: any) => {
+  create: async (purchase: Record<string, unknown>) => {
     const response = await axiosInstance.post('/api/purchases/adjust', purchase);
     return response.data;
   },
@@ -102,11 +106,11 @@ export const expenseService = {
     const response = await axiosInstance.get('/api/expenses');
     return response.data;
   },
-  create: async (expense: any) => {
+  create: async (expense: Record<string, unknown>) => {
     const response = await axiosInstance.post('/api/expenses', expense);
     return response.data;
   },
-  update: async (id: string, expense: any) => {
+  update: async (id: string, expense: Record<string, unknown>) => {
     const response = await axiosInstance.put(`/api/expenses/${id}`, expense);
     return response.data;
   },
@@ -153,11 +157,11 @@ export const superAdminService = {
     const response = await axiosInstance.get('/api/superadmin/plans');
     return response.data;
   },
-  createPlan: async (data: any) => {
+  createPlan: async (data: Record<string, unknown>) => {
     const response = await axiosInstance.post('/api/superadmin/plans', data);
     return response.data;
   },
-  updatePlan: async (id: string, data: any) => {
+  updatePlan: async (id: string, data: Record<string, unknown>) => {
     const response = await axiosInstance.put(`/api/superadmin/plans/${id}`, data);
     return response.data;
   },

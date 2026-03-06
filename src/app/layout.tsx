@@ -4,6 +4,9 @@ import "./globals.css";
 import StoreProvider from "@/providers/StoreProvider";
 import MainLayout from "@/components/layout/MainLayout";
 
+// ملاحظة: تم استخدام Google Fonts هنا لتجنب أخطاء البناء في حال عدم وجود ملفات الخط محلياً.
+// للانتقال للخط المحلي (Production Readiness)، قم بتحميل ملفات Cairo-Regular.woff2 و Cairo-Bold.woff2
+// ووضعها في public/fonts/ ثم استبدل هذا الاستيراد بـ localFont.
 const cairo = Cairo({
   subsets: ["arabic", "latin"],
   variable: "--font-cairo",
