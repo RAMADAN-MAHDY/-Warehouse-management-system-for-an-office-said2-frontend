@@ -1,5 +1,4 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 // استخدام رابط نسبي في المتصفح لدفع الطلبات عبر Next.js Rewrites (Proxy)
 // وفي السيرفر (Server-side rendering) نستخدم الرابط الكامل
@@ -35,8 +34,9 @@ axiosInstance.interceptors.response.use(
     // Handle specific error statuses
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      Cookies.remove('token');
       if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
       }
     } else if (error.response?.status === 402) {
