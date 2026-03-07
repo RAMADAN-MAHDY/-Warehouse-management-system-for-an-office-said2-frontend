@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://management-system-said2.vercel.app/api/:path*',
+        destination: 'https://warehouse-management-system-for-an.vercel.app/api/:path*',
       },
     ];
   },
