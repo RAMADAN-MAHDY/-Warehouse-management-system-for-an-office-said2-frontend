@@ -27,6 +27,7 @@ import { logout } from '@/store/slices/authSlice';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { authService } from '@/services/api';
+import NotificationBell from '../ui/NotificationBell';
 
 const navItems = [
   { name: 'الرئيسية', href: '/', icon: Home },
@@ -94,21 +95,31 @@ export default function Sidebar() {
       )}>
         <div className="flex flex-col h-full">
           <div className="p-6">
-            <Link href="/dashboard" className="flex items-center gap-3">
-              <Image 
-                src="/logo.png" 
-                alt="Logo" 
-                width={40} 
-                height={40} 
-                className="rounded-lg shadow-lg"
-              />
-              <h1 className="text-xl font-bold text-blue-400">نظام الإدارة</h1>
-            </Link>
-            {mounted && user && (
-              <p className="mt-3 text-sm text-gray-400 border-t border-gray-700 pt-3">
-                مرحباً، {user.companyName}
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              <Link href="/dashboard" className="flex items-center gap-3">
+                <Image 
+                  src="/logo.png" 
+                  alt="Logo" 
+                  width={40} 
+                  height={40} 
+                  className="rounded-lg shadow-lg"
+                />
+                <h1 className="text-xl font-bold text-blue-400">نظام الإدارة</h1>
+              </Link>
+              <div className="lg:hidden ml-8">
+                {mounted && <NotificationBell />}
+              </div>
+            </div>
+            <div className="hidden lg:flex items-center justify-between mt-4 bg-gray-900/40 p-2 rounded-xl border border-gray-700/50">
+              <div className="flex-1">
+                {mounted && user && (
+                  <p className="text-xs text-gray-400 font-medium truncate">
+                    {user.companyName}
+                  </p>
+                )}
+              </div>
+              {mounted && <NotificationBell />}
+            </div>
           </div>
 
           <nav className="flex-1 px-4 space-y-2 overflow-y-auto">

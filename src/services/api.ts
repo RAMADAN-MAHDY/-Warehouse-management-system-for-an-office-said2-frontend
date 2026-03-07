@@ -240,3 +240,19 @@ export const reportService = {
     return response.data;
   }
 };
+
+// Service for notification-related operations
+export const notificationService = {
+  getNotifications: async () => {
+    const response = await axiosInstance.get('/api/notifications');
+    return response.data;
+  },
+  markAsRead: async (id: string) => {
+    const response = await axiosInstance.put(`/api/notifications/${id}/read`);
+    return response.data;
+  },
+  markAllAsRead: async () => {
+    const response = await axiosInstance.put('/api/notifications/read-all');
+    return response.data;
+  }
+};
