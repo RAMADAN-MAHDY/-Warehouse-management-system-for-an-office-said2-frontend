@@ -58,7 +58,7 @@ export default function PaymentModal({ isOpen, onClose, plan, onSuccess }: Payme
       <div className="bg-blue-500/10 border border-blue-500/20 p-4 sm:p-6 rounded-2xl mb-6 text-right">
         <p className="text-blue-400 text-xs sm:text-sm mb-3">يرجى تحويل المبلغ المطلوب للرقم التالي:</p>
         <div className="flex items-center justify-between bg-black/40 p-3 sm:p-4 rounded-xl mb-3">
-          <span className="text-xl sm:text-2xl font-mono font-bold text-white tracking-widest">01012345678</span>
+          <span className="text-xl sm:text-2xl font-mono font-bold text-white tracking-widest">01556299599</span>
           <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
         </div>
         <div className="flex justify-between text-xs sm:text-sm text-gray-400">

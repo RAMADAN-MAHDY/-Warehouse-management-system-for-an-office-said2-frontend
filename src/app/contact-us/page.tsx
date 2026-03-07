@@ -3,29 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Mail, Phone, MapPin, Send, MessageCircle, Clock, Facebook, Twitter, Instagram, Linkedin, HelpCircle } from 'lucide-react';
+import { ArrowRight, Phone, MapPin, MessageCircle, Clock, Zap, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 
 export default function ContactUsPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    // محاكاة إرسال الرسالة
-    setTimeout(() => {
-      toast.success('تم إرسال رسالتك بنجاح! سيرد فريقنا عليك قريباً.');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-      setLoading(false);
-    }, 1500);
-  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-right" dir="rtl">
@@ -55,100 +37,58 @@ export default function ContactUsPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-            {/* Contact Form */}
-            <div className="glass-card p-8 rounded-[2.5rem] border border-gray-800 bg-gray-800/20">
-              <h2 className="text-2xl font-bold text-white mb-8">أرسل لنا رسالة</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">الاسم بالكامل</label>
-                    <input 
-                      type="text" 
-                      required
-                      className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400 pr-2">البريد الإلكتروني</label>
-                    <input 
-                      type="email" 
-                      required
-                      className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-400 pr-2">الموضوع</label>
-                  <input 
-                    type="text" 
-                    required
-                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-400 pr-2">الرسالة</label>
-                  <textarea 
-                    rows={5}
-                    required
-                    className="w-full px-4 py-3 bg-gray-900/50 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                    value={formData.message}
-                    onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  />
-                </div>
-                <Button type="submit" variant="primary" className="w-full py-4 text-lg font-bold" disabled={loading}>
-                  {loading ? 'جاري الإرسال...' : 'إرسال الرسالة'}
-                  {!loading && <Send size={20} className="mr-2" />}
+          <div className="max-w-4xl mx-auto">
+            {/* WhatsApp Focused Contact Section */}
+            <div className="glass-card p-10 lg:p-16 rounded-[3rem] border border-gray-800 bg-gray-800/20 text-center relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 blur-[100px] rounded-full -z-10 group-hover:bg-green-500/20 transition-all duration-700" />
+              
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-green-500/10 text-green-500 mb-8 border border-green-500/20 shadow-2xl shadow-green-500/10 animate-pulse">
+                <MessageCircle size={48} />
+              </div>
+
+              <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">تواصل معنا عبر واتساب</h2>
+              <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto leading-relaxed">
+                للحصول على أسرع استجابة وتواصل مباشر مع فريق الدعم الفني، يرجى مراسلتنا عبر الواتساب. نحن متواجدون لمساعدتك في أي وقت.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <Button 
+                  size="lg" 
+                  className="px-12 h-16 text-lg bg-green-600 hover:bg-green-700 text-white font-bold rounded-2xl shadow-xl shadow-green-500/20 flex items-center gap-3 w-full sm:w-auto"
+                  onClick={() => window.open('https://wa.me/201556299599', '_blank')}
+                >
+                  <MessageCircle size={24} />
+                  <span>راسلنا الآن</span>
                 </Button>
-              </form>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ContactInfoCard 
-                  icon={<Phone className="text-green-400" />}
-                  title="اتصل بنا"
-                  value="+20 101 234 5678"
-                />
-                <ContactInfoCard 
-                  icon={<Mail className="text-blue-400" />}
-                  title="راسلنا"
-                  value="support@management-system.com"
-                />
-                <ContactInfoCard 
-                  icon={<MapPin className="text-red-400" />}
-                  title="الموقع"
-                  value="القاهرة، مصر - المعادي"
-                />
-                <ContactInfoCard 
-                  icon={<Clock className="text-amber-400" />}
-                  title="أوقات العمل"
-                  value="السبت - الخميس: 9ص - 6م"
-                />
+                
+                <div className="flex items-center gap-4 p-4 px-6 bg-gray-800/50 rounded-2xl border border-gray-700 w-full sm:w-auto">
+                  <Phone size={20} className="text-gray-400" />
+                  <span className="text-xl font-mono font-bold text-white tracking-wider" dir="ltr">+20 155 629 9599</span>
+                </div>
               </div>
 
-              {/* Map Placeholder */}
-              <div className="glass-card h-64 rounded-[2.5rem] border border-gray-800 bg-gray-800/20 flex items-center justify-center relative overflow-hidden group">
-                 <div className="absolute inset-0 bg-blue-600/5 group-hover:bg-blue-600/10 transition-colors" />
-                 <div className="text-center z-10">
-                    <MapPin size={48} className="text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-500 font-bold">خريطة الموقع التفاعلية</p>
-                 </div>
-              </div>
-
-              {/* Social Links */}
-              <div className="flex justify-center gap-6">
-                 <SocialLink icon={<Facebook />} href="#" />
-                 <SocialLink icon={<Twitter />} href="#" />
-                 <SocialLink icon={<Instagram />} href="#" />
-                 <SocialLink icon={<Linkedin />} href="#" />
+              <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 pt-12 border-t border-gray-800/50">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
+                    <Clock size={20} />
+                  </div>
+                  <span className="text-sm text-gray-400">السبت - الخميس</span>
+                  <span className="text-white font-bold">9ص - 10م</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400 border border-purple-500/20">
+                    <Zap size={20} />
+                  </div>
+                  <span className="text-sm text-gray-400">استجابة سريعة</span>
+                  <span className="text-white font-bold">خلال دقائق</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/20">
+                    <HelpCircle size={20} />
+                  </div>
+                  <span className="text-sm text-gray-400">دعم فني شامل</span>
+                  <span className="text-white font-bold">24/7 للطوارئ</span>
+                </div>
               </div>
             </div>
           </div>

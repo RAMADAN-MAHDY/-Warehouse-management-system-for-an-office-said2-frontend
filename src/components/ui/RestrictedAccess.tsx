@@ -89,7 +89,7 @@ export default function RestrictedAccess({ type, message }: RestrictedAccessProp
             <Button 
               variant="outline" 
               className="w-full h-12 gap-2 border-green-500/50 text-green-400 hover:bg-green-500/10"
-              onClick={() => window.open('https://wa.me/201012345678', '_blank')}
+              onClick={() => window.open('https://wa.me/201556299599', '_blank')}
               icon={<MessageCircle size={18} />}
             >
               تواصل معنا
