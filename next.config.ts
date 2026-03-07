@@ -15,14 +15,6 @@ const nextConfig: NextConfig = {
     webpackBuildWorker: true,
     parallelServerCompiles: false,
   },
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'https://warehouse-management-system-for-an.vercel.app/api/:path*',
-      },
-    ];
-  },
 };
 
 export default nextConfig;
