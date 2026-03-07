@@ -3,9 +3,8 @@ import Cookies from 'js-cookie';
 
 // استخدام رابط نسبي في المتصفح لدفع الطلبات عبر Next.js Rewrites (Proxy)
 // وفي السيرفر (Server-side rendering) نستخدم الرابط الكامل
-const API_URL = typeof window !== 'undefined' 
-  ? '' 
-  : process.env.NEXT_PUBLIC_API_URL;
+// استخدام رابط نسبي لضمان مرور الطلبات عبر Next.js Proxy (Rewrite)
+const API_URL = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_API_URL || 'https://warehouse-management-system-for-an.vercel.app');
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
