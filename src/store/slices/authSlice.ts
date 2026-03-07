@@ -3,7 +3,7 @@ import { AuthState, User } from '@/types';
 
 const initialState: AuthState = {
   user: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null,
-  token: null, // التوكن الآن في HttpOnly cookie
+  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
   isAuthenticated: typeof window !== 'undefined' ? !!localStorage.getItem('user') : false,
   loading: false,
   error: null,
@@ -17,13 +17,15 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<{ user: User }>) => {
+    loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
       state.loading = false;
       state.user = action.payload.user;
+      state.token = action.payload.token;
       state.isAuthenticated = true;
       state.error = null;
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(action.payload.user));
+        localStorage.setItem('token', action.payload.token);
       }
     },
     loginFailure: (state, action: PayloadAction<string>) => {
@@ -38,6 +40,7 @@ const authSlice = createSlice({
       state.error = null;
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
       }
     },
     setUser: (state, action: PayloadAction<User>) => {

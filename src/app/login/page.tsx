@@ -29,7 +29,8 @@ export default function LoginPage() {
       const response = await authService.login({ username, password });
       if (response.status) {
         dispatch(loginSuccess({ 
-          user: response.data.user
+          user: response.data.user,
+          token: response.data.token
         }));
         toast.success('تم تسجيل الدخول بنجاح');
         router.push('/dashboard');
