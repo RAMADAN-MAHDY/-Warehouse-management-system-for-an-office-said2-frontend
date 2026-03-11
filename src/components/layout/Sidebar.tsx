@@ -31,7 +31,7 @@ import NotificationBell from '../ui/NotificationBell';
 
 const navItems = [
   { name: 'الرئيسية', href: '/', icon: Home },
-  { name: 'لوحة التحكم', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'المخزون', href: '/store', icon: LayoutDashboard },
   { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
   { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },
   { name: 'الأرباح والتقارير', href: '/profit', icon: TrendingUp },
@@ -96,7 +96,7 @@ export default function Sidebar() {
         <div className="flex flex-col h-full">
           <div className="p-6">
             <div className="flex items-center justify-between">
-              <Link href="/dashboard" className="flex items-center gap-3">
+              <Link href="/" className="flex items-center gap-3">
                 <Image 
                   src="/logo.png" 
                   alt="Logo" 

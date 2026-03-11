@@ -120,10 +120,13 @@ export const expenseService = {
   }
 };
 
-// Service for subscription-related operations
 export const subscriptionService = {
   getStatus: async () => {
     const response = await axiosInstance.get('/api/subscription/status');
+    return response.data;
+  },
+  getPlans: async () => {
+    const response = await axiosInstance.get('/api/subscription/plans');
     return response.data;
   },
   submitPayment: async (paymentData: { amount: number; referenceNumber: string; planRequested: string }) => {
@@ -253,6 +256,10 @@ export const notificationService = {
   },
   markAllAsRead: async () => {
     const response = await axiosInstance.put('/api/notifications/read-all');
+    return response.data;
+  },
+  deleteNotification: async (id: string) => {
+    const response = await axiosInstance.delete(`/api/notifications/${id}`);
     return response.data;
   }
 };

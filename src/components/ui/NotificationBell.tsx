@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle, XCircle, Info, Clock, CheckCheck } from 'lucide-react';
+import { Bell, CheckCircle, XCircle, Info, Clock, CheckCheck, Trash2 } from 'lucide-react';
 import { notificationService } from '@/services/api';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -22,8 +22,10 @@ export default function NotificationBell() {
         setNotifications(response.data.notifications);
         setUnreadCount(response.data.unreadCount);
       }
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+    } catch (error: any) {
+      if (error.response?.status !== 401 && error.response?.status !== 403) {
+        console.warn('Failed to fetch notifications:', error?.message || error);
+      }
     } finally {
       setLoading(false);
     }
@@ -33,7 +35,15 @@ export default function NotificationBell() {
     fetchNotifications();
     // Poll for new notifications every 30 seconds
     const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+
+    // استمع للحدث المخصص لإعادة تحميل الإشعارات فوراً بعد طلب الدفع
+    const handleRefresh = () => fetchNotifications();
+    window.addEventListener('notification:refresh', handleRefresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notification:refresh', handleRefresh);
+    };
   }, []);
 
   useEffect(() => {
@@ -52,6 +62,20 @@ export default function NotificationBell() {
       fetchNotifications();
     } catch (error) {
       console.error('Failed to mark as read:', error);
+    }
+  };
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // منع تفعيل markAsRead عند الضغط على زرار الحذف
+    // تحديث فوري (optimistic) قبل انتظار الرد
+    setNotifications(prev => prev.filter(n => n._id !== id));
+    try {
+      await notificationService.deleteNotification(id);
+      // تحديث عدد غير المقروء
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+      fetchNotifications(); // استرجاع الحالة عند الفشل
     }
   };
 
@@ -92,8 +116,8 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-3 w-80 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
+        <div className="absolute right-0 left-auto mt-3 w-[280px] sm:w-80 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="p-3 sm:p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
             <h3 className="font-bold text-white flex items-center gap-2">
               <Bell size={16} className="text-blue-400" />
               التنبيهات
@@ -133,7 +157,7 @@ export default function NotificationBell() {
                       <div className="mt-1 flex-shrink-0">
                         {getIcon(notif.type)}
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <p className={cn(
                           "text-sm leading-relaxed",
                           notif.isRead ? "text-gray-400" : "text-gray-100 font-medium"
@@ -150,6 +174,14 @@ export default function NotificationBell() {
                           )}
                         </div>
                       </div>
+                      {/* زرار الحذف - يظهر عند hover */}
+                      <button
+                        onClick={(e) => handleDelete(notif._id, e)}
+                        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all self-start mt-0.5"
+                        title="حذف الإشعار"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                 ))}

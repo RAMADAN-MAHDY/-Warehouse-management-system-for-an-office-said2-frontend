@@ -33,7 +33,7 @@ export default function LoginPage() {
           token: response.data.token
         }));
         toast.success('تم تسجيل الدخول بنجاح');
-        router.push('/dashboard');
+        router.push('/store');
       } else {
         dispatch(loginFailure(response.message || 'بيانات الدخول غير صحيحة'));
         toast.error(response.message || 'بيانات الدخول غير صحيحة');

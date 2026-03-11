@@ -1,71 +1,20 @@
 'use client';
-import { useState , useEffect } from 'react';
-import MainLayout from '@/components/layout/MainLayout';
-import { subscriptionService } from '@/services/api';
-import { Check, Crown, Zap, Shield, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+// import MainLayout from '@/components/layout/MainLayout';
+import { Check, Shield, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { useSubscription } from '@/hooks/useSubscription';
 import PaymentModal from '@/components/ui/PaymentModal';
 
 
 import PricingCard, { PricingPlan } from '@/components/ui/PricingCard';
 
-const PLANS: PricingPlan[] = [
-  {
-    id: 'basic',
-    name: 'الخطة الأساسية',
-    price: 180,
-    icon: <Zap className="w-8 h-8" />,
-    features: [
-      'حد أقصى 200 منتج',
-      '200 عملية بيع/شراء شهرياً',
-      '200 عملية تسجيل مصروفات',
-      'دعم فني عبر البريد',
-      'تقارير أساسية'
-    ],
-    color: 'blue'
-  },
-  {
-    id: 'professional',
-    name: 'الخطة الاحترافية',
-    price: 480,
-    icon: <Crown className="w-8 h-8" />,
-    features: [
-      'حد أقصى 1000 منتج',
-      '1000 عملية بيع/شراء شهرياً',
-      '1000 عملية تسجيل مصروفات',
-      'دعم فني متميز 24/7',
-      'تقارير تحليلية متقدمة',
-      'تصدير Excel غير محدود'
-    ],
-    color: 'amber',
-    popular: true
-  }
-];
 
 
 export default function SubscriptionPage() {
-  const [status, setStatus] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { status, plans, loading, refetch } = useSubscription();
   const [paymentModal, setPaymentModal] = useState<any>(null);
-
-
-  useEffect(() => {
-    fetchStatus();
-  }, []);
-
-  const fetchStatus = async () => {
-    try {
-      const response = await subscriptionService.getStatus();
-      if (response.status) setStatus(response.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
 
   if (loading) {
     return (
@@ -87,9 +36,8 @@ export default function SubscriptionPage() {
               <h1 className="text-3xl font-bold text-white mb-2">حالة الاشتراك الحالي</h1>
               <p className="text-gray-400">تابع استهلاكك وموعد انتهاء اشتراكك</p>
             </div>
-            <div className={`px-6 py-2 rounded-full font-bold text-lg ${
-              status?.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-            }`}>
+            <div className={`px-6 py-2 rounded-full font-bold text-lg ${status?.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+              }`}>
               {status?.status === 'active' ? 'نشط' : 'منتهي'}
             </div>
           </div>
@@ -137,25 +85,34 @@ export default function SubscriptionPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {PLANS.map((plan) => (
-            <PricingCard 
-              key={plan.id}
-              plan={plan}
-              isLoggedIn={true}
-              currentPlanId={status?.plan}
-              onSubscribe={(p) => setPaymentModal(p)}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {plans.map((plan) => (
+            <div key={plan.id} className="flex flex-col">
+              <PricingCard
+                plan={plan}
+                isLoggedIn={true}
+                currentPlanId={status?.plan}
+                onSubscribe={(p) => {
+                  if (p.price === 0) return; // الخطة المجانية - لا شيء
+                  setPaymentModal(p);
+                }}
+              />
+              {plan.price === 0 && status?.plan !== plan.id && (
+                <p className="text-center text-xs text-blue-400 font-medium mt-2">
+                  ( شهر مجاني تجريبي — تجربتك مفعّلة تلقائياً عند التسجيل )
+                </p>
+              )}
+            </div>
           ))}
         </div>
 
       </div>
 
-      <PaymentModal 
-        isOpen={!!paymentModal} 
-        onClose={() => setPaymentModal(null)} 
+      <PaymentModal
+        isOpen={!!paymentModal}
+        onClose={() => setPaymentModal(null)}
         plan={paymentModal}
-        onSuccess={fetchStatus}
+        onSuccess={refetch}
       />
 
     </>
@@ -177,7 +134,7 @@ function UsageBar({ label, current, max, color }: { label: string; current: numb
         <span className="text-white font-medium">{current} / {max}</span>
       </div>
       <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-        <div 
+        <div
           className={`h-full ${colorMap[color]} transition-all duration-1000`}
           style={{ width: `${percentage}%` }}
         />

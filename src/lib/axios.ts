@@ -32,13 +32,18 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     
     // Handle specific error statuses
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isPublicPath = originalRequest.url?.includes('/api/subscription/plans');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublicPath) {
       originalRequest._retry = true;
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
+    } else if (error.response?.status === 401 && isPublicPath) {
+      // Just reject without redirect for public paths
+      return Promise.reject(error);
     } else if (error.response?.status === 402) {
       // Payment Required - Subscription ended
       if (typeof window !== 'undefined') {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Check, Crown, Zap, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import {Button} from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 
 /**
  * @interface PricingPlan
@@ -34,7 +34,7 @@ interface PricingCardProps {
  */
 const PricingCard: React.FC<PricingCardProps> = ({ plan, currentPlanId, isLoggedIn, onSubscribe }) => {
   const isCurrentPlan = currentPlanId === plan.id;
-  
+
   const colorClasses = {
     blue: 'border-blue-500/50 bg-blue-500/5 text-blue-400',
     amber: 'border-amber-500/50 bg-amber-500/5 text-amber-400',
@@ -48,19 +48,17 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, currentPlanId, isLogged
   };
 
   return (
-    <div 
-      className={`relative glass-card p-8 rounded-[2.5rem] border flex flex-col transition-all duration-300 hover:scale-[1.02] h-full ${
-        plan.popular ? colorClasses[plan.color] : 'border-gray-700/50 bg-gray-800/20'
-      }`}
+    <div
+      className={`relative glass-card p-8 rounded-[2.5rem] border flex flex-col transition-all duration-300 hover:scale-[1.02] h-full ${plan.popular ? colorClasses[plan.color] : 'border-gray-700/50 bg-gray-800/20'
+        }`}
     >
       {plan.popular && (
-        <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-black text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider ${
-          plan.color === 'amber' ? 'bg-amber-500' : plan.color === 'blue' ? 'bg-blue-500' : 'bg-emerald-500'
-        }`}>
+        <div className={`absolute -top-4 left-1/2 -translate-x-1/2 text-black text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider ${plan.color === 'amber' ? 'bg-amber-500' : plan.color === 'blue' ? 'bg-blue-500' : 'bg-emerald-500'
+          }`}>
           الأكثر طلباً
         </div>
       )}
-      
+
       <div className="mb-8 text-right">
         <div className={`mb-4 flex justify-end ${iconColors[plan.color]}`}>{plan.icon}</div>
         <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
@@ -74,9 +72,8 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, currentPlanId, isLogged
         {plan.features.map((feature, i) => (
           <div key={i} className="flex items-center justify-end gap-3 text-gray-300">
             <span>{feature}</span>
-            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-              plan.popular ? 'bg-white/10' : 'bg-gray-700/50'
-            }`}>
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${plan.popular ? 'bg-white/10' : 'bg-gray-700/50'
+              }`}>
               <Check className={`w-3 h-3 ${iconColors[plan.color]}`} />
             </div>
           </div>
@@ -94,7 +91,7 @@ const PricingCard: React.FC<PricingCardProps> = ({ plan, currentPlanId, isLogged
           خطتك الحالية
         </Button>
       ) : (
-        <Button 
+        <Button
           variant={plan.popular ? 'primary' : 'outline'}
           className="w-full py-4 rounded-2xl text-lg font-bold"
           onClick={() => onSubscribe?.(plan)}

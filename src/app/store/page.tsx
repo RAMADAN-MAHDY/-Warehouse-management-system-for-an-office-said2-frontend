@@ -251,14 +251,14 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <DashboardCard 
+        {/* <DashboardCard 
           title="حالة الاشتراك" 
           value={subscription?.status === 'active' ? 'نشط' : 'منتهي'} 
           icon={<ShieldCheck className={subscription?.status === 'active' ? "text-green-500" : "text-red-500"} />}
           loading={!subscription}
           subtitle={`${subscription?.daysLeft || 0} يوم متبقي`}
           href="/subscription"
-        />
+        /> */}
         {/* <DashboardCard 
           title="إجمالي المبيعات" 
           value={summary?.financials?.totalSales || 0} 

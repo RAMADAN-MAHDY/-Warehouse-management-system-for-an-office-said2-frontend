@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { MessageCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -22,90 +23,25 @@ import { subscriptionService, authService } from '@/services/api';
 import PricingCard, { PricingPlan } from '@/components/ui/PricingCard';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/useSubscription';
+import PaymentModal from '@/components/ui/PaymentModal';
 
-/**
- * @description تعريف خطط الأسعار المتاحة في النظام
- */
-const PRICING_PLANS: PricingPlan[] = [
-  {
-    id: 'free',
-    name: 'الخطة التجريبية',
-    price: 0,
-    icon: <Zap className="w-8 h-8" />,
-    features: [
-      'فترة تجربة لمدة 30 يوم',
-      'حد أقصى 200 منتج',
-      '200 عملية بيع/شراء',
-      '200 تسجيل مصروفات',
-      'دعم فني أساسي'
-    ],
-    color: 'blue'
-  },
-  {
-    id: 'basic',
-    name: 'الخطة الأساسية',
-    price: 180,
-    icon: <ShieldCheck className="w-8 h-8" />,
-    features: [
-      'حد أقصى 200 منتج',
-      '200 عملية بيع/شراء',
-      '200 تسجيل مصروفات',
-      'تقارير مالية أساسية',
-      'دعم فني متميز'
-    ],
-    color: 'emerald',
-    popular: true
-  },
-  {
-    id: 'professional',
-    name: 'الخطة الاحترافية',
-    price: 480,
-    icon: <Crown className="w-8 h-8" />,
-    features: [
-      'حد أقصى 1000 منتج',
-      '1000 عملية بيع/شراء',
-      '1000 تسجيل مصروفات',
-      'تقارير تحليلية متقدمة',
-      'تصدير Excel غير محدود',
-      'دعم فني 24/7'
-    ],
-    color: 'amber'
-  }
-];
 
-/**
- * @component LandingPage
- * @description الصفحة الرئيسية للنظام (Landing Page)
- */
 export default function LandingPage() {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  const [subscription, setSubscription] = useState<any>(null);
+  const { plans, status: subscription, loading, refetch } = useSubscription(isAuthenticated);
+
+
   const [mounted, setMounted] = useState(false);
+  const [paymentModal, setPaymentModal] = useState<PricingPlan | null>(null);
   const dispatch = useDispatch();
   const router = useRouter();
 
+
   useEffect(() => {
     setMounted(true);
-    if (isAuthenticated) {
-      fetchSubscription();
-    }
   }, [isAuthenticated]);
-
-  const fetchSubscription = async () => {
-    try {
-      const response = await subscriptionService.getStatus();
-      if (response.status) setSubscription(response.data);
-    } catch (error: any) {
-      const status = error.response?.status;
-      const errorMessage = error.response?.data?.message || 'فشل التحقق من حالة الاشتراك';
-      
-      // Only handle errors NOT managed by global axios interceptor (401, 402, 403)
-      if (status !== 401 && status !== 402 && status !== 403) {
-        console.error('Failed to fetch subscription status', error);
-        toast.error(errorMessage);
-      }
-    }
-  };
+    
 
   const handleLogout = async () => {
     try {
@@ -130,7 +66,7 @@ export default function LandingPage() {
                   <Button variant="outline" size="sm" onClick={handleLogout} icon={<LogOut size={16} />}>
                     خروج
                   </Button>
-                  <Link href="/dashboard">
+                  <Link href="/store">
                     <Button variant="primary" size="sm" icon={<LayoutDashboard size={16} />}>
                       لوحة التحكم
                     </Button>
@@ -177,7 +113,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row-reverse items-center justify-center gap-4">
             {mounted && (
               <>
-                <Link href={isAuthenticated ? "/dashboard" : "/register"}>
+                <Link href={isAuthenticated ? "/store" : "/register"}>
                   <Button size="lg" className="px-10 h-16 text-lg" icon={<ArrowRight size={20} className="mr-2" />}>
                     {isAuthenticated ? "انتقل للوحة التحكم" : "ابدأ الآن"}
                   </Button>
@@ -206,21 +142,40 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {mounted && PRICING_PLANS.map((plan) => (
+            {mounted && plans?.map((plan: PricingPlan) => (
               <PricingCard 
                 key={plan.id} 
                 plan={plan} 
                 isLoggedIn={isAuthenticated}
-                currentPlanId={subscription?.plan}
-                onSubscribe={(p) => router.push('/subscription')}
+                currentPlanId={typeof subscription?.plan === 'string' ? subscription.plan : subscription?.plan?.id || undefined}
+                onSubscribe={(p) => {
+                  if (p.price === 0) {
+                    // الخطة المجانية - توجيه مباشر بدون نموذج دفع
+                    router.push('/store');
+                  } else {
+                    router.push('/subscription');
+                  }
+                }}
               />
             ))}
+
+            <PaymentModal
+        isOpen={!!paymentModal}
+        onClose={() => setPaymentModal(null)}
+        plan={paymentModal}
+        onSuccess={refetch}
+      />
           </div>
           
           <div className="mt-16 p-8 rounded-[2rem] bg-blue-600/10 border border-blue-500/20 text-center">
             <h3 className="text-2xl font-bold text-white mb-4">هل تحتاج إلى ميزات مخصصة؟</h3>
             <p className="text-gray-400 mb-6">يمكننا تصميم خطة خاصة تناسب احتياجاتك الفريدة، تواصل مع فريق المبيعات لدينا.</p>
-            <Button variant="outline" className="px-8 border-blue-500/50 text-blue-400">تواصل معنا</Button>
+
+            {/* التواصل عبر الواتس */}
+            <Link href="https://wa.me/201124885991">
+            <Button variant="outline" className="px-8 border-blue-500/50 text-blue-400"> 
+            تواصل معنا <MessageCircle className="w-4 h-4" /></Button>
+            </Link>
           </div>
         </div>
       </section>

@@ -53,7 +53,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       if (!isAuthenticated && !isAuthPage) {
         router.push('/login');
       } else if (isAuthenticated && (pathname === '/login' || pathname === '/register')) {
-        router.push('/dashboard');
+        router.push('/store');
       } else if (isAuthenticated && !isAuthPage && !isSubscriptionPage) {
         // التحقق من حالة الاشتراك للصفحات المحمية (غير صفحة الاشتراك نفسها)
         checkSubscription();

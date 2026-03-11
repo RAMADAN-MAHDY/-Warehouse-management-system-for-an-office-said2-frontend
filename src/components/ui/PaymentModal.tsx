@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+ import React, { useState } from 'react';
 import Modal from './Modal';
 import { Button } from './Button';
-import { Wallet, Loader2 } from 'lucide-react';
+import { Wallet, Loader2, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { subscriptionService } from '@/services/api';
+import Image from 'next/image';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -38,6 +39,8 @@ export default function PaymentModal({ isOpen, onClose, plan, onSuccess }: Payme
       if (response.status) {
         toast.success(response.message || 'تم إرسال الطلب بنجاح');
         setRefNumber('');
+        // أطلق حدثاً مخصصاً لإخطار NotificationBell بتحديث الإشعارات فوراً
+        window.dispatchEvent(new CustomEvent('notification:refresh'));
         if (onSuccess) onSuccess();
         onClose();
       }
@@ -56,14 +59,43 @@ export default function PaymentModal({ isOpen, onClose, plan, onSuccess }: Payme
       maxWidth="md"
     >
       <div className="bg-blue-500/10 border border-blue-500/20 p-4 sm:p-6 rounded-2xl mb-6 text-right">
-        <p className="text-blue-400 text-xs sm:text-sm mb-3">يرجى تحويل المبلغ المطلوب للرقم التالي:</p>
-        <div className="flex items-center justify-between bg-black/40 p-3 sm:p-4 rounded-xl mb-3">
-          <span className="text-xl sm:text-2xl font-mono font-bold text-white tracking-widest">01556299599</span>
-          <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
-        </div>
-        <div className="flex justify-between text-xs sm:text-sm text-gray-400">
-          <span>الخطة: <span className="text-white font-bold">{plan.name}</span></span>
-          <span>المبلغ: <span className="text-white font-bold">{plan.price} ج.م</span></span>
+        <p className="text-blue-400 text-xs sm:text-sm mb-3">يرجى تحويل المبلغ المطلوب للرقم التالي أو مسح رمز הـ QR:</p>
+        
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-black/40 p-3 sm:p-4 rounded-xl mb-4">
+          <div className="flex flex-col items-center justify-center p-2 bg-white rounded-xl">
+            {/* 
+               رابط الدفع الديناميكي:
+               في العادة لتطبيقات المحافظ في مصر وانستا باي، ניתן استخدام صيغة UPI أو رقم الهاتف فقط.
+               هنا تم تمرير رقم الهاتف مع المبلغ بشكل ديناميكي لرمز QR عبر API خارجي.
+            */}
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`upi://pay?pa=01099313876@instapay&pn=Subscription&am=${plan.price}&cu=EGP`)}`}
+              alt="QR Code"
+              width={100}
+              height={100}
+              className="rounded-lg"
+            />
+            <span className="text-[10px] text-gray-500 font-bold mt-1 text-center">امسح للدفع السريع<br/>InstaPay</span>
+          </div>
+          
+          <div className="flex flex-col sm:items-end w-full">
+            <span className="text-xs text-gray-400 mb-1">رقم فودافون كاش / انستا باي:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl sm:text-2xl font-mono font-bold text-white tracking-widest">01099313876</span>
+              <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
+            </div>
+            
+            <div className="flex flex-col text-xs sm:text-sm text-gray-400 mt-4 w-full">
+              <div className="flex justify-between border-b border-gray-700/50 pb-2 mb-2">
+                <span>الخطة:</span>
+                <span className="text-white font-bold">{plan.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>المبلغ المطلوب:</span>
+                <span className="text-green-400 font-bold text-lg">{plan.price} ج.م</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -32,10 +32,10 @@ export default function RegisterPage() {
         password: formData.password,
         companyName: formData.companyName
       });
-    //   console.log(response);
+      // console.log(response);
 
       if (response.status) {
-        setSuccess(`تم إنشاء الحساب بنجاح! اسم الشركة: ${response.data.companyName}`);
+        setSuccess(`تم إنشاء الحساب بنجاح! اسم الشركة: ${response.data.user.companyName}`);
         toast.success('تم إنشاء الحساب بنجاح');
         // Optional: auto login or redirect after delay
       } else {

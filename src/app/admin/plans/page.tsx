@@ -27,10 +27,12 @@ export default function AdminPlans() {
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({
     id: '',
     name: '',
     price: 0,
+    durationDays: 30,
     limits: { maxItems: 200, maxSales: 200, maxExpenses: 200 },
     features: [],
     isPublic: true
@@ -54,14 +56,24 @@ export default function AdminPlans() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await superAdminService.createPlan(formData);
-      if (response.status) {
-        toast.success('تمت إضافة الخطة بنجاح');
-        setShowAddModal(false);
-        fetchPlans();
+      if (editingId) {
+        const response = await superAdminService.updatePlan(editingId, formData);
+        if (response.status) {
+          toast.success('تم تحديث الخطة بنجاح');
+          setShowAddModal(false);
+          setEditingId(null);
+          fetchPlans();
+        }
+      } else {
+        const response = await superAdminService.createPlan(formData);
+        if (response.status) {
+          toast.success('تمت إضافة الخطة بنجاح');
+          setShowAddModal(false);
+          fetchPlans();
+        }
       }
     } catch (error: any) {
-      toast.error('فشل في إضافة الخطة');
+      toast.error(editingId ? 'فشل في تحديث الخطة' : 'فشل في إضافة الخطة');
     }
   };
 
@@ -76,6 +88,34 @@ export default function AdminPlans() {
     } catch (error: any) {
       toast.error('فشل في حذف الخطة');
     }
+  };
+
+  const handleEdit = (plan: any) => {
+    setFormData({
+      id: plan.id,
+      name: plan.name,
+      price: plan.price,
+      durationDays: plan.durationDays || 30,
+      limits: { ...plan.limits },
+      features: [...(plan.features || [])],
+      isPublic: plan.isPublic
+    });
+    setEditingId(plan._id);
+    setShowAddModal(true);
+  };
+
+  const openAddModal = () => {
+    setFormData({
+      id: '',
+      name: '',
+      price: 0,
+      durationDays: 30,
+      limits: { maxItems: 200, maxSales: 200, maxExpenses: 200 },
+      features: [],
+      isPublic: true
+    });
+    setEditingId(null);
+    setShowAddModal(true);
   };
 
   if (loading) {
@@ -96,7 +136,7 @@ export default function AdminPlans() {
             <h1 className="text-3xl font-bold text-white mb-2">إدارة خطط الاشتراك</h1>
             <p className="text-gray-400">إضافة وتعديل وحذف خطط الأسعار والحدود المسموحة</p>
           </div>
-          <Button variant="primary" size="lg" className="rounded-2xl" onClick={() => setShowAddModal(true)}>
+          <Button variant="primary" size="lg" className="rounded-2xl" onClick={openAddModal}>
             <Plus className="ml-2" size={20} />
             إضافة خطة جديدة
           </Button>
@@ -112,6 +152,9 @@ export default function AdminPlans() {
                   {plan.id === 'professional' ? <Crown size={28} /> : <Zap size={28} />}
                 </div>
                 <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="rounded-xl border-gray-700 text-blue-400 hover:bg-blue-500/10" onClick={() => handleEdit(plan)}>
+                    <Edit2 size={18} />
+                  </Button>
                   <Button variant="outline" size="sm" className="rounded-xl border-gray-700 text-red-400 hover:bg-red-500/10" onClick={() => handleDelete(plan._id)}>
                     <Trash2 size={18} />
                   </Button>
@@ -158,8 +201,11 @@ export default function AdminPlans() {
         {/* Add Plan Modal */}
         <Modal
           isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          title="إضافة خطة اشتراك جديدة"
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingId(null);
+          }}
+          title={editingId ? "تعديل خطة الاشتراك" : "إضافة خطة اشتراك جديدة"}
           maxWidth="2xl"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -170,7 +216,7 @@ export default function AdminPlans() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 pr-2">كود الخطة (Unique ID)</label>
-                <input type="text" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} />
+                <input type="text" required disabled={!!editingId} className={`w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all ${editingId ? 'opacity-50 cursor-not-allowed' : ''}`} value={formData.id} onChange={(e) => setFormData({...formData, id: e.target.value})} />
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 pr-2">السعر (ج.م)</label>
@@ -185,12 +231,22 @@ export default function AdminPlans() {
                 <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxSales} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxSales: Number(e.target.value)}})} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-gray-400 pr-2">أقصى عدد مصروفات</label>
+                <label className="text-sm text-gray-400 pr-2">أقصى عدد مصاريف</label>
                 <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxExpenses} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxExpenses: Number(e.target.value)}})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">المدة (بالأيام)</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.durationDays} onChange={(e) => setFormData({...formData, durationDays: Number(e.target.value)})} />
+              </div>
+              <div className="flex items-center gap-3 pt-4">
+                <input type="checkbox" id="isPublic" className="w-5 h-5 accent-purple-600" checked={formData.isPublic} onChange={(e) => setFormData({...formData, isPublic: e.target.checked})} />
+                <label htmlFor="isPublic" className="text-gray-300 select-none">عرض الخطة للجمهور</label>
               </div>
             </div>
 
-            <Button type="submit" variant="primary" className="w-full py-4 text-lg font-bold">حفظ الخطة الجديدة</Button>
+            <Button type="submit" variant="primary" className="w-full py-4 text-lg font-bold">
+              {editingId ? 'تعديل الخطة' : 'حفظ الخطة الجديدة'}
+            </Button>
           </form>
         </Modal>
 
