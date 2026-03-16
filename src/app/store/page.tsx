@@ -208,7 +208,7 @@ export default function DashboardPage() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
         <div>
           <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-3">
-            لوحة التحكم
+            الخزون 
             {subscription && (
               <Link 
                 href="/subscription" 
