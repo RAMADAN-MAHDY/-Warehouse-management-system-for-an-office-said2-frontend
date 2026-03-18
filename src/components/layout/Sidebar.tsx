@@ -95,7 +95,7 @@ export default function Sidebar() {
       )}>
         <div className="flex flex-col h-full">
           <div className="p-6">
-            <div className="flex items-center mt-10 sm:mt-3 justify-between">
+            <div className="flex items-center mt-10 md:mt-3 justify-between">
               <Link href="/" className="flex items-center gap-3">
                 <Image 
                   src="/logo.png" 

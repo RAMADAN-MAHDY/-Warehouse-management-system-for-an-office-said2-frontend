@@ -174,10 +174,10 @@ export default function NotificationBell() {
                           )}
                         </div>
                       </div>
-                      {/* زرار الحذف - يظهر عند hover */}
+                      {/* زرار الحذف - يظهر عند hover في حالة اجهزة الكمبيوتر ووجود ماوس لا كن في حالة التاتش يظهر علطول*/}
                       <button
                         onClick={(e) => handleDelete(notif._id, e)}
-                        className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-1 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all self-start mt-0.5"
+                        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex-shrink-0 p-1 text-red-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all self-start mt-0.5"
                         title="حذف الإشعار"
                       >
                         <Trash2 size={14} />
