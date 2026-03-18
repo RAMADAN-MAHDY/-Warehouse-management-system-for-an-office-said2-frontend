@@ -35,8 +35,8 @@ export default function PaymentModal({ isOpen, onClose, plan, onSuccess }: Payme
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!refNumber) return toast.error('يرجى إدخال رقم العملية');
-    if (refNumber.length < 8) return toast.error('رقم العملية غير صحيح');
+    if (!refNumber) return toast.error('يرجى إدخال اسم الحساب أو رقم الهاتف');
+    if (refNumber.length < 3) return toast.error('البيانات المدخلة غير صحيحة');
     
     setSubmitting(true);
     try {
@@ -130,14 +130,14 @@ export default function PaymentModal({ isOpen, onClose, plan, onSuccess }: Payme
           <div className="space-y-2">
             <div className="flex justify-between items-center px-2">
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">تأكيد عملية الدفع</span>
-              <label className="text-xs text-gray-400">رقم العملية (Reference Number)</label>
+              <label className="text-xs text-gray-400">اسم الحساب أو الرقم المحول منه</label>
             </div>
             <div className="relative group">
               <input 
                 type="text"
                 required
-                placeholder="أدخل رقم العملية المكون من 10-12 رقم"
-                className="w-full px-5 py-4 bg-gray-900/50 border border-gray-800 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-center text-lg font-mono tracking-widest placeholder:text-gray-700 placeholder:text-sm placeholder:font-sans placeholder:tracking-normal"
+                placeholder="أدخل اسم الحساب أو الرقم المستخدم للدفع"
+                className="w-full px-5 py-4 bg-gray-900/50 border border-gray-800 rounded-2xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-center text-lg font-medium tracking-normal placeholder:text-gray-700 placeholder:text-sm placeholder:font-sans placeholder:tracking-normal"
                 value={refNumber}
                 onChange={(e) => setRefNumber(e.target.value)}
               />
