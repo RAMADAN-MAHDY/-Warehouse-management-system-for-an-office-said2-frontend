@@ -9,7 +9,9 @@ import {
   Calendar,
   Tag,
   User,
-  Hash
+  Hash,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { purchaseService } from '@/services/api';
 import { Purchase } from '@/types';
@@ -30,6 +32,8 @@ import Modal from '@/components/ui/Modal';
 export default function PurchasesPage() {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   
@@ -41,9 +45,10 @@ export default function PurchasesPage() {
   const fetchPurchases = async () => {
     setLoading(true);
     try {
-      const response = await purchaseService.getAll();
+      const response = await purchaseService.getAll({ page, limit: 10 });
       if (response.status) {
         setPurchases(response.data);
+        setPagination(response.pagination);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب المشتريات');
@@ -54,7 +59,7 @@ export default function PurchasesPage() {
 
   useEffect(() => {
     fetchPurchases();
-  }, []);
+  }, [page]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,6 +174,49 @@ export default function PurchasesPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            className="text-gray-400 hover:text-white"
+          >
+            <ChevronRight size={18} className="ml-1" />
+            السابق
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            {[...Array(pagination.totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setPage(i + 1)}
+                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                  page === i + 1 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
+            disabled={page === pagination.totalPages}
+            className="text-gray-400 hover:text-white"
+          >
+            التالي
+            <ChevronLeft size={18} className="mr-1" />
+          </Button>
         </div>
       )}
 

@@ -10,7 +10,9 @@ import {
   Edit2, 
   Loader2,
   Calendar,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { saleService, itemService } from '@/services/api';
 import { SaleInvoice, Item } from '@/types';
@@ -32,6 +34,8 @@ export default function SalesPage() {
   const [sales, setSales] = useState<SaleInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ from: '', to: '' });
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SaleInvoice | null>(null);
@@ -50,9 +54,10 @@ export default function SalesPage() {
   const fetchSales = async () => {
     setLoading(true);
     try {
-      const response = await saleService.getAll(filter);
+      const response = await saleService.getAll({ ...filter, page, limit: 10 });
       if (response.status) {
         setSales(response.data);
+        setPagination(response.pagination);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب المبيعات');
@@ -63,7 +68,7 @@ export default function SalesPage() {
 
   useEffect(() => {
     fetchSales();
-  }, [filter]);
+  }, [filter, page]);
 
   const handleSearchProduct = async (query: string) => {
     setSearchQuery(query);
@@ -265,7 +270,10 @@ export default function SalesPage() {
               onChange={(e) => setFilter({ ...filter, to: e.target.value })}
             />
           </div>
-          <Button variant="secondary" onClick={() => setFilter({ from: '', to: '' })}>
+          <Button variant="secondary" onClick={() => {
+            setFilter({ from: '', to: '' });
+            setPage(1);
+          }}>
             إعادة تعيين
           </Button>
         </div>
@@ -359,6 +367,49 @@ export default function SalesPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            className="text-gray-400 hover:text-white"
+          >
+            <ChevronRight size={18} className="ml-1" />
+            السابق
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            {[...Array(pagination.totalPages)].map((_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setPage(i + 1)}
+                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                  page === i + 1 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
+            disabled={page === pagination.totalPages}
+            className="text-gray-400 hover:text-white"
+          >
+            التالي
+            <ChevronLeft size={18} className="mr-1" />
+          </Button>
         </div>
       )}
 

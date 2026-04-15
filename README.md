@@ -1,62 +1,58 @@
-# نظام إدارة المخازن والمبيعات - واجهة المستخدم (Frontend)
+# 📦 نظام إدارة المخازن والمبيعات الاحترافي (Next.js 16)
 
-هذا هو مشروع واجهة المستخدم (Frontend) لنظام إدارة المخازن والمبيعات، تم بناؤه باستخدام إطار العمل **Next.js 16** مع **TypeScript** و **Tailwind CSS 4**. يوفر النظام واجهة احترافية وسهلة الاستخدام لإدارة المنتجات، المبيعات، المشتريات، والمصروفات مع دعم كامل للغة العربية (RTL).
-
----
-
-## 📋 جدول المحتويات
-- [المتطلبات الأساسية](#-المتطلبات-الأساسية)
-- [تقنيات المشروع](#-تقنيات-المشروع)
-- [هيكل المجلدات](#-هيكل-المجلدات)
-- [التثبيت والتشغيل المحلي](#-التثبيت-والتشغيل-المحلي)
-- [إعدادات البيئة (Environment Variables)](#-إعدادات-البيئة-environment-variables)
-- [بنية التطبيق (Architecture)](#-بنية-التطبيق-architecture)
-- [إدارة الحالة (State Management)](#-إدارة-الحالة-state-management)
-- [التواصل مع Backend API](#-التواصل-مع-backend-api)
-- [المعايير المتبعة (Coding Standards)](#-المعايير-المتبعة-coding-standards)
-- [الأوامر المتاحة](#-الأوامر-المتاحة)
+واجهة مستخدم عصرية ومتطورة لنظام إدارة المخازن، المبيعات، المشتريات، والمصروفات. تم بناء النظام باستخدام أحدث التقنيات لعام 2026 لضمان سرعة الأداء وسهولة الاستخدام مع دعم كامل للغة العربية (RTL).
 
 ---
 
-## 🛠 تقنيات المشروع
+## 🌟 المميزات الرئيسية (Core Features)
 
-يعتمد المشروع على أحدث التقنيات لضمان الأداء العالي وسهولة الصيانة:
-- **Framework:** [Next.js 15 (App Router)](https://nextjs.org/)
-- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **📊 لوحة تحكم ذكية (Smart Dashboard):** عرض ملخص للأداء، الإيرادات، المصروفات، والمنتجات الأكثر مبيعاً مع رسوم بيانية تفاعلية (Chart.js).
+- **📦 إدارة المخازن (Inventory Management):** تتبع المنتجات، مستويات المخزون، وتنبيهات بنقص الكميات.
+- **💰 المبيعات والمشتريات (Sales & Purchases):** إدارة كاملة للفواتير، العملاء، والموردين.
+- **💸 إدارة المصروفات (Expenses):** تتبع المصاريف التشغيلية وتصنيفها.
+- **🛡️ نظام اشتراكات متطور (Subscription System):** دعم الدفع عبر **InstaPay** و **Vodafone Cash** مع واجهة احترافية لتأكيد العمليات.
+- **📄 تصدير التقارير (Reports Export):** إمكانية تصدير كافة البيانات والتقارير بصيغ **Excel (XLSX)** و **PDF (jsPDF)**.
+- **🔐 نظام صلاحيات (Authentication):** حماية كاملة للمسارات (Route Guards) باستخدام JWT و Redux Middleware.
+- **📱 متوافق مع كافة الأجهزة (Responsive Design):** تصميم مرن يعمل بكفاءة على الموبايل، التابلت، والحاسوب.
+
+---
+
+## 🛠 التقنيات المستخدمة (Tech Stack)
+
+تم استخدام أحدث إصدارات المكتبات لضمان الاستقرار والأمان:
+- **Framework:** [Next.js 16 (App Router)](https://nextjs.org/)
+- **Core:** [React 19](https://react.dev/)
+- **Language:** [TypeScript 5+](https://www.typescriptlang.org/)
 - **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
-- **State Management:** [Redux Toolkit](https://redux-toolkit.js.org/)
+- **State Management:** [Redux Toolkit 2.x](https://redux-toolkit.js.org/)
 - **API Client:** [Axios](https://axios-http.com/)
-- **Form Handling:** [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
+- **Animations:** [Framer Motion 12](https://www.framer.com/motion/)
 - **Icons:** [Lucide React](https://lucide.dev/)
-- **Animations:** [Framer Motion](https://www.framer.com/motion/)
+- **Charts:** [Chart.js](https://www.chartjs.org/) & [React Chartjs 2](https://react-chartjs-2.js.org/)
 - **Notifications:** [Sonner](https://sonner.steventey.com/)
-- **Excel Export:** [XLSX](https://sheetjs.com/)
 
 ---
 
-## 📁 هيكل المجلدات
-
-تم تنظيم المشروع بشكل يسهل الوصول إلى المكونات والمنطق البرمجي:
+## 📁 هيكل المجلدات المنظم (Project Structure)
 
 ```text
 src/
-├── app/                # نظام التوجيه (App Router) والصفحات والخطوط العالمية
-│   ├── dashboard/      # صفحة لوحة التحكم الرئيسية
-│   ├── sales/          # إدارة المبيعات
-│   ├── purchases/      # إدارة المشتريات
-│   ├── expenses/       # إدارة المصروفات
-│   ├── login/          # صفحة تسجيل الدخول
-│   ├── layout.tsx      # الهيكل العام للتطبيق (Root Layout) والـ SEO
-│   └── globals.css     # التنسيقات العالمية
-├── components/         # المكونات القابلة لإعادة الاستخدام
-│   ├── layout/         # مكونات الهيكل (Sidebar, Navbar, MainLayout)
-│   └── ui/             # مكونات الواجهة البسيطة (Button, Table, Input)
-├── lib/                # المكتبات والإعدادات المساعدة (Axios Instance, Utils)
-├── providers/          # مزودي السياق (Redux Provider, etc.)
-├── services/           # خدمات التواصل مع API (API Services)
-├── store/              # إعدادات Redux Toolkit (Slices, Store)
-├── types/              # تعريفات TypeScript (Interfaces, Types)
-└── public/             # الملفات الثابتة (الصور، الأيقونات)
+├── app/                # نظام التوجيه (App Router) والصفحات (Next.js 16)
+│   ├── (auth)/         # صفحات الدخول والتسجيل
+│   ├── dashboard/      # لوحة التحكم الرئيسية
+│   ├── inventory/      # إدارة المنتجات والمخزون
+│   ├── sales/          # إدارة المبيعات والفواتير
+│   ├── purchases/      # إدارة المشتريات والموردين
+│   ├── expenses/       # إدارة المصاريف
+│   └── layout.tsx      # الهيكل العام والتكوين الأساسي
+├── components/         # المكونات البرمجية
+│   ├── layout/         # مكونات الهيكل (Sidebar, Navbar, MobileNav)
+│   └── ui/             # مكونات الواجهة (Button, Modal, Table, Input)
+├── services/           # طبقة التواصل مع الـ Backend (API Services)
+├── store/              # إدارة الحالة العالمية (Redux Slices & Store)
+├── types/              # تعريفات TypeScript الموحدة
+├── lib/                # الإعدادات المساعدة (Axios, Date Utils)
+└── public/             # الملفات الثابتة (الصور، الـ QR Codes)
 ```
 
 ---
@@ -64,107 +60,64 @@ src/
 ## 🚀 التثبيت والتشغيل المحلي
 
 ### المتطلبات الأساسية
-- Node.js (الإصدار 18 أو أحدث)
-- npm أو yarn أو pnpm
+- **Node.js:** الإصدار 18 أو أحدث (يفضل LTS).
+- **Package Manager:** npm (أو yarn/pnpm).
 
 ### خطوات التشغيل
-1. قم بتحميل المستودع (Clone repository).
-2. انتقل إلى مجلد المشروع:
+1. قم بتحميل المستودع:
    ```bash
-   cd frontend-nextjs
+   git clone [repository-url]
    ```
-3. قم بتثبيت التبعيات:
+2. تثبيت المكتبات:
    ```bash
    npm install
    ```
-4. قم بإنشاء ملف `.env.local` بناءً على `.env.example`.
-5. ابدأ تشغيل خادم التطوير:
+3. إعداد المتغيرات البيئية:
+   قم بإنشاء ملف `.env.local` وأضف الرابط الخاص بالـ API:
+   ```env
+   NEXT_PUBLIC_API_URL=https://management-system-said2.vercel.app
+   ```
+4. تشغيل خادم التطوير:
    ```bash
    npm run dev
    ```
-6. افتح [http://localhost:3000](http://localhost:3000) في متصفحك.
+5. افتح [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## ⚙️ إعدادات البيئة (Environment Variables)
+## � نظام الدفع والاشتراكات
 
-يجب توفير المتغيرات التالية في ملف `.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=https://management-system-said2.vercel.app  # رابط الـ Backend API
-```
-
----
-
-## 🏗 بنية التطبيق (Architecture)
-
-### نظام التوجيه (Routing)
-يعتمد المشروع على **App Router** الخاص بـ Next.js. يتم توزيع الصفحات في مجلدات داخل `src/app`. يتم استخدام `layout.tsx` لضمان ظهور الـ Sidebar والـ Navbar في جميع الصفحات المحمية.
-
-### المكونات (Components)
-- **UI Components:** توجد في `src/components/ui` وهي مكونات ذرية (Atomic) مثل الأزرار والجداول.
-- **Layout Components:** توجد في `src/components/layout` وتتحكم في شكل الصفحة العام.
-
-### إدارة الحالة (State Management)
-يتم استخدام **Redux Toolkit** لإدارة الحالة العالمية، خاصة بيانات المستخدم (Auth) والجلسة.
-- يتم تعريف الـ Slices في `src/store/slices`.
-- يتم تغليف التطبيق بـ `StoreProvider` في `src/app/layout.tsx`.
+يدعم النظام واجهة دفع احترافية (PaymentModal) مصممة لتسهيل عمليات الاشتراك:
+- **InstaPay QR:** مسح الكود مباشرة للدفع السريع.
+- **Copy IPA:** نسخ عنوان الدفع اللحظي بضغطة زر.
+- **Validation:** التحقق من بيانات الدفع قبل الإرسال لضمان الدقة.
 
 ---
 
-## 🔌 التواصل مع Backend API
+## 🛠 الأوامر المتاحة (Available Commands)
 
-يتم استخدام **Axios** مع نظام **Interceptors** لإدارة الطلبات:
-- يتم إرفاق التوكن (JWT) تلقائياً في كل طلب من خلال `src/lib/axios.ts`.
-- يتم التعامل مع أخطاء 401 (انتهاء صلاحية الجلسة) وتوجيه المستخدم لصفحة تسجيل الدخول.
-- يتم تنظيم طلبات API في مجلد `src/services` لتسهيل استدعائها في المكونات.
-
-مثال على استدعاء API:
-```typescript
-import { saleService } from '@/services/api';
-
-const fetchSales = async () => {
-  const data = await saleService.getAll();
-  // ...
-};
-```
+- `npm run dev`: تشغيل بيئة التطوير.
+- `npm run build`: بناء نسخة الإنتاج المحسنة.
+- `npm run start`: تشغيل النسخة المبنية.
+- `npm run lint`: فحص جودة الكود.
+- `npm run clean`: تنظيف المجلدات المؤقتة.
 
 ---
 
-## 🎨 المعايير المتبعة (Coding Standards)
+## 🌍 المعايير والتوطين (RTL & Localization)
 
-- **التسمية:** استخدام `camelCase` للمتغيرات والدوال، و `PascalCase` للمكونات والملفات (مثل `Button.tsx`).
-- **التنسيق:** الاعتماد الكلي على Tailwind CSS للتنسيقات.
-- **TypeScript:** يجب تعريف الـ Types والـ Interfaces في `src/types` وتجنب استخدام `any`.
-- **RTL:** يتم ضبط الاتجاه من اليمين لليسار في ملف `layout.tsx` باستخدام `dir="rtl"`.
-- **SEO:** يتم ضبط Metadata في `layout.tsx` و `robots.ts` و `sitemap.ts`.
-
----
-
-## 🛠 الأوامر المتاحة
-
-في مجلد المشروع، يمكنك تشغيل:
-
-- `npm run dev`: لتشغيل التطبيق في وضع التطوير.
-- `npm run build`: لبناء التطبيق للإنتاج.
-- `npm run start`: لتشغيل التطبيق المبني (بعد عمل build).
-- `npm run lint`: لفحص جودة الكود واكتشاف الأخطاء.
-- `npm run clean`: لمسح مجلد الـ build المؤقت.
+النظام مصمم خصيصاً للمستخدم العربي:
+- **Direction:** دعم كامل لـ `dir="rtl"`.
+- **Fonts:** استخدام خط **Cairo** المتميز بوضوحه في الواجهات الإدارية.
+- **SEO:** إعدادات Metadata متقدمة لدعم محركات البحث.
 
 ---
 
-## 🌍 التوطين واللغات
-التطبيق مصمم حالياً للغة العربية بشكل أساسي مع استخدام خط **Cairo** لضمان تجربة مستخدم ممتازة. تم ضبط إعدادات اللغة في وسم الـ `html`:
-```html
-<html lang="ar" dir="rtl">
-```
+## 📦 النشر (Deployment)
+
+المشروع جاهز للنشر على **Vercel** أو أي منصة سحابية تدعم Next.js. يتم البناء والتحسين تلقائياً لضمان أعلى سرعة تحميل (Lighthouse Scores 90+).
 
 ---
 
-## 📦 البناء والنشر (Deployment)
-المشروع مهيأ للنشر بسهولة على منصة **Vercel** أو أي منصة تدعم Next.js. عند البناء، يتم تحسين الصور والملفات لضمان أسرع وقت تحميل ممكن.
-
----
-
-**تم إعداد هذا التوثيق لمساعدة المطورين الجدد على البدء بسرعة وكفاءة.**
-**بالتوفيق في التطوير! 🚀**
+**تطوير وصيانة:** [اسم المطور/الفريق]
+**آخر تحديث:** مارس 2026 🚀

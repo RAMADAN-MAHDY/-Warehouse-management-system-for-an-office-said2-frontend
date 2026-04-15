@@ -56,7 +56,7 @@ export const itemService = {
 };
 
 export const saleService = {
-  getAll: async (params?: { from?: string; to?: string }) => {
+  getAll: async (params?: { from?: string; to?: string; page?: number; limit?: number }) => {
     const response = await axiosInstance.get('/api/sales', { params });
     return response.data;
   },
@@ -86,8 +86,8 @@ export const saleService = {
 };
 
 export const purchaseService = {
-  getAll: async () => {
-    const response = await axiosInstance.get('/api/purchases');
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get('/api/purchases', { params });
     return response.data;
   },
   create: async (purchase: Record<string, unknown>) => {
