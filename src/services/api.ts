@@ -21,8 +21,8 @@ export const authService = {
 };
 
 export const itemService = {
-  getAll: async () => {
-    const response = await axiosInstance.get('/api/items');
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get('/api/items', { params });
     return response.data;
   },
   search: async (query: string) => {

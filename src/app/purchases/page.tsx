@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  ShoppingBag, 
-  Plus, 
-  Trash2, 
+import {
+  ShoppingBag,
+  Plus,
+  Trash2,
   Loader2,
   Calendar,
   Tag,
@@ -17,13 +17,13 @@ import { purchaseService } from '@/services/api';
 import { Purchase } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
 } from '@/components/ui/Table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Modal from '@/components/ui/Modal';
@@ -36,7 +36,7 @@ export default function PurchasesPage() {
   const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     reason: '',
     amount: 0
@@ -106,9 +106,9 @@ export default function PurchasesPage() {
           </h1>
           <p className="text-gray-400 mt-1">تتبع كافة المشتريات والتعديلات المالية للمخزون</p>
         </div>
-        
-        <Button 
-          variant="primary" 
+
+        <Button
+          variant="primary"
           icon={<Plus size={20} />}
           onClick={() => setIsModalOpen(true)}
         >
@@ -141,7 +141,7 @@ export default function PurchasesPage() {
                   const quantity = (p.itemId && p.itemId.price) ? (Number(p.amount) / p.itemId.price).toFixed(0) : '-';
                   const price = p.itemId?.price ? formatCurrency(p.itemId.price) : '-';
                   const supplier = p.itemId?.customer || p.supplier || '-';
-                  
+
                   return (
                     <TableRow key={p._id}>
                       <TableCell>{formatDate(p.date || p.createdAt)}</TableCell>
@@ -153,9 +153,9 @@ export default function PurchasesPage() {
                         {formatCurrency(p.amount)}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDelete(p._id)}
                           className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
                         >
@@ -190,17 +190,16 @@ export default function PurchasesPage() {
             <ChevronRight size={18} className="ml-1" />
             السابق
           </Button>
-          
+
           <div className="flex items-center gap-2">
             {[...Array(pagination.totalPages)].map((_, i) => (
               <button
                 key={i + 1}
                 onClick={() => setPage(i + 1)}
-                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                  page === i + 1 
-                    ? 'bg-blue-600 text-white' 
+                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === i + 1
+                    ? 'bg-blue-600 text-white'
                     : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
+                  }`}
               >
                 {i + 1}
               </button>
@@ -256,9 +255,9 @@ export default function PurchasesPage() {
             <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
               حفظ
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               className="flex-1"
               onClick={() => setIsModalOpen(false)}
             >

@@ -17,7 +17,9 @@ import {
   DollarSign,
   ShoppingCart,
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { itemService, reportService, subscriptionService } from '@/services/api';
 import { Item } from '@/types';
@@ -46,6 +48,8 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -59,9 +63,10 @@ export default function DashboardPage() {
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const response = await itemService.getAll();
+      const response = await itemService.getAll({ page, limit: 10 });
       if (response.status) {
         setItems(response.data);
+        setPagination(response.pagination);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب البيانات');
@@ -106,6 +111,9 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchItems();
+  }, [page]);
+
+  useEffect(() => {
     fetchSummary();
     fetchSubscription();
   }, []);
@@ -320,7 +328,7 @@ export default function DashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.slice(0, 10).map((item) => (
+                {items.map((item) => (
                   <TableRow key={item._id}>
                     <TableCell className="font-medium text-blue-400">{item.modelNumber}</TableCell>
                     <TableCell>{item.name}</TableCell>
@@ -345,6 +353,49 @@ export default function DashboardPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+
+          {/* Pagination Controls */}
+          {!loading && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                disabled={page === 1}
+                className="text-gray-400 hover:text-white"
+              >
+                <ChevronRight size={18} className="ml-1" />
+                السابق
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                {[...Array(pagination.totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                      page === i + 1 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                disabled={page === pagination.totalPages}
+                className="text-gray-400 hover:text-white"
+              >
+                التالي
+                <ChevronLeft size={18} className="mr-1" />
+              </Button>
+            </div>
           )}
         </div>
 
@@ -376,11 +427,11 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <h2 className="text-xl font-bold text-white flex items-center gap-2 mt-8">
+          {/* <h2 className="text-xl font-bold text-white flex items-center gap-2 mt-8">
             <History size={20} className="text-purple-500" />
             آخر المبيعات
-          </h2>
-          <div className="glass rounded-2xl overflow-hidden border border-gray-700">
+          </h2> */}
+          {/* <div className="glass rounded-2xl overflow-hidden border border-gray-700">
             {summaryLoading ? (
               <div className="p-10 flex justify-center"><Loader2 className="animate-spin" /></div>
             ) : summary?.recentSales?.length > 0 ? (
@@ -404,7 +455,7 @@ export default function DashboardPage() {
             <Link href="/sales" className="block p-3 text-center text-xs text-blue-400 hover:bg-blue-900/10 transition border-t border-gray-700 font-bold">
               عرض كل المبيعات
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
 
