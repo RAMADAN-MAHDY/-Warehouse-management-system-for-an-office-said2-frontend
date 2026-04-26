@@ -21,7 +21,7 @@ export const authService = {
 };
 
 export const itemService = {
-  getAll: async (params?: { page?: number; limit?: number }) => {
+  getAll: async (params?: { page?: number; limit?: number; lowStock?: boolean }) => {
     const response = await axiosInstance.get('/api/items', { params });
     return response.data;
   },

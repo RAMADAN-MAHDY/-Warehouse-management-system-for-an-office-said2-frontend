@@ -51,6 +51,10 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
   const [totalInventoryValue, setTotalInventoryValue] = useState(0);
+  const [lowStockItems, setLowStockItems] = useState<Item[]>([]);
+  const [lowStockLoading, setLowStockLoading] = useState(true);
+  const [lowStockPage, setLowStockPage] = useState(1);
+  const [lowStockPagination, setLowStockPagination] = useState({ totalPages: 1, total: 0 });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -74,6 +78,21 @@ export default function DashboardPage() {
       toast.error('حدث خطأ أثناء جلب البيانات');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLowStockItems = async () => {
+    setLowStockLoading(true);
+    try {
+      const response = await itemService.getAll({ page: lowStockPage, limit: 10, lowStock: true });
+      if (response.status) {
+        setLowStockItems(response.data);
+        setLowStockPagination(response.pagination);
+      }
+    } catch (error) {
+      console.error('Failed to fetch low stock items', error);
+    } finally {
+      setLowStockLoading(false);
     }
   };
 
@@ -114,6 +133,10 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchItems();
   }, [page]);
+
+  useEffect(() => {
+    fetchLowStockItems();
+  }, [lowStockPage]);
 
   useEffect(() => {
     fetchSummary();
@@ -410,23 +433,56 @@ export default function DashboardPage() {
             نواقص المخزن
           </h2>
           <div className="glass rounded-2xl overflow-hidden border border-gray-700">
-            {summaryLoading ? (
+            {lowStockLoading ? (
               <div className="p-10 flex justify-center"><Loader2 className="animate-spin" /></div>
-            ) : summary?.inventory?.lowStockItems?.length > 0 ? (
-              <div className="divide-y divide-gray-700">
-                {summary.inventory.lowStockItems.map((item: any) => (
-                  <div key={item._id} className="p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
-                    <div>
-                      <p className="text-sm font-bold text-white">{item.name}</p>
-                      <p className="text-xs text-gray-500">موديل: {item.modelNumber}</p>
+            ) : lowStockItems.length > 0 ? (
+              <>
+                <div className="divide-y divide-gray-700">
+                  {lowStockItems.map((item: any) => (
+                    <div key={item._id} className="p-4 flex items-center justify-between hover:bg-gray-800/50 transition">
+                      <div>
+                        <p className="text-sm font-bold text-white">{item.name}</p>
+                        <p className="text-xs text-gray-500">موديل: {item.modelNumber}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-red-400">{item.quantity} قطعة</p>
+                        <p className="text-xs text-gray-500">متبقي</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-red-400">{item.quantity} قطعة</p>
-                      <p className="text-xs text-gray-500">متبقي</p>
-                    </div>
+                  ))}
+                </div>
+                
+                {/* Low Stock Pagination Controls */}
+                {lowStockPagination.totalPages > 1 && (
+                  <div className="p-4 border-t border-gray-700 flex items-center justify-between bg-gray-900/50">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLowStockPage(prev => Math.max(1, prev - 1))}
+                      disabled={lowStockPage === 1}
+                      className="text-gray-400 hover:text-white h-8 text-xs px-2"
+                    >
+                      <ChevronRight size={14} className="ml-1" />
+                      السابق
+                    </Button>
+                    
+                    <span className="text-xs text-gray-400 font-medium">
+                      صفحة {lowStockPage} من {lowStockPagination.totalPages}
+                    </span>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLowStockPage(prev => Math.min(lowStockPagination.totalPages, prev + 1))}
+                      disabled={lowStockPage === lowStockPagination.totalPages}
+                      className="text-gray-400 hover:text-white h-8 text-xs px-2"
+                    >
+                      التالي
+                      <ChevronLeft size={14} className="mr-1" />
+                    </Button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             ) : (
               <div className="p-8 text-center text-gray-500 text-sm italic">لا توجد نواقص حالياً</div>
             )}
