@@ -34,6 +34,7 @@ export default function ExpensesPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [totalExpensesValue, setTotalExpensesValue] = useState(0);
   const [pagination, setPagination] = useState({
     total: 0,
     totalPages: 1,
@@ -52,6 +53,7 @@ export default function ExpensesPage() {
       const response = await expenseService.getAll({ page, limit: 10 });
       if (response.status) {
         setExpenses(response.data);
+        setTotalExpensesValue(response.totalExpensesValue || 0);
         if (response.pagination) {
           setPagination(response.pagination);
         }
@@ -125,6 +127,9 @@ export default function ExpensesPage() {
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             <Wallet className="text-orange-500" />
             المصروفات العامة
+            <span className="text-sm font-medium text-gray-400 mr-2 bg-gray-800/50 px-2 py-0.5 rounded-full border border-gray-700/50">
+              (إجمالي المصروفات: {formatCurrency(totalExpensesValue)})
+            </span>
           </h1>
           <p className="text-gray-400 mt-1">تتبع وتسجيل كافة المصاريف التشغيلية</p>
         </div>
@@ -146,7 +151,7 @@ export default function ExpensesPage() {
         <div className="glass p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-orange-500 shadow-xl">
           <div>
             <p className="text-sm text-gray-400">إجمالي المصروفات</p>
-            <p className="text-2xl font-bold text-orange-400">{formatCurrency(totalExpenses)}</p>
+            <p className="text-2xl font-bold text-orange-400">{formatCurrency(totalExpensesValue)}</p>
           </div>
           <div className="p-3 bg-orange-500/10 rounded-xl">
             <TrendingDown className="text-orange-500" />

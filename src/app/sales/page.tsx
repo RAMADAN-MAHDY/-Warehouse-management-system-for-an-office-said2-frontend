@@ -40,6 +40,7 @@ export default function SalesPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SaleInvoice | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [totalSalesValue, setTotalSalesValue] = useState(0);
   
   // New Sale states
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,6 +59,7 @@ export default function SalesPage() {
       if (response.status) {
         setSales(response.data);
         setPagination(response.pagination);
+        setTotalSalesValue(response.totalSalesValue || 0);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب المبيعات');
@@ -213,6 +215,9 @@ export default function SalesPage() {
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             <ShoppingCart className="text-purple-500" />
             فواتير المبيعات
+            <span className="text-sm font-medium text-gray-400 mr-2 bg-gray-800/50 px-2 py-0.5 rounded-full border border-gray-700/50">
+              (إجمالي المبيعات: {formatCurrency(totalSalesValue)})
+            </span>
           </h1>
           <p className="text-gray-400 mt-1">تتبع وإدارة كافة عمليات البيع</p>
         </div>

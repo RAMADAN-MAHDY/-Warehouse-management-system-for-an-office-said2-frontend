@@ -36,6 +36,7 @@ export default function PurchasesPage() {
   const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [totalPurchasesValue, setTotalPurchasesValue] = useState(0);
 
   const [formData, setFormData] = useState({
     reason: '',
@@ -49,6 +50,7 @@ export default function PurchasesPage() {
       if (response.status) {
         setPurchases(response.data);
         setPagination(response.pagination);
+        setTotalPurchasesValue(response.totalPurchasesValue || 0);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب المشتريات');
@@ -103,6 +105,9 @@ export default function PurchasesPage() {
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
             <ShoppingBag className="text-blue-500" />
             إدارة المشتريات
+            <span className="text-sm font-medium text-gray-400 mr-2 bg-gray-800/50 px-2 py-0.5 rounded-full border border-gray-700/50">
+              (إجمالي المشتريات: {formatCurrency(totalPurchasesValue)})
+            </span>
           </h1>
           <p className="text-gray-400 mt-1">تتبع كافة المشتريات والتعديلات المالية للمخزون</p>
         </div>
