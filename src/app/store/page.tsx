@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ totalPages: 1, total: 0 });
+  const [totalInventoryValue, setTotalInventoryValue] = useState(0);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -67,6 +68,7 @@ export default function DashboardPage() {
       if (response.status) {
         setItems(response.data);
         setPagination(response.pagination);
+        setTotalInventoryValue(response.totalInventoryValue || 0);
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب البيانات');
@@ -294,6 +296,9 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Package size={20} className="text-blue-500" />
               المخزون الحالي
+              <span className="text-sm font-medium text-gray-400 mr-2 bg-gray-800/50 px-2 py-0.5 rounded-full border border-gray-700/50">
+                (إجمالي القيمة: {formatCurrency(totalInventoryValue)})
+              </span>
             </h2>
             <div className="flex gap-2">
               <div className="relative">
