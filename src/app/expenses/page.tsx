@@ -7,7 +7,9 @@ import {
   Trash2, 
   Edit2, 
   Loader2,
-  TrendingDown
+  TrendingDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { expenseService } from '@/services/api';
 import { Expense } from '@/types';
@@ -31,6 +33,12 @@ export default function ExpensesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    totalPages: 1,
+    limit: 10
+  });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -41,9 +49,12 @@ export default function ExpensesPage() {
   const fetchExpenses = async () => {
     setLoading(true);
     try {
-      const response = await expenseService.getAll();
+      const response = await expenseService.getAll({ page, limit: 10 });
       if (response.status) {
         setExpenses(response.data);
+        if (response.pagination) {
+          setPagination(response.pagination);
+        }
       }
     } catch (error) {
       toast.error('حدث خطأ أثناء جلب المصروفات');
@@ -54,7 +65,7 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [page]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا المصروف؟')) return;
@@ -198,6 +209,51 @@ export default function ExpensesPage() {
             )}
           </TableBody>
         </Table>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && pagination.totalPages > 1 && (
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 glass p-4 rounded-xl border border-white/10">
+          <p className="text-sm text-gray-400">
+            عرض <span className="text-white font-medium">{expenses.length}</span> من أصل <span className="text-white font-medium">{pagination.total}</span> مصروف
+          </p>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-9 w-9"
+            >
+              <ChevronRight size={18} />
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  variant={page === p ? 'primary' : 'outline'}
+                  size="sm"
+                  onClick={() => setPage(p)}
+                  className={`h-9 w-9 p-0 ${page === p ? 'shadow-lg shadow-blue-500/20' : ''}`}
+                >
+                  {p}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+              disabled={page === pagination.totalPages}
+              className="h-9 w-9"
+            >
+              <ChevronLeft size={18} />
+            </Button>
+          </div>
+        </div>
       )}
 
       <Modal

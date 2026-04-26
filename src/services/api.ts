@@ -102,8 +102,8 @@ export const purchaseService = {
 
 // Service for expense-related operations
 export const expenseService = {
-  getAll: async () => {
-    const response = await axiosInstance.get('/api/expenses');
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get('/api/expenses', { params });
     return response.data;
   },
   create: async (expense: Record<string, unknown>) => {
