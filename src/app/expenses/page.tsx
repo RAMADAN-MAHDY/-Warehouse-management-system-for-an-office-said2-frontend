@@ -147,7 +147,7 @@ export default function ExpensesPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass p-6 rounded-2xl flex items-center justify-between border-l-4 border-l-orange-500 shadow-xl">
           <div>
             <p className="text-sm text-gray-400">إجمالي المصروفات</p>
@@ -157,7 +157,7 @@ export default function ExpensesPage() {
             <TrendingDown className="text-orange-500" />
           </div>
         </div>
-      </div>
+      </div> */}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">

@@ -296,11 +296,8 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Package size={20} className="text-blue-500" />
               المخزون الحالي
-              <span className="text-sm font-medium text-gray-400 mr-2 bg-gray-800/50 px-2 py-0.5 rounded-full border border-gray-700/50">
-                (إجمالي القيمة: {formatCurrency(totalInventoryValue)})
-              </span>
             </h2>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <div className="relative">
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
                   <Search size={16} />
@@ -313,6 +310,9 @@ export default function DashboardPage() {
                   onChange={handleSearch}
                 />
               </div>
+              <span className="text-sm font-medium text-gray-400 mr-2 bg-gray-800/50 px-2 py-0.5 rounded-full border border-gray-700/50">
+                (إجمالي القيمة: {formatCurrency(totalInventoryValue)})
+              </span>
             </div>
           </div>
 
