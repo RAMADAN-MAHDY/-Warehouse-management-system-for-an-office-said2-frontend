@@ -107,11 +107,15 @@ export interface InventoryAdjustment {
 export interface ProfitSummary {
   totalCOGS: number;
   totalSales: number;
+  grossSales?: number;
+  totalReturns?: number;
+  grossCOGS?: number;
+  returnsCOGS?: number;
   totalExpenses: number;
   netProfit: number;
   totalPurchases: number;
-  purchases: Purchase[];
-  expenses: Expense[];
+  purchases?: Purchase[];
+  expenses?: Expense[];
 }
 
 export interface Return {

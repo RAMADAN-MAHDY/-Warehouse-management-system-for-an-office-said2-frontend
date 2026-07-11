@@ -11,7 +11,8 @@ import {
   Loader2,
   PieChart as PieChartIcon,
   BarChart3,
-  ShoppingCart
+  ShoppingCart,
+  RotateCcw
 } from 'lucide-react';
 import { profitService, purchaseService } from '@/services/api';
 import { ProfitSummary } from '@/types';
@@ -81,6 +82,9 @@ export default function ProfitPage() {
     fetchSummary();
   }, []);
 
+  const totalReturns = summary?.totalReturns ?? 0;
+  const returnsCOGS = summary?.returnsCOGS ?? 0;
+
 //   const handleAddPurchase = async (e: React.FormEvent) => {
 //     e.preventDefault();
 //     setFormLoading(true);
@@ -116,27 +120,30 @@ export default function ProfitPage() {
 //   };
 
   const barChartData = {
-    labels: ['تكلفة البضاعة (COGS)', 'إجمالي المبيعات', 'إجمالي المصروفات', 'صافي الربح'],
+    labels: ['صافي تكلفة البضاعة (COGS)', 'صافي المبيعات', 'المرتجعات', 'إجمالي المصروفات', 'صافي الربح'],
     datasets: [
       {
         label: 'المبالغ (ج.م)',
         data: summary ? [
           summary.totalCOGS,
           summary.totalSales,
+          totalReturns,
           summary.totalExpenses,
           summary.netProfit
         ] : [],
         backgroundColor: [
           'rgba(59, 130, 246, 0.6)', // Blue
           'rgba(16, 185, 129, 0.6)', // Green
-          'rgba(245, 158, 11, 0.6)', // Orange
           'rgba(239, 68, 68, 0.6)',  // Red
+          'rgba(245, 158, 11, 0.6)', // Orange
+          'rgba(168, 85, 247, 0.6)', // Purple
         ],
         borderColor: [
           'rgba(59, 130, 246, 1)',
           'rgba(16, 185, 129, 1)',
-          'rgba(245, 158, 11, 1)',
           'rgba(239, 68, 68, 1)',
+          'rgba(245, 158, 11, 1)',
+          'rgba(168, 85, 247, 1)',
         ],
         borderWidth: 1,
         borderRadius: 8,
@@ -193,13 +200,13 @@ export default function ProfitPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <SummaryCard 
-          title="تكلفة البضاعة المباعة" 
+          title="صافي تكلفة البضاعة المباعة" 
           value={summary.totalCOGS} 
           icon={<ShoppingCart className="text-blue-400" />}
           color="blue"
         />
         <SummaryCard 
-          title="إجمالي المبيعات" 
+          title="صافي المبيعات" 
           value={summary.totalSales} 
           icon={<TrendingUp className="text-green-400" />}
           color="green"
@@ -217,6 +224,35 @@ export default function ProfitPage() {
           color={summary.netProfit >= 0 ? "emerald" : "red"}
         />
       </div>
+
+      {(summary.grossSales != null || summary.grossCOGS != null || summary.totalReturns != null || summary.returnsCOGS != null) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <SummaryCard 
+            title="المبيعات قبل المرتجعات" 
+            value={summary.grossSales ?? summary.totalSales + totalReturns} 
+            icon={<DollarSign className="text-green-400" />}
+            color="green"
+          />
+          <SummaryCard 
+            title="إجمالي المرتجعات" 
+            value={totalReturns} 
+            icon={<RotateCcw className="text-red-400" />}
+            color="red"
+          />
+          <SummaryCard 
+            title="COGS قبل المرتجعات" 
+            value={summary.grossCOGS ?? summary.totalCOGS + returnsCOGS} 
+            icon={<ShoppingCart className="text-blue-400" />}
+            color="blue"
+          />
+          <SummaryCard 
+            title="COGS المرتجعات" 
+            value={returnsCOGS} 
+            icon={<RotateCcw className="text-red-400" />}
+            color="red"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass p-8 rounded-3xl border border-gray-700 shadow-2xl h-[400px]">
@@ -239,11 +275,11 @@ export default function ProfitPage() {
           <div className="h-[250px]">
             <Pie 
               data={{
-                labels: ['صافي الربح', 'المصروفات' , 'تكلفة البضاعة المباعة' , 'إجمالي المبيعات'],
+                labels: ['صافي الربح', 'المصروفات', 'صافي COGS', 'صافي المبيعات', 'المرتجعات'],
                 datasets: [{
-                  data: [Math.max(0, summary.netProfit), summary.totalExpenses, summary.totalCOGS, summary.totalSales],
-                  backgroundColor: ['rgba(245, 0, 19, 0.6)', 'rgba(245, 158, 11, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(19, 130, 26, 0.6)'],
-                  borderColor: ['rgba(245, 0, 19, 1)', 'rgba(245, 158, 11, 1)', 'rgba(59, 130, 246, 1)', 'rgba(19, 130, 26, 1)'],
+                  data: [Math.max(0, summary.netProfit), summary.totalExpenses, summary.totalCOGS, summary.totalSales, totalReturns],
+                  backgroundColor: ['rgba(168, 85, 247, 0.6)', 'rgba(245, 158, 11, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(16, 185, 129, 0.6)', 'rgba(239, 68, 68, 0.6)'],
+                  borderColor: ['rgba(168, 85, 247, 1)', 'rgba(245, 158, 11, 1)', 'rgba(59, 130, 246, 1)', 'rgba(16, 185, 129, 1)', 'rgba(239, 68, 68, 1)'],
                   borderWidth: 1,
                 }]
               }}
