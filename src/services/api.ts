@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios';
-import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment } from '@/types';
+import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return } from '@/types';
 
 export const authService = {
   login: async (credentials: Record<string, string>) => {
@@ -81,6 +81,21 @@ export const saleService = {
       params,
       responseType: 'blob'
     });
+    return response.data;
+  }
+};
+
+export const returnService = {
+  getAll: async (params?: any) => {
+    const response = await axiosInstance.get('/api/returns', { params });
+    return response.data;
+  },
+  create: async (data: { saleInvoiceId: string; quantity: number; reason?: string }) => {
+    const response = await axiosInstance.post('/api/returns', data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await axiosInstance.delete(`/api/returns/${id}`);
     return response.data;
   }
 };

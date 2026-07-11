@@ -12,9 +12,10 @@ import {
   Calendar,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
-import { saleService, itemService } from '@/services/api';
+import { saleService, itemService, returnService } from '@/services/api';
 import { SaleInvoice, Item } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -39,6 +40,12 @@ export default function SalesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<SaleInvoice | null>(null);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returningSale, setReturningSale] = useState<SaleInvoice | null>(null);
+  const [returnData, setReturnData] = useState({
+    quantity: 1,
+    reason: ''
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [totalSalesValue, setTotalSalesValue] = useState(0);
   
@@ -176,6 +183,29 @@ export default function SalesPage() {
       }
     } catch (error) {
       toast.error('فشل حذف الفواتير المحددة');
+    }
+  };
+
+  const handleReturnSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!returningSale) return;
+
+    try {
+      const response = await returnService.create({
+        saleInvoiceId: returningSale._id,
+        quantity: returnData.quantity,
+        reason: returnData.reason
+      });
+
+      if (response.status) {
+        toast.success('تم تسجيل المرتجع بنجاح');
+        setIsReturnModalOpen(false);
+        setReturningSale(null);
+        setReturnData({ quantity: 1, reason: '' });
+        fetchSales();
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'فشل تسجيل المرتجع');
     }
   };
 
@@ -335,6 +365,19 @@ export default function SalesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => {
+                            setReturningSale(sale);
+                            setReturnData({ quantity: sale.quantity, reason: '' });
+                            setIsReturnModalOpen(true);
+                          }}
+                          className="text-orange-400 hover:text-orange-300 hover:bg-orange-900/20"
+                          title="مرتجع"
+                        >
+                          <RotateCcw size={16} />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -579,6 +622,67 @@ export default function SalesPage() {
         </form>
       </Modal>
 
+      {/* Return Sale Modal */}
+      <Modal
+        isOpen={isReturnModalOpen}
+        onClose={() => setIsReturnModalOpen(false)}
+        title="تسجيل مرتجع"
+        maxWidth="md"
+      >
+        {returningSale && (
+          <form onSubmit={handleReturnSale} className="space-y-4">
+            <div className="p-4 bg-orange-900/20 rounded-xl border border-orange-500/30">
+              <p className="text-sm text-orange-400 font-medium">فاتورة رقم:</p>
+              <p className="text-white font-bold">{returningSale._id}</p>
+              <p className="text-sm text-gray-400 mt-1">
+                المنتج: {returningSale.name} ({returningSale.modelNumber})
+              </p>
+              <p className="text-sm text-gray-400">الكمية المباعة: {returningSale.quantity}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الكمية المرتجعة</label>
+              <input
+                type="number"
+                required
+                min="1"
+                max={returningSale.quantity}
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-orange-500 outline-none"
+                value={returnData.quantity}
+                onChange={(e) => setReturnData({ ...returnData, quantity: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">سبب المرتجع (اختياري)</label>
+              <textarea
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-orange-500 outline-none min-h-[100px]"
+                placeholder="اذكر سبب الإرجاع هنا..."
+                value={returnData.reason}
+                onChange={(e) => setReturnData({ ...returnData, reason: e.target.value })}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                type="submit"
+                variant="primary"
+                className="flex-1 bg-orange-600 hover:bg-orange-700"
+              >
+                تأكيد المرتجع
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setIsReturnModalOpen(false)}
+              >
+                إلغاء
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -114,6 +114,24 @@ export interface ProfitSummary {
   expenses: Expense[];
 }
 
+export interface Return {
+  _id: string;
+  saleInvoiceId: string;
+  itemId: string | Item;
+  modelNumber: string;
+  name: string;
+  quantity: number;
+  price: number;
+  costPrice: number;
+  total: number;
+  reason?: string;
+  sellerName?: string;
+  date: string;
+  customerId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface User {
   _id: string;
   username: string;
