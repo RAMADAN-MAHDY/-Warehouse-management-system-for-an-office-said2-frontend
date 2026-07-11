@@ -33,6 +33,7 @@ const navItems = [
   { name: 'الرئيسية', href: '/', icon: Home },
   { name: 'المخزون', href: '/store', icon: LayoutDashboard },
   { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
+  { name: 'المناديب', href: '/representatives', icon: Users },
   { name: 'المرتجعات', href: '/returns', icon: ListRestart },
   { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },
   { name: 'الأرباح والتقارير', href: '/profit', icon: TrendingUp },

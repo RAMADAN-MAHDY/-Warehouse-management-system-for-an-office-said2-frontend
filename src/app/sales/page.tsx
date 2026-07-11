@@ -15,8 +15,8 @@ import {
   ChevronRight,
   RotateCcw
 } from 'lucide-react';
-import { saleService, itemService, returnService } from '@/services/api';
-import { SaleInvoice, Item } from '@/types';
+import { saleService, itemService, returnService, representativeService } from '@/services/api';
+import { SaleInvoice, Item, Representative } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -48,6 +48,7 @@ export default function SalesPage() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [totalSalesValue, setTotalSalesValue] = useState(0);
+  const [representatives, setRepresentatives] = useState<Representative[]>([]);
   
   // New Sale states
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +56,7 @@ export default function SalesPage() {
   const [selectedProduct, setSelectedProduct] = useState<Item | null>(null);
   const [saleData, setSaleData] = useState({
     sellerName: '',
+    representativeId: '',
     quantity: 1,
     price: 0
   });
@@ -78,6 +80,19 @@ export default function SalesPage() {
   useEffect(() => {
     fetchSales();
   }, [filter, page]);
+
+  const fetchRepresentatives = async () => {
+    try {
+      const response = await representativeService.getAll({ page: 1, limit: 200, includeInactive: false });
+      if (response.status) {
+        setRepresentatives(response.data || []);
+      }
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    fetchRepresentatives();
+  }, []);
 
   const handleSearchProduct = async (query: string) => {
     setSearchQuery(query);
@@ -115,6 +130,7 @@ export default function SalesPage() {
         modelNumber: selectedProduct.modelNumber,
         name: selectedProduct.name,
         sellerName: saleData.sellerName,
+        representativeId: saleData.representativeId || undefined,
         price: saleData.price,
         quantity: saleData.quantity,
         total: saleData.price * saleData.quantity
@@ -124,7 +140,7 @@ export default function SalesPage() {
         toast.success('تمت عملية البيع بنجاح');
         setIsModalOpen(false);
         setSelectedProduct(null);
-        setSaleData({ sellerName: '', quantity: 1, price: 0 });
+        setSaleData({ sellerName: '', representativeId: '', quantity: 1, price: 0 });
         fetchSales();
       }
     } catch (error: any) {
@@ -144,6 +160,8 @@ export default function SalesPage() {
       const response = await saleService.update(editingSale?._id, {
         price: saleData.price,
         quantity: saleData.quantity,
+        sellerName: saleData.sellerName,
+        representativeId: saleData.representativeId || null,
       });
 
       if (response.status) {
@@ -334,7 +352,7 @@ export default function SalesPage() {
                 </TableHead>
                 <TableHead>التاريخ</TableHead>
                 <TableHead>رقم الموديل</TableHead>
-                <TableHead>اسم المشتري</TableHead>
+                <TableHead>المندوب</TableHead>
                 <TableHead>اسم القطعة</TableHead>
                 <TableHead>الكمية</TableHead>
                 <TableHead>السعر</TableHead>
@@ -386,7 +404,8 @@ export default function SalesPage() {
                           setSaleData({
                             sellerName: sale.sellerName || '',
                             quantity: sale.quantity,
-                            price: sale.price
+                            price: sale.price,
+                            representativeId: sale.representativeId || ''
                           });
                             setIsEditModalOpen(true);
                           }}
@@ -506,12 +525,37 @@ export default function SalesPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">اسم العميل (اختياري)</label>
+                <label className="text-sm font-medium text-gray-300">اختيار مندوب (اختياري)</label>
+                <select
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.representativeId}
+                  onChange={(e) => {
+                    const repId = e.target.value;
+                    if (!repId) {
+                      setSaleData((prev) => ({ ...prev, representativeId: '', sellerName: '' }));
+                      return;
+                    }
+                    const rep = representatives.find((r) => r._id === repId);
+                    setSaleData((prev) => ({ ...prev, representativeId: repId, sellerName: rep?.name || '' }));
+                  }}
+                >
+                  <option value="">بدون اختيار (إدخال يدوي)</option>
+                  {representatives.map((rep) => (
+                    <option key={rep._id} value={rep._id}>
+                      {rep.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">اسم المندوب (يدوي)</label>
                 <input
                   type="text"
                   className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   value={saleData.sellerName}
                   onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
+                  disabled={Boolean(saleData.representativeId)}
                 />
               </div>
 
@@ -567,12 +611,37 @@ export default function SalesPage() {
       >
         <form onSubmit={handleUpdateSale} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">اسم المشتري</label>
+            <label className="text-sm font-medium text-gray-300">اختيار مندوب (اختياري)</label>
+            <select
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.representativeId}
+              onChange={(e) => {
+                const repId = e.target.value;
+                if (!repId) {
+                  setSaleData((prev) => ({ ...prev, representativeId: '', sellerName: '' }));
+                  return;
+                }
+                const rep = representatives.find((r) => r._id === repId);
+                setSaleData((prev) => ({ ...prev, representativeId: repId, sellerName: rep?.name || '' }));
+              }}
+            >
+              <option value="">بدون اختيار (إدخال يدوي)</option>
+              {representatives.map((rep) => (
+                <option key={rep._id} value={rep._id}>
+                  {rep.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">اسم المندوب (يدوي)</label>
             <input
               type="text"
               className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
               value={saleData.sellerName}
               onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
+              disabled={Boolean(saleData.representativeId)}
             />
           </div>
           <div className="space-y-2">

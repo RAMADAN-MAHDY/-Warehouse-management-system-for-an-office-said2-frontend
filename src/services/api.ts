@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios';
-import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return } from '@/types';
+import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse } from '@/types';
 
 export const authService = {
   login: async (credentials: Record<string, string>) => {
@@ -315,6 +315,31 @@ export const reportService = {
   },
   getProfit: async (params?: { from?: string; to?: string }) => {
     const response = await axiosInstance.get('/api/reports/profit', { params });
+    return response.data;
+  }
+};
+
+export const representativeService = {
+  getAll: async (params?: { page?: number; limit?: number; search?: string; includeInactive?: boolean }) => {
+    const response = await axiosInstance.get<RepresentativeListResponse>('/api/representatives', {
+      params: { ...params, includeInactive: params?.includeInactive ? 'true' : 'false' }
+    });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await axiosInstance.get<ApiResponse<Representative>>(`/api/representatives/${id}`);
+    return response.data;
+  },
+  create: async (data: { name: string; phone?: string; address?: string; commissionRate?: number; hiredAt?: string }) => {
+    const response = await axiosInstance.post<ApiResponse<Representative>>('/api/representatives', data);
+    return response.data;
+  },
+  update: async (id: string, data: Partial<Representative>) => {
+    const response = await axiosInstance.put<ApiResponse<Representative>>(`/api/representatives/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await axiosInstance.delete<ApiResponse<Representative>>(`/api/representatives/${id}`);
     return response.data;
   }
 };

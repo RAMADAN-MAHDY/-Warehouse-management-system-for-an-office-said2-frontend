@@ -14,7 +14,8 @@ export interface Item {
 export interface SaleInvoice {
   _id: string;
   modelNumber: string;
-  sellerName: string;
+  sellerName?: string;
+  representativeId?: string | null;
   name: string;
   quantity: number;
   price: number;
@@ -134,6 +135,37 @@ export interface Return {
   customerId: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface Representative {
+  _id: string;
+  customerId: string;
+  name: string;
+  phone?: string;
+  address?: string;
+  commissionRate?: number;
+  isActive: boolean;
+  hiredAt?: string;
+  deletedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T> {
+  status: boolean;
+  message: string;
+  data: T;
+}
+
+export interface RepresentativeListResponse extends ApiResponse<Representative[]> {
+  pagination: Pagination;
 }
 
 export interface User {
