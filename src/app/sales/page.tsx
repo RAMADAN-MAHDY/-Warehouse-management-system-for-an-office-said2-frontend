@@ -110,7 +110,7 @@ export default function SalesPage() {
         sellerName: saleData.sellerName,
         price: saleData.price,
         quantity: saleData.quantity,
-        frontTotal: saleData.price * saleData.quantity
+        total: saleData.price * saleData.quantity
       });
 
       if (response.status) {

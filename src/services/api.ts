@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios';
-import { Item } from '@/types';
+import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment } from '@/types';
 
 export const authService = {
   login: async (credentials: Record<string, string>) => {
@@ -11,7 +11,7 @@ export const authService = {
     return response.data;
   },
   getProfile: async () => {
-    const response = await axiosInstance.get('/api/auth/profile');
+    const response = await axiosInstance.get('/api/auth/me');
     return response.data;
   },
   logout: async () => {
@@ -56,15 +56,15 @@ export const itemService = {
 };
 
 export const saleService = {
-  getAll: async (params?: { from?: string; to?: string; page?: number; limit?: number }) => {
+  getAll: async (params?: { from?: string; to?: string; day?: string; month?: string; year?: string; page?: number; limit?: number }) => {
     const response = await axiosInstance.get('/api/sales', { params });
     return response.data;
   },
-  create: async (sale: Record<string, unknown>) => {
+  create: async (sale: Partial<SaleInvoice>) => {
     const response = await axiosInstance.post('/api/sales', sale);
     return response.data;
   },
-  update: async (id: string, sale: Record<string, unknown>) => {
+  update: async (id: string, sale: Partial<SaleInvoice>) => {
     const response = await axiosInstance.put(`/api/sales/${id}`, sale);
     return response.data;
   },
@@ -90,12 +90,20 @@ export const purchaseService = {
     const response = await axiosInstance.get('/api/purchases', { params });
     return response.data;
   },
-  create: async (purchase: Record<string, unknown>) => {
-    const response = await axiosInstance.post('/api/purchases/adjust', purchase);
+  create: async (purchase: Partial<Purchase>) => {
+    const response = await axiosInstance.post('/api/purchases', purchase);
+    return response.data;
+  },
+  update: async (id: string, purchase: Partial<Purchase>) => {
+    const response = await axiosInstance.put(`/api/purchases/${id}`, purchase);
     return response.data;
   },
   delete: async (id: string) => {
     const response = await axiosInstance.delete(`/api/purchases/${id}`);
+    return response.data;
+  },
+  adjust: async (adjustment: { amount: number; reason: string }) => {
+    const response = await axiosInstance.post('/api/purchases/adjust', adjustment);
     return response.data;
   }
 };
@@ -106,16 +114,68 @@ export const expenseService = {
     const response = await axiosInstance.get('/api/expenses', { params });
     return response.data;
   },
-  create: async (expense: Record<string, unknown>) => {
+  create: async (expense: Partial<Expense>) => {
     const response = await axiosInstance.post('/api/expenses', expense);
     return response.data;
   },
-  update: async (id: string, expense: Record<string, unknown>) => {
+  update: async (id: string, expense: Partial<Expense>) => {
     const response = await axiosInstance.put(`/api/expenses/${id}`, expense);
     return response.data;
   },
   delete: async (id: string) => {
     const response = await axiosInstance.delete(`/api/expenses/${id}`);
+    return response.data;
+  }
+};
+
+// Service for supplier-related operations
+export const supplierService = {
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get('/api/suppliers', { params });
+    return response.data;
+  },
+  create: async (supplier: Partial<Supplier>) => {
+    const response = await axiosInstance.post('/api/suppliers', supplier);
+    return response.data;
+  },
+  update: async (id: string, supplier: Partial<Supplier>) => {
+    const response = await axiosInstance.put(`/api/suppliers/${id}`, supplier);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await axiosInstance.delete(`/api/suppliers/${id}`);
+    return response.data;
+  }
+};
+
+// Service for purchase invoice-related operations
+export const purchaseInvoiceService = {
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get('/api/purchase-invoices', { params });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await axiosInstance.get(`/api/purchase-invoices/${id}`);
+    return response.data;
+  },
+  create: async (invoice: Partial<PurchaseInvoice>) => {
+    const response = await axiosInstance.post('/api/purchase-invoices', invoice);
+    return response.data;
+  },
+  cancel: async (id: string) => {
+    const response = await axiosInstance.post(`/api/purchase-invoices/${id}/cancel`);
+    return response.data;
+  }
+};
+
+// Service for inventory adjustment-related operations
+export const inventoryAdjustmentService = {
+  getAll: async (params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get('/api/inventory-adjustments', { params });
+    return response.data;
+  },
+  create: async (adjustment: Partial<InventoryAdjustment>) => {
+    const response = await axiosInstance.post('/api/inventory-adjustments', adjustment);
     return response.data;
   }
 };

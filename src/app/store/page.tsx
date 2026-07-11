@@ -62,7 +62,8 @@ export default function DashboardPage() {
     customer: '',
     name: '',
     quantity: 0,
-    price: 0
+    price: 0,
+    costPrice: 0
   });
 
   const fetchItems = async () => {
@@ -180,7 +181,8 @@ export default function DashboardPage() {
       customer: item.customer,
       name: item.name,
       quantity: item.quantity,
-      price: item.price
+      price: item.price,
+      costPrice: item.costPrice || 0
     });
     setIsModalOpen(true);
   };
@@ -200,7 +202,7 @@ export default function DashboardPage() {
         toast.success(editingItem ? 'تم التعديل بنجاح' : 'تمت الإضافة بنجاح');
         setIsModalOpen(false);
         setEditingItem(null);
-        setFormData({ modelNumber: '', customer: '', name: '', quantity: 0, price: 0 });
+        setFormData({ modelNumber: '', customer: '', name: '', quantity: 0, price: 0, costPrice: 0 });
         fetchItems();
       }
     } catch (error) {
@@ -274,7 +276,7 @@ export default function DashboardPage() {
             icon={<Plus size={20} />}
             onClick={() => {
               setEditingItem(null);
-              setFormData({ modelNumber: '', customer: '', name: '', quantity: 0, price: 0 });
+              setFormData({ modelNumber: '', customer: '', name: '', quantity: 0, price: 0, costPrice: 0 });
               setIsModalOpen(true);
             }}
           >
@@ -583,6 +585,17 @@ export default function DashboardPage() {
                 className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.price || ''}
                 onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">سعر التكلفة</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.costPrice || ''}
+                onChange={(e) => setFormData({ ...formData, costPrice: parseFloat(e.target.value) || 0 })}
               />
             </div>
             {/*  */}
