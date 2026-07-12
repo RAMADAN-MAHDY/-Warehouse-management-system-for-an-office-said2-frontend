@@ -2,8 +2,10 @@ export interface Item {
   _id: string;
   modelNumber: string;
   customer: string;
+  category?: string;
   name: string;
   quantity: number;
+  minQuantity?: number;
   price: number;
   costPrice: number;
   customerId: string;

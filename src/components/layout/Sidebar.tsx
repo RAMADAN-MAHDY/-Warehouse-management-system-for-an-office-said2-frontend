@@ -38,7 +38,7 @@ const navItems = [
   { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },
   { name: 'الأرباح والتقارير', href: '/profit', icon: TrendingUp },
   { name: 'المصروفات', href: '/expenses', icon: Wallet },
-  { name: 'ملفات الإكسل', href: '/excel-files', icon: FileSpreadsheet },
+  // { name: 'ملفات الإكسل', href: '/excel-files', icon: FileSpreadsheet },
   { name: 'الاشتراك', href: '/subscription', icon: CreditCard },
 ];
 

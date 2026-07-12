@@ -60,8 +60,10 @@ export default function DashboardPage() {
   const [formData, setFormData] = useState({
     modelNumber: '',
     customer: '',
+    category: '',
     name: '',
     quantity: 0,
+    minQuantity: 5,
     price: 0,
     costPrice: 0
   });
@@ -179,8 +181,10 @@ export default function DashboardPage() {
     setFormData({
       modelNumber: item.modelNumber,
       customer: item.customer,
+      category: item.category || '',
       name: item.name,
       quantity: item.quantity,
+      minQuantity: item.minQuantity ?? 5,
       price: item.price,
       costPrice: item.costPrice || 0
     });
@@ -202,7 +206,7 @@ export default function DashboardPage() {
         toast.success(editingItem ? 'تم التعديل بنجاح' : 'تمت الإضافة بنجاح');
         setIsModalOpen(false);
         setEditingItem(null);
-        setFormData({ modelNumber: '', customer: '', name: '', quantity: 0, price: 0, costPrice: 0 });
+        setFormData({ modelNumber: '', customer: '', category: '', name: '', quantity: 0, minQuantity: 5, price: 0, costPrice: 0 });
         fetchItems();
       }
     } catch (error) {
@@ -276,7 +280,7 @@ export default function DashboardPage() {
             icon={<Plus size={20} />}
             onClick={() => {
               setEditingItem(null);
-              setFormData({ modelNumber: '', customer: '', name: '', quantity: 0, price: 0, costPrice: 0 });
+              setFormData({ modelNumber: '', customer: '', category: '', name: '', quantity: 0, minQuantity: 5, price: 0, costPrice: 0 });
               setIsModalOpen(true);
             }}
           >
@@ -352,35 +356,40 @@ export default function DashboardPage() {
                   <TableHead>الموديل</TableHead>
                   <TableHead>القطعة</TableHead>
                   <TableHead>الكمية</TableHead>
+                  <TableHead>الحد الأدنى</TableHead>
                   <TableHead>السعر</TableHead>
                   <TableHead>الإجمالي</TableHead>
                   <TableHead className="text-center">إجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item) => (
-                  <TableRow key={item._id}>
-                    <TableCell className="font-medium text-blue-400">{item.modelNumber}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>
-                      <span className={item.quantity < 5 ? "text-red-400 font-bold" : ""}>
-                        {item.quantity}
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatCurrency(item.price)}</TableCell>
-                    <TableCell>{formatCurrency(item.quantity * item.price)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-blue-400">
-                          <Edit2 size={14} />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)} className="h-8 w-8 text-red-400">
-                          <Trash2 size={14} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {items.map((item) => {
+                  const minQty = item.minQuantity ?? 5;
+                  return (
+                    <TableRow key={item._id}>
+                      <TableCell className="font-medium text-blue-400">{item.modelNumber}</TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>
+                        <span className={item.quantity < minQty ? "text-red-400 font-bold" : ""}>
+                          {item.quantity}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-gray-300">{minQty}</TableCell>
+                      <TableCell>{formatCurrency(item.price)}</TableCell>
+                      <TableCell>{formatCurrency(item.quantity * item.price)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-blue-400">
+                            <Edit2 size={14} />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)} className="h-8 w-8 text-red-400">
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -445,6 +454,9 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-sm font-bold text-white">{item.name}</p>
                         <p className="text-xs text-gray-500">موديل: {item.modelNumber}</p>
+                        <p className="text-xs text-gray-500">
+                          الحد الأدنى: {item.minQuantity ?? 5} | الناقص: {Math.max(0, Number(item.minQuantity ?? 5) - Number(item.quantity || 0))}
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-red-400">{item.quantity} قطعة</p>
@@ -548,6 +560,29 @@ export default function DashboardPage() {
                 className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.customer}
                 onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الفئة (اختياري)</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الحد الأدنى للنقص</label>
+              <input
+                type="number"
+                required
+                min="0"
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.minQuantity}
+                onChange={(e) => setFormData({ ...formData, minQuantity: parseInt(e.target.value) || 0 })}
               />
             </div>
           </div>

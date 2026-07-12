@@ -46,12 +46,6 @@ export const itemService = {
       responseType: 'blob'
     });
     return response.data;
-  },
-  downloadExcel: async (id: string) => {
-    const response = await axiosInstance.get(`/api/items/download/${id}`, {
-      responseType: 'blob'
-    });
-    return response.data;
   }
 };
 
