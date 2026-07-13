@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Users, Search, Plus, Edit2, Trash2, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
-import { representativeService } from '@/services/api';
-import { Representative } from '@/types';
+import { Users, Search, Plus, Edit2, Trash2, Loader2, ToggleLeft, ToggleRight, FileText } from 'lucide-react';
+import { representativeService, saleService } from '@/services/api';
+import { Representative, SaleInvoice } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 import Modal from '@/components/ui/Modal';
+import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function RepresentativesPage() {
   const [data, setData] = useState<Representative[]>([]);
@@ -20,6 +21,13 @@ export default function RepresentativesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editing, setEditing] = useState<Representative | null>(null);
+  
+  const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
+  const [selectedRep, setSelectedRep] = useState<Representative | null>(null);
+  const [sales, setSales] = useState<SaleInvoice[]>([]);
+  const [salesLoading, setSalesLoading] = useState(false);
+  const [salesPage, setSalesPage] = useState(1);
+  const [salesPagination, setSalesPagination] = useState({ totalPages: 1, total: 0 });
 
   const [form, setForm] = useState({
     name: '',
@@ -144,6 +152,34 @@ export default function RepresentativesPage() {
     }
   };
 
+  const handleViewSales = async (rep: Representative) => {
+    setSelectedRep(rep);
+    setSalesPage(1);
+    setIsSalesModalOpen(true);
+    await fetchSalesForRep(rep._id, 1);
+  };
+
+  const fetchSalesForRep = async (repId: string, currentPage: number) => {
+    setSalesLoading(true);
+    try {
+      const response = await saleService.getByRepresentative(repId, { page: currentPage, limit: 10 });
+      if (response.status) {
+        setSales(response.data || []);
+        setSalesPagination(response.pagination || { totalPages: 1, total: 0 });
+      }
+    } catch (error) {
+      toast.error('حدث خطأ أثناء جلب المبيعات');
+    } finally {
+      setSalesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isSalesModalOpen && selectedRep) {
+      fetchSalesForRep(selectedRep._id, salesPage);
+    }
+  }, [salesPage]);
+
   return (
     <div className="space-y-8 animate-in">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -236,6 +272,13 @@ export default function RepresentativesPage() {
                     </TableCell>
                     <TableCell className="text-left">
                       <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={() => handleViewSales(rep)}
+                          className="p-2 text-gray-500 hover:text-green-400 transition-colors bg-gray-800/50 rounded-lg"
+                          title="عرض المبيعات"
+                        >
+                          <FileText size={18} />
+                        </button>
                         <button
                           onClick={() => handleToggleActive(rep)}
                           className="p-2 text-gray-500 hover:text-blue-400 transition-colors bg-gray-800/50 rounded-lg"
@@ -415,6 +458,82 @@ export default function RepresentativesPage() {
               </Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {isSalesModalOpen && selectedRep && (
+        <Modal 
+          isOpen={isSalesModalOpen} 
+          onClose={() => setIsSalesModalOpen(false)} 
+          title={`مبيعات المندوب: ${selectedRep.name}`}
+          maxWidth="4xl"
+        >
+          <div className="space-y-4">
+            {salesLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="animate-spin text-blue-500" size={32} />
+                <p className="text-gray-400">جاري تحميل المبيعات...</p>
+              </div>
+            ) : sales.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">لا توجد مبيعات لهذا المندوب</p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <Table data={sales}>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>المنتج</TableHead>
+                        <TableHead>الكمية</TableHead>
+                        <TableHead>السعر</TableHead>
+                        <TableHead>الإجمالي</TableHead>
+                        <TableHead>التاريخ</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sales.map((sale) => (
+                        <TableRow key={sale._id}>
+                          <TableCell className="text-white">{sale.name}</TableCell>
+                          <TableCell className="text-gray-300">{sale.quantity}</TableCell>
+                          <TableCell className="text-gray-300">{formatCurrency(sale.price)}</TableCell>
+                          <TableCell className="text-gray-300 font-bold">{formatCurrency(sale.total)}</TableCell>
+                          <TableCell className="text-gray-300">{formatDate(sale.createdAt)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {salesPagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4">
+                    <span className="text-sm text-gray-400">إجمالي: {salesPagination.total}</span>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setSalesPage(p => Math.max(1, p - 1))}
+                        disabled={salesPage <= 1}
+                      >
+                        السابق
+                      </Button>
+                      <span className="text-sm text-gray-400 px-2">
+                        صفحة {salesPage} / {salesPagination.totalPages}
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setSalesPage(p => Math.min(salesPagination.totalPages, p + 1))}
+                        disabled={salesPage >= salesPagination.totalPages}
+                      >
+                        التالي
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </Modal>
       )}
     </div>

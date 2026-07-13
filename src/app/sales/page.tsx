@@ -13,9 +13,10 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Printer
 } from 'lucide-react';
-import { saleService, itemService, returnService, representativeService } from '@/services/api';
+import { saleService, itemService, returnService, representativeService, authService } from '@/services/api';
 import { SaleInvoice, Item, Representative } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/Table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Modal from '@/components/ui/Modal';
+import { PrintInvoice } from '@/components/PrintInvoice';
 
 
 export default function SalesPage() {
@@ -49,6 +51,9 @@ export default function SalesPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [totalSalesValue, setTotalSalesValue] = useState(0);
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
+  const [companyName, setCompanyName] = useState('');
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [printingData, setPrintingData] = useState<SaleInvoice | null>(null);
   
   // New Sale states
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,7 +63,8 @@ export default function SalesPage() {
     sellerName: '',
     representativeId: '',
     quantity: 1,
-    price: 0
+    price: 0,
+    paidAmount: 0
   });
 
   const fetchSales = async () => {
@@ -92,7 +98,27 @@ export default function SalesPage() {
 
   useEffect(() => {
     fetchRepresentatives();
+    fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await authService.getProfile();
+      if (response.status) {
+        setCompanyName(response.data.companyName);
+      }
+    } catch (error) {}
+  };
+
+  const handlePrint = (sale: SaleInvoice) => {
+    setPrintingData(sale);
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+      setPrintingData(null);
+    }, 500);
+  };
 
   const handleSearchProduct = async (query: string) => {
     setSearchQuery(query);
@@ -126,6 +152,7 @@ export default function SalesPage() {
     if (!selectedProduct) return;
     
     try {
+      const total = saleData.price * saleData.quantity;
       const response = await saleService.create({
         modelNumber: selectedProduct.modelNumber,
         name: selectedProduct.name,
@@ -133,14 +160,15 @@ export default function SalesPage() {
         representativeId: saleData.representativeId || undefined,
         price: saleData.price,
         quantity: saleData.quantity,
-        total: saleData.price * saleData.quantity
+        total,
+        paidAmount: saleData.paidAmount
       });
 
       if (response.status) {
         toast.success('تمت عملية البيع بنجاح');
         setIsModalOpen(false);
         setSelectedProduct(null);
-        setSaleData({ sellerName: '', representativeId: '', quantity: 1, price: 0 });
+        setSaleData({ sellerName: '', representativeId: '', quantity: 1, price: 0, paidAmount: 0 });
         fetchSales();
       }
     } catch (error: any) {
@@ -150,6 +178,7 @@ export default function SalesPage() {
 
   const handleUpdateSale = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     // console.log('Update Sale Form Submitted -----------------');
     // console.log(editingSale?._id);
     // console.log(saleData.price, saleData.quantity);
@@ -157,11 +186,13 @@ export default function SalesPage() {
     if (!editingSale) return;
 
     try {
+      const total = saleData.price * saleData.quantity;
       const response = await saleService.update(editingSale?._id, {
         price: saleData.price,
         quantity: saleData.quantity,
         sellerName: saleData.sellerName,
         representativeId: saleData.representativeId || null,
+        paidAmount: saleData.paidAmount,
       });
 
       if (response.status) {
@@ -288,6 +319,13 @@ export default function SalesPage() {
             تصدير Excel
           </Button>
           <Button 
+            variant="outline" 
+            icon={<Printer size={20} />}
+            onClick={() => window.print()}
+          >
+            طباعة الصفحة
+          </Button>
+          <Button 
             variant="primary" 
             icon={<Plus size={20} />}
             onClick={() => setIsModalOpen(true)}
@@ -357,12 +395,31 @@ export default function SalesPage() {
                 <TableHead>الكمية</TableHead>
                 <TableHead>السعر</TableHead>
                 <TableHead>الإجمالي</TableHead>
+                <TableHead>المبلغ المدفوع</TableHead>
+                <TableHead>حالة الدفع</TableHead>
                 <TableHead className="text-center">إجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sales.length > 0 ? (
-                sales.map((sale) => (
+                sales.map((sale) => {
+                  // Get payment status color
+                  let statusClass = '';
+                  let statusLabel = '';
+                  switch(sale.paymentStatus) {
+                    case 'paid':
+                      statusClass = 'bg-green-100 text-green-800 border-green-300';
+                      statusLabel = 'مدفوعة';
+                      break;
+                    case 'partial':
+                      statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+                      statusLabel = 'جزئية';
+                      break;
+                    default:
+                      statusClass = 'bg-red-100 text-red-800 border-red-300';
+                      statusLabel = 'غير مدفوعة';
+                  }
+                  return (
                   <TableRow key={sale._id}>
                     <TableCell>
                       <input 
@@ -381,8 +438,23 @@ export default function SalesPage() {
                     <TableCell className="font-bold text-green-400">
                       {formatCurrency(sale.total)}
                     </TableCell>
+                    <TableCell>{formatCurrency(sale.paidAmount || 0)}</TableCell>
+                    <TableCell>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
+                        {statusLabel}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handlePrint(sale)}
+                          className="text-green-400 hover:text-green-300 hover:bg-green-900/20"
+                          title="طباعة الفاتورة"
+                        >
+                          <Printer size={16} />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -397,22 +469,23 @@ export default function SalesPage() {
                           <RotateCcw size={16} />
                         </Button>
                         <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => {
-                            setEditingSale(sale);
-                          setSaleData({
-                            sellerName: sale.sellerName || '',
-                            quantity: sale.quantity,
-                            price: sale.price,
-                            representativeId: sale.representativeId || ''
-                          });
-                            setIsEditModalOpen(true);
-                          }}
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                        >
-                          <Edit2 size={16} />
-                        </Button>
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => {
+                          setEditingSale(sale);
+                        setSaleData({
+                          sellerName: sale.sellerName || '',
+                          quantity: sale.quantity,
+                          price: sale.price,
+                          representativeId: sale.representativeId || '',
+                          paidAmount: sale.paidAmount || 0
+                        });
+                          setIsEditModalOpen(true);
+                        }}
+                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                      >
+                        <Edit2 size={16} />
+                      </Button>
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -424,10 +497,11 @@ export default function SalesPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
+                );
+                })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-10 text-gray-500">
+                  <TableCell colSpan={11} className="text-center py-10 text-gray-500">
                     لا توجد فواتير في هذه الفترة
                   </TableCell>
                 </TableRow>
@@ -586,6 +660,19 @@ export default function SalesPage() {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">المبلغ المدفوع</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  max={saleData.price * saleData.quantity}
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.paidAmount || ''}
+                  onChange={(e) => setSaleData({ ...saleData, paidAmount: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+
               <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
                 <span className="text-gray-400">الإجمالي الكلي:</span>
                 <span className="text-2xl font-bold text-green-400">
@@ -665,6 +752,19 @@ export default function SalesPage() {
               className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
               value={saleData.price || ''}
               onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">المبلغ المدفوع</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              max={saleData.price * saleData.quantity}
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.paidAmount || ''}
+              onChange={(e) => setSaleData({ ...saleData, paidAmount: parseFloat(e.target.value) || 0 })}
             />
           </div>
 
@@ -752,6 +852,14 @@ export default function SalesPage() {
           </form>
         )}
       </Modal>
+
+      {isPrinting && printingData && (
+        <PrintInvoice 
+          type="sale"
+          invoice={printingData}
+          companyName={companyName} 
+        />
+      )}
     </div>
   );
 }

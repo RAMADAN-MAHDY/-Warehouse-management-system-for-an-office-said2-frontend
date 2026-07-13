@@ -19,7 +19,9 @@ import {
   ShieldCheck,
   Users,
   CreditCard as PaymentIcon,
-  ListRestart
+  ListRestart,
+  FileText,
+  Building2
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -35,7 +37,9 @@ const navItems = [
   { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
   { name: 'المناديب', href: '/representatives', icon: Users },
   { name: 'المرتجعات', href: '/returns', icon: ListRestart },
+  { name: 'الموردين', href: '/suppliers', icon: Building2 },
   { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },
+  { name: 'فواتير المشتريات', href: '/purchase-invoices', icon: FileText },
   { name: 'الأرباح والتقارير', href: '/profit', icon: TrendingUp },
   { name: 'المصروفات', href: '/expenses', icon: Wallet },
   // { name: 'ملفات الإكسل', href: '/excel-files', icon: FileSpreadsheet },

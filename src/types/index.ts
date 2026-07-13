@@ -23,6 +23,8 @@ export interface SaleInvoice {
   price: number;
   costPrice: number;
   total: number;
+  paidAmount: number;
+  paymentStatus: 'paid' | 'partial' | 'unpaid';
   customerId: string;
   createdAt?: string;
   updatedAt?: string;
@@ -32,6 +34,8 @@ export interface Expense {
   _id: string;
   description: string;
   amount: number;
+  paidAmount: number;
+  paymentStatus: 'paid' | 'partial' | 'unpaid';
   customerId: string;
   date: string;
   createdAt?: string;
@@ -87,6 +91,7 @@ export interface PurchaseInvoice {
   discount: number;
   grandTotal: number;
   paidAmount: number;
+  paymentStatus: 'paid' | 'partial' | 'unpaid';
   customerId: string;
   cancelledAt?: string;
   cancelledBy?: string;

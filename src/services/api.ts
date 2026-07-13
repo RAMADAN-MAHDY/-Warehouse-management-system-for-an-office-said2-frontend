@@ -54,6 +54,10 @@ export const saleService = {
     const response = await axiosInstance.get('/api/sales', { params });
     return response.data;
   },
+  getByRepresentative: async (representativeId: string, params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get(`/api/sales/representative/${representativeId}`, { params });
+    return response.data;
+  },
   create: async (sale: Partial<SaleInvoice>) => {
     const response = await axiosInstance.post('/api/sales', sale);
     return response.data;
@@ -143,6 +147,10 @@ export const supplierService = {
     const response = await axiosInstance.get('/api/suppliers', { params });
     return response.data;
   },
+  getById: async (id: string) => {
+    const response = await axiosInstance.get(`/api/suppliers/${id}`);
+    return response.data;
+  },
   create: async (supplier: Partial<Supplier>) => {
     const response = await axiosInstance.post('/api/suppliers', supplier);
     return response.data;
@@ -163,6 +171,10 @@ export const purchaseInvoiceService = {
     const response = await axiosInstance.get('/api/purchase-invoices', { params });
     return response.data;
   },
+  getBySupplier: async (supplierId: string, params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get(`/api/purchase-invoices/supplier/${supplierId}`, { params });
+    return response.data;
+  },
   getById: async (id: string) => {
     const response = await axiosInstance.get(`/api/purchase-invoices/${id}`);
     return response.data;
@@ -171,8 +183,19 @@ export const purchaseInvoiceService = {
     const response = await axiosInstance.post('/api/purchase-invoices', invoice);
     return response.data;
   },
+  update: async (id: string, invoice: Partial<PurchaseInvoice>) => {
+    const response = await axiosInstance.put(`/api/purchase-invoices/${id}`, invoice);
+    return response.data;
+  },
   cancel: async (id: string) => {
     const response = await axiosInstance.post(`/api/purchase-invoices/${id}/cancel`);
+    return response.data;
+  },
+  exportExcel: async (params?: { from?: string; to?: string }) => {
+    const response = await axiosInstance.get('/api/purchase-invoices/export', {
+      params,
+      responseType: 'blob'
+    });
     return response.data;
   }
 };

@@ -44,7 +44,8 @@ export default function ExpensesPage() {
   // Form states
   const [formData, setFormData] = useState({
     description: '',
-    amount: 0
+    amount: 0,
+    paidAmount: 0
   });
 
   const fetchExpenses = async () => {
@@ -86,7 +87,8 @@ export default function ExpensesPage() {
     setEditingExpense(expense);
     setFormData({
       description: expense.description,
-      amount: expense.amount
+      amount: expense.amount,
+      paidAmount: expense.paidAmount
     });
     setIsModalOpen(true);
   };
@@ -106,7 +108,7 @@ export default function ExpensesPage() {
         toast.success(editingExpense ? 'تم التعديل بنجاح' : 'تمت الإضافة بنجاح');
         setIsModalOpen(false);
         setEditingExpense(null);
-        setFormData({ description: '', amount: 0 });
+        setFormData({ description: '', amount: 0, paidAmount: 0 });
         fetchExpenses();
       }
     } catch (error) {
@@ -139,7 +141,7 @@ export default function ExpensesPage() {
           icon={<Plus size={20} />}
           onClick={() => {
             setEditingExpense(null);
-            setFormData({ description: '', amount: 0 });
+            setFormData({ description: '', amount: 0  , paidAmount: 0 });
             setIsModalOpen(true);
           }}
         >
@@ -171,17 +173,41 @@ export default function ExpensesPage() {
               <TableHead>التاريخ</TableHead>
               <TableHead>الوصف</TableHead>
               <TableHead>المبلغ</TableHead>
+              <TableHead>المبلغ المدفوع</TableHead>
+              <TableHead>حالة الدفع</TableHead>
               <TableHead className="text-center">إجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {expenses.length > 0 ? (
-              expenses.map((expense) => (
+              expenses.map((expense) => {
+                let statusClass = '';
+                let statusLabel = '';
+                switch(expense.paymentStatus) {
+                  case 'paid':
+                    statusClass = 'bg-green-100 text-green-800 border-green-300';
+                    statusLabel = 'مدفوعة';
+                    break;
+                  case 'partial':
+                    statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+                    statusLabel = 'جزئية';
+                    break;
+                  default:
+                    statusClass = 'bg-red-100 text-red-800 border-red-300';
+                    statusLabel = 'غير مدفوعة';
+                }
+                return (
                 <TableRow key={expense._id}>
                   <TableCell>{formatDate(expense.date || expense.createdAt || '')}</TableCell>
                   <TableCell className="font-medium text-white">{expense.description}</TableCell>
                   <TableCell className="font-bold text-red-400">
                     {formatCurrency(expense.amount)}
+                  </TableCell>
+                  <TableCell>{formatCurrency(expense.paidAmount || 0)}</TableCell>
+                  <TableCell>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
+                      {statusLabel}
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-2">
@@ -204,10 +230,11 @@ export default function ExpensesPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+              );
+              })
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-gray-500">
+                <TableCell colSpan={6} className="text-center py-10 text-gray-500">
                   لا توجد مصروفات مسجلة
                 </TableCell>
               </TableRow>
@@ -290,6 +317,19 @@ export default function ExpensesPage() {
               className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
               value={formData.amount || ''}
               onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">المبلغ المدفوع</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              max={formData.amount}
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              value={formData.paidAmount || ''}
+              onChange={(e) => setFormData({ ...formData, paidAmount: parseFloat(e.target.value) || 0 })}
             />
           </div>
 

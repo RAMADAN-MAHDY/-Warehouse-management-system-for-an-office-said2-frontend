@@ -11,7 +11,8 @@ import {
   User,
   Hash,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Printer
 } from 'lucide-react';
 import { purchaseService } from '@/services/api';
 import { Purchase } from '@/types';
@@ -112,13 +113,22 @@ export default function PurchasesPage() {
           <p className="text-gray-400 mt-1">تتبع كافة المشتريات والتعديلات المالية للمخزون</p>
         </div>
 
-        <Button
-          variant="primary"
-          icon={<Plus size={20} />}
-          onClick={() => setIsModalOpen(true)}
-        >
-          إضافة مشتريات أخرى
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            icon={<Printer size={20} />}
+            onClick={() => window.print()}
+          >
+            طباعة الصفحة
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Plus size={20} />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            إضافة مشتريات أخرى
+          </Button>
+        </div>
       </div>
 
       {loading ? (
