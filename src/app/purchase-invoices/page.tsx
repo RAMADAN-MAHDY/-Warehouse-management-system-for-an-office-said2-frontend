@@ -391,6 +391,9 @@ export default function PurchaseInvoicesPage() {
                   if (invoice.status === 'cancelled') {
                     invoiceStatusClass = 'bg-red-100 text-red-800 border-red-300';
                     invoiceStatusLabel = 'ملغية';
+                  } else if (invoice.status === 'posted') {
+                    invoiceStatusClass = 'bg-purple-100 text-purple-800 border-purple-300';
+                    invoiceStatusLabel = 'مرحّلة';
                   } else {
                     invoiceStatusClass = 'bg-blue-100 text-blue-800 border-blue-300';
                     invoiceStatusLabel = 'مسجلة';
@@ -429,7 +432,7 @@ export default function PurchaseInvoicesPage() {
                           >
                             <Printer size={16} />
                           </Button>
-                          {invoice.status !== 'cancelled' && (
+                          {invoice.status !== 'posted' && invoice.status !== 'cancelled' && (
                             <>
                               <Button 
                                 variant="ghost" 

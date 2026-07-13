@@ -21,7 +21,8 @@ import {
   CreditCard as PaymentIcon,
   ListRestart,
   FileText,
-  Building2
+  Building2,
+  User
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -36,6 +37,7 @@ const navItems = [
   { name: 'المخزون', href: '/store', icon: LayoutDashboard },
   { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
   { name: 'المناديب', href: '/representatives', icon: Users },
+  { name: 'العملاء', href: '/clients', icon: User },
   { name: 'المرتجعات', href: '/returns', icon: ListRestart },
   { name: 'الموردين', href: '/suppliers', icon: Building2 },
   { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },

@@ -13,10 +13,24 @@ export interface Item {
   updatedAt?: string;
 }
 
+export interface Client {
+  _id: string;
+  code: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface SaleInvoice {
   _id: string;
   modelNumber: string;
   sellerName?: string;
+  clientName?: string;
+  clientId?: string | Client | null;
   representativeId?: string | null;
   name: string;
   quantity: number;
@@ -199,4 +213,8 @@ export interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+}
+
+export interface ClientListResponse extends ApiResponse<Client[]> {
+  pagination: Pagination;
 }

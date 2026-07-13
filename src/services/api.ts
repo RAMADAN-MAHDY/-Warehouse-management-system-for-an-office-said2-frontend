@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios';
-import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse } from '@/types';
+import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse, Client, ClientListResponse } from '@/types';
 
 export const authService = {
   login: async (credentials: Record<string, string>) => {
@@ -377,6 +377,35 @@ export const notificationService = {
   },
   deleteNotification: async (id: string) => {
     const response = await axiosInstance.delete(`/api/notifications/${id}`);
+    return response.data;
+  }
+};
+
+export const clientService = {
+  getAll: async (params?: { page?: number; limit?: number; search?: string; includeInactive?: boolean }) => {
+    const response = await axiosInstance.get<ClientListResponse>('/api/clients', {
+      params: { ...params, includeInactive: params?.includeInactive ? 'true' : 'false' }
+    });
+    return response.data;
+  },
+  getById: async (id: string) => {
+    const response = await axiosInstance.get<ApiResponse<Client>>(`/api/clients/${id}`);
+    return response.data;
+  },
+  getBalance: async (id: string, params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get(`/api/clients/${id}/balance`, { params });
+    return response.data;
+  },
+  create: async (data: { name: string; phone?: string; email?: string; address?: string }) => {
+    const response = await axiosInstance.post<ApiResponse<Client>>('/api/clients', data);
+    return response.data;
+  },
+  update: async (id: string, data: Partial<Client>) => {
+    const response = await axiosInstance.put<ApiResponse<Client>>(`/api/clients/${id}`, data);
+    return response.data;
+  },
+  delete: async (id: string) => {
+    const response = await axiosInstance.delete<ApiResponse<Client>>(`/api/clients/${id}`);
     return response.data;
   }
 };

@@ -16,8 +16,8 @@ import {
   RotateCcw,
   Printer
 } from 'lucide-react';
-import { saleService, itemService, returnService, representativeService, authService } from '@/services/api';
-import { SaleInvoice, Item, Representative } from '@/types';
+import { saleService, itemService, returnService, representativeService, authService, clientService } from '@/services/api';
+import { SaleInvoice, Item, Representative, Client } from '@/types';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -51,6 +51,7 @@ export default function SalesPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [totalSalesValue, setTotalSalesValue] = useState(0);
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [companyName, setCompanyName] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
   const [printingData, setPrintingData] = useState<SaleInvoice | null>(null);
@@ -60,8 +61,10 @@ export default function SalesPage() {
   const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Item | null>(null);
   const [saleData, setSaleData] = useState({
-    sellerName: '',
+    sellerName: '', 
     representativeId: '',
+    clientId: '',
+    clientName: '', 
     quantity: 1,
     price: 0,
     paidAmount: 0
@@ -96,8 +99,18 @@ export default function SalesPage() {
     } catch (error) {}
   };
 
+  const fetchClients = async () => {
+    try {
+      const response = await clientService.getAll({ page: 1, limit: 200, includeInactive: false });
+      if (response.status) {
+        setClients(response.data || []);
+      }
+    } catch (error) {}
+  };
+
   useEffect(() => {
     fetchRepresentatives();
+    fetchClients();
     fetchProfile();
   }, []);
 
@@ -158,6 +171,8 @@ export default function SalesPage() {
         name: selectedProduct.name,
         sellerName: saleData.sellerName,
         representativeId: saleData.representativeId || undefined,
+        clientId: saleData.clientId || undefined,
+        clientName: saleData.clientName || undefined,
         price: saleData.price,
         quantity: saleData.quantity,
         total,
@@ -168,7 +183,7 @@ export default function SalesPage() {
         toast.success('تمت عملية البيع بنجاح');
         setIsModalOpen(false);
         setSelectedProduct(null);
-        setSaleData({ sellerName: '', representativeId: '', quantity: 1, price: 0, paidAmount: 0 });
+        setSaleData({ sellerName: '', representativeId: '', clientId: '', clientName: '', quantity: 1, price: 0, paidAmount: 0 });
         fetchSales();
       }
     } catch (error: any) {
@@ -179,10 +194,6 @@ export default function SalesPage() {
   const handleUpdateSale = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // console.log('Update Sale Form Submitted -----------------');
-    // console.log(editingSale?._id);
-    // console.log(saleData.price, saleData.quantity);
-
     if (!editingSale) return;
 
     try {
@@ -192,6 +203,7 @@ export default function SalesPage() {
         quantity: saleData.quantity,
         sellerName: saleData.sellerName,
         representativeId: saleData.representativeId || null,
+        clientId: saleData.clientId || null,
         paidAmount: saleData.paidAmount,
       });
 
@@ -391,6 +403,7 @@ export default function SalesPage() {
                 <TableHead>التاريخ</TableHead>
                 <TableHead>رقم الموديل</TableHead>
                 <TableHead>المندوب</TableHead>
+                <TableHead>اسم العميل</TableHead>
                 <TableHead>اسم القطعة</TableHead>
                 <TableHead>الكمية</TableHead>
                 <TableHead>السعر</TableHead>
@@ -403,7 +416,6 @@ export default function SalesPage() {
             <TableBody>
               {sales.length > 0 ? (
                 sales.map((sale) => {
-                  // Get payment status color
                   let statusClass = '';
                   let statusLabel = '';
                   switch(sale.paymentStatus) {
@@ -431,7 +443,8 @@ export default function SalesPage() {
                     </TableCell>
                     <TableCell>{formatDate(sale.createdAt || '')}</TableCell>
                     <TableCell className="font-medium text-blue-400">{sale.modelNumber}</TableCell>
-                    <TableCell>{sale.sellerName || '-'}</TableCell>
+                     <TableCell className="text-gray-300">{representatives.find(r => r._id === sale.representativeId)?.name || sale.sellerName || '-'}</TableCell>
+                      <TableCell className="text-gray-300">{(sale.clientId as any)?.name || clients.find(c => c._id === sale.clientId)?.name || (sale as any).clientName || '-'}</TableCell>
                     <TableCell>{sale.name}</TableCell>
                     <TableCell>{sale.quantity}</TableCell>
                     <TableCell>{formatCurrency(sale.price)}</TableCell>
@@ -473,13 +486,15 @@ export default function SalesPage() {
                         size="icon" 
                         onClick={() => {
                           setEditingSale(sale);
-                        setSaleData({
-                          sellerName: sale.sellerName || '',
-                          quantity: sale.quantity,
-                          price: sale.price,
-                          representativeId: sale.representativeId || '',
-                          paidAmount: sale.paidAmount || 0
-                        });
+                           setSaleData({
+                              sellerName: sale.sellerName || '',
+                              clientId: typeof sale.clientId === 'object' && sale.clientId !== null ? (sale.clientId as any)._id : (sale.clientId as string) || '',
+                              clientName: '',
+                              quantity: sale.quantity,
+                              price: sale.price,
+                              representativeId: sale.representativeId || '',
+                              paidAmount: sale.paidAmount || 0
+                           });
                           setIsEditModalOpen(true);
                         }}
                         className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
@@ -555,12 +570,16 @@ export default function SalesPage() {
       )}
 
       {/* Add Sale Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="عملية بيع جديدة"
-        maxWidth="xl"
-      >
+        <Modal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedProduct(null);
+            setSaleData({ sellerName: '', representativeId: '', clientId: '', clientName: '', quantity: 1, price: 0, paidAmount: 0 });
+          }}
+          title="عملية بيع جديدة"
+          maxWidth="xl"
+        >
         <div className="space-y-6">
           <div className="relative">
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
@@ -590,47 +609,82 @@ export default function SalesPage() {
             )}
           </div>
 
-          {selectedProduct && (
+            {selectedProduct && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">اختيار عميل (اختياري)</label>
+                  <select
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={saleData.clientId}
+                    onChange={(e) => {
+                      const clientId = e.target.value;
+                      if (!clientId) {
+                        setSaleData((prev) => ({ ...prev, clientId: '', clientName: '' }));
+                        return;
+                      }
+                      const client = clients.find((c) => c._id === clientId);
+                      setSaleData((prev) => ({ ...prev, clientId, clientName: client?.name || '' }));
+                    }}
+                  >
+                    <option value="">بدون اختيار (إدخال يدوي)</option>
+                    {clients.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">اسم العميل (يدوي)</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={saleData.clientName}
+                      onChange={(e) => setSaleData({ ...saleData, clientName: e.target.value })}
+                      disabled={Boolean(saleData.clientId)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">اختيار مندوب (اختياري)</label>
+                  <select
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={saleData.representativeId}
+                    onChange={(e) => {
+                      const repId = e.target.value;
+                      if (!repId) {
+                        setSaleData((prev) => ({ ...prev, representativeId: '', sellerName: '' }));
+                        return;
+                      }
+                      const rep = representatives.find((r) => r._id === repId);
+                      setSaleData((prev) => ({ ...prev, representativeId: repId, sellerName: rep?.name || '' }));
+                    }}
+                  >
+                    <option value="">بدون اختيار (إدخال يدوي)</option>
+                    {representatives.map((rep) => (
+                      <option key={rep._id} value={rep._id}>
+                        {rep.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">اسم المندوب (يدوي)</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={saleData.sellerName}
+                      onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
+                      disabled={Boolean(saleData.representativeId)}
+                  />
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleAddSale} className="space-y-4 border-t border-gray-700 pt-6 animate-in">
               <div className="p-4 bg-blue-900/20 rounded-xl border border-blue-500/30">
                 <p className="text-sm text-blue-400 font-medium">المنتج المختار:</p>
-                <p className="text-lg font-bold text-white">{selectedProduct.name}</p>
-                <p className="text-sm text-gray-400">الموديل: {selectedProduct.modelNumber}</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">اختيار مندوب (اختياري)</label>
-                <select
-                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={saleData.representativeId}
-                  onChange={(e) => {
-                    const repId = e.target.value;
-                    if (!repId) {
-                      setSaleData((prev) => ({ ...prev, representativeId: '', sellerName: '' }));
-                      return;
-                    }
-                    const rep = representatives.find((r) => r._id === repId);
-                    setSaleData((prev) => ({ ...prev, representativeId: repId, sellerName: rep?.name || '' }));
-                  }}
-                >
-                  <option value="">بدون اختيار (إدخال يدوي)</option>
-                  {representatives.map((rep) => (
-                    <option key={rep._id} value={rep._id}>
-                      {rep.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">اسم المندوب (يدوي)</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={saleData.sellerName}
-                  onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
-                  disabled={Boolean(saleData.representativeId)}
-                />
+                <p className="text-lg font-bold text-white">{selectedProduct?.name ?? ''}</p>
+                <p className="text-sm text-gray-400">الموديل: {selectedProduct?.modelNumber ?? ''}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -640,7 +694,7 @@ export default function SalesPage() {
                     type="number"
                     required
                     min="1"
-                    max={selectedProduct.quantity}
+                    max={selectedProduct?.quantity ?? 0}
                     className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                     value={saleData.quantity || ''}
                     onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) || 0 })}
@@ -684,8 +738,8 @@ export default function SalesPage() {
                 تأكيد عملية البيع
               </Button>
             </form>
-          )}
-        </div>
+          </div>
+
       </Modal>
 
 

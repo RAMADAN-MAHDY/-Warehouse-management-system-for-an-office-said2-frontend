@@ -498,7 +498,7 @@ export default function RepresentativesPage() {
                           <TableCell className="text-gray-300">{sale.quantity}</TableCell>
                           <TableCell className="text-gray-300">{formatCurrency(sale.price)}</TableCell>
                           <TableCell className="text-gray-300 font-bold">{formatCurrency(sale.total)}</TableCell>
-                          <TableCell className="text-gray-300">{formatDate(sale.createdAt)}</TableCell>
+                          <TableCell className="text-gray-300">{sale.createdAt ? formatDate(sale.createdAt) : ''}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
