@@ -107,7 +107,8 @@ export default function PrivacyPolicyPage() {
               </h2>
               <p className="text-gray-400 leading-relaxed">
                 إذا كان لديك أي استفسار بخصوص سياسة الخصوصية، يرجى التواصل معنا عبر البريد الإلكتروني: 
-                <span className="text-blue-400 mr-2">privacy@management-system.com</span>
+                <span className="text-blue-400 mr-2">aurorasoftwarehouse@gmail.com
+</span>
               </p>
             </section>
           </div>
