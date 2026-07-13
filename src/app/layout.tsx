@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/providers/StoreProvider";
 import MainLayout from "@/components/layout/MainLayout";
+import GoogleAnalytics from "./GoogleAnalytics";
 
 // ملاحظة: تم استخدام Google Fonts هنا لتجنب أخطاء البناء في حال عدم وجود ملفات الخط محلياً.
 // للانتقال للخط المحلي (Production Readiness)، قم بتحميل ملفات Cairo-Regular.woff2 و Cairo-Bold.woff2
@@ -42,9 +43,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const googleAnalyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
+
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable}`}>
       <body className="font-cairo bg-gray-900 text-gray-100 min-h-screen">
+        {googleAnalyticsId ? (
+          <GoogleAnalytics measurementId={googleAnalyticsId} />
+        ) : null}
         <StoreProvider>
           <MainLayout>
             {children}
