@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Users, Search, Plus, Edit2, Trash2, Loader2, ToggleLeft, ToggleRight, FileText } from 'lucide-react';
+import { Users, Search, Plus, Edit2, Trash2, Loader2, ToggleLeft, ToggleRight, FileText, TrendingUp } from 'lucide-react';
 import { representativeService, saleService } from '@/services/api';
 import { Representative, SaleInvoice } from '@/types';
 import { toast } from 'sonner';
@@ -28,6 +28,11 @@ export default function RepresentativesPage() {
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesPage, setSalesPage] = useState(1);
   const [salesPagination, setSalesPagination] = useState({ totalPages: 1, total: 0 });
+
+  // Commission Report states
+  const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
+  const [commissionReport, setCommissionReport] = useState<any>(null);
+  const [commissionLoading, setCommissionLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -159,6 +164,23 @@ export default function RepresentativesPage() {
     await fetchSalesForRep(rep._id, 1);
   };
 
+  const handleViewCommissionReport = async (rep: Representative) => {
+    setSelectedRep(rep);
+    setIsCommissionModalOpen(true);
+    setCommissionLoading(true);
+    setCommissionReport(null);
+    try {
+      const response = await representativeService.getCommissionReport(rep._id);
+      if (response.status) {
+        setCommissionReport(response.data);
+      }
+    } catch (error) {
+      toast.error('حدث خطأ أثناء جلب تقرير العمولات');
+    } finally {
+      setCommissionLoading(false);
+    }
+  };
+
   const fetchSalesForRep = async (repId: string, currentPage: number) => {
     setSalesLoading(true);
     try {
@@ -273,6 +295,13 @@ export default function RepresentativesPage() {
                     <TableCell className="text-left">
                       <div className="flex items-center gap-2 justify-end">
                         <button
+                          onClick={() => handleViewCommissionReport(rep)}
+                          className="p-2 text-gray-500 hover:text-purple-400 transition-colors bg-gray-800/50 rounded-lg"
+                          title="تقرير العمولات"
+                        >
+                          <TrendingUp size={18} />
+                        </button>
+                        <button
                           onClick={() => handleViewSales(rep)}
                           className="p-2 text-gray-500 hover:text-green-400 transition-colors bg-gray-800/50 rounded-lg"
                           title="عرض المبيعات"
@@ -359,10 +388,12 @@ export default function RepresentativesPage() {
                   min={0}
                   max={100}
                   step={0.01}
+                  placeholder="مثال: 5"
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   value={form.commissionRate}
                   onChange={(e) => setForm({ ...form, commissionRate: Number(e.target.value) })}
                 />
+                <p className="text-xs text-gray-400 mt-1">أدخل النسبة المئوية للعمولة (مثال: اكتب 5 لعمولة 5%)</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -425,10 +456,12 @@ export default function RepresentativesPage() {
                   min={0}
                   max={100}
                   step={0.01}
+                  placeholder="مثال: 5"
                   className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   value={form.commissionRate}
                   onChange={(e) => setForm({ ...form, commissionRate: Number(e.target.value) })}
                 />
+                <p className="text-xs text-gray-400 mt-1">أدخل النسبة المئوية للعمولة (مثال: اكتب 5 لعمولة 5%)</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -531,6 +564,89 @@ export default function RepresentativesPage() {
                     </div>
                   </div>
                 )}
+              </>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {isCommissionModalOpen && selectedRep && (
+        <Modal 
+          isOpen={isCommissionModalOpen} 
+          onClose={() => setIsCommissionModalOpen(false)} 
+          title={`تقرير عمولات المندوب: ${selectedRep.name}`}
+          maxWidth="5xl"
+        >
+          <div className="space-y-6">
+            {commissionLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3">
+                <Loader2 className="animate-spin text-purple-500" size={32} />
+                <p className="text-gray-400">جاري تحميل تقرير العمولات...</p>
+              </div>
+            ) : !commissionReport ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">لا توجد بيانات لتقرير العمولات</p>
+              </div>
+            ) : (
+              <>
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="bg-gray-800/60 p-4 rounded-xl border border-gray-700">
+                    <p className="text-xs text-gray-400 mb-1">نسبة العمولة</p>
+                    <p className="text-lg font-bold text-blue-400">{commissionReport.summary.commissionRate}%</p>
+                  </div>
+                  <div className="bg-gray-800/60 p-4 rounded-xl border border-gray-700">
+                    <p className="text-xs text-gray-400 mb-1">إجمالي المبيعات</p>
+                    <p className="text-lg font-bold text-white">{formatCurrency(commissionReport.summary.totalSales)}</p>
+                  </div>
+                  <div className="bg-gray-800/60 p-4 rounded-xl border border-gray-700">
+                    <p className="text-xs text-gray-400 mb-1">إجمالي العمولات المستحقة</p>
+                    <p className="text-lg font-bold text-purple-400">{formatCurrency(commissionReport.summary.totalCommission)}</p>
+                  </div>
+                  <div className="bg-gray-800/60 p-4 rounded-xl border border-gray-700">
+                    <p className="text-xs text-gray-400 mb-1">العمولة المحصلة (من المدفوع)</p>
+                    <p className="text-lg font-bold text-green-400">{formatCurrency(commissionReport.summary.collectedCommission)}</p>
+                  </div>
+                  <div className="bg-gray-800/60 p-4 rounded-xl border border-gray-700">
+                    <p className="text-xs text-gray-400 mb-1">العمولة المعلقة (من المتبقي)</p>
+                    <p className="text-lg font-bold text-orange-400">{formatCurrency(commissionReport.summary.pendingCommission)}</p>
+                  </div>
+                </div>
+
+                {/* Sales Invoices Details */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold text-gray-300">تفاصيل الفواتير والعمولات</h3>
+                  <div className="overflow-x-auto rounded-xl border border-gray-700">
+                    <Table data={commissionReport.sales}>
+                      <TableHeader>
+                        <TableRow className="border-gray-700 hover:bg-transparent">
+                          <TableHead className="text-gray-400">العميل</TableHead>
+                          <TableHead className="text-gray-400">المنتج</TableHead>
+                          <TableHead className="text-gray-400">قيمة الفاتورة</TableHead>
+                          <TableHead className="text-gray-400">المدفوع</TableHead>
+                          <TableHead className="text-gray-400">المتبقي</TableHead>
+                          <TableHead className="text-gray-400">العمولة الإجمالية</TableHead>
+                          <TableHead className="text-gray-400">العمولة المحصلة</TableHead>
+                          <TableHead className="text-gray-400">التاريخ</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {commissionReport.sales.map((sale: any) => (
+                          <TableRow key={sale._id} className="border-gray-800 hover:bg-gray-800/30">
+                            <TableCell className="text-white font-medium">{(sale.clientId && sale.clientId.name) || 'عميل نقدي'}</TableCell>
+                            <TableCell className="text-gray-300">{sale.name} ({sale.quantity} وحدة)</TableCell>
+                            <TableCell className="text-gray-300">{formatCurrency(sale.total)}</TableCell>
+                            <TableCell className="text-green-400">{formatCurrency(sale.paidAmount)}</TableCell>
+                            <TableCell className="text-orange-400">{formatCurrency(sale.remainingAmount)}</TableCell>
+                            <TableCell className="text-purple-400 font-bold">{formatCurrency(sale.commission)}</TableCell>
+                            <TableCell className="text-green-400 font-bold">{formatCurrency(sale.collectedCommission)}</TableCell>
+                            <TableCell className="text-gray-400 text-xs">{sale.createdAt ? formatDate(sale.createdAt) : ''}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </>
             )}
           </div>

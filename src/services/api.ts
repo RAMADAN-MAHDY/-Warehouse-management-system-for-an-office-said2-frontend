@@ -362,6 +362,10 @@ export const representativeService = {
   delete: async (id: string) => {
     const response = await axiosInstance.delete<ApiResponse<Representative>>(`/api/representatives/${id}`);
     return response.data;
+  },
+  getCommissionReport: async (id: string, params?: { from?: string; to?: string }) => {
+    const response = await axiosInstance.get(`/api/representatives/${id}/commission-report`, { params });
+    return response.data;
   }
 };
 
