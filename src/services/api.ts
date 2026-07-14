@@ -46,6 +46,10 @@ export const itemService = {
       responseType: 'blob'
     });
     return response.data;
+  },
+  getMovements: async (id: string, params?: { page?: number; limit?: number }) => {
+    const response = await axiosInstance.get(`/api/items/${id}/movements`, { params });
+    return response.data;
   }
 };
 

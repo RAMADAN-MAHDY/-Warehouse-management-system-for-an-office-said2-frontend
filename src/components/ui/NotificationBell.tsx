@@ -96,6 +96,8 @@ export default function NotificationBell() {
         return <XCircle className="text-red-500" size={18} />;
       case 'subscription_request':
         return <Clock className="text-blue-500" size={18} />;
+      case 'system_alert':
+        return <Info className="text-orange-400" size={18} />;
       default:
         return <Info className="text-gray-400" size={18} />;
     }

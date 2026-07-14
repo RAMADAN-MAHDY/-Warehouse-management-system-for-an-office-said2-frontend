@@ -8,15 +8,11 @@ import {
   Trash2, 
   Package, 
   Loader2,
-  RefreshCcw,
   Download,
   AlertTriangle,
   History,
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign,
-  ShoppingCart,
-  ShieldCheck,
+  ArrowDownCircle,
+  ArrowUpCircle,
   CreditCard,
   ChevronLeft,
   ChevronRight
@@ -55,6 +51,14 @@ export default function DashboardPage() {
   const [lowStockLoading, setLowStockLoading] = useState(true);
   const [lowStockPage, setLowStockPage] = useState(1);
   const [lowStockPagination, setLowStockPagination] = useState({ totalPages: 1, total: 0 });
+
+  // Item movements modal state
+  const [movementsModalOpen, setMovementsModalOpen] = useState(false);
+  const [selectedItemForMovements, setSelectedItemForMovements] = useState<Item | null>(null);
+  const [movements, setMovements] = useState<any[]>([]);
+  const [movementsLoading, setMovementsLoading] = useState(false);
+  const [movementsPage, setMovementsPage] = useState(1);
+  const [movementsPagination, setMovementsPagination] = useState({ totalPages: 1, total: 0 });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -213,6 +217,28 @@ export default function DashboardPage() {
       toast.error('حدث خطأ أثناء الحفظ');
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleViewMovements = async (item: Item, page = 1) => {
+    setSelectedItemForMovements(item);
+    setMovementsModalOpen(true);
+    setMovementsLoading(true);
+    setMovementsPage(page);
+    try {
+      const response = await itemService.getMovements(item._id, { page, limit: 15 });
+      if (response.status) {
+        // Backend returns: { data: { item, movements, pagination } }
+        const payload = response.data;
+        const movementsArray = payload.movements ?? payload;
+        const paginationData = payload.pagination ?? { totalPages: 1, total: movementsArray.length };
+        setMovements(Array.isArray(movementsArray) ? movementsArray : []);
+        setMovementsPagination(paginationData);
+      }
+    } catch (error) {
+      toast.error('فشل تحميل حركات الصنف');
+    } finally {
+      setMovementsLoading(false);
     }
   };
 
@@ -378,11 +404,14 @@ export default function DashboardPage() {
                       <TableCell>{formatCurrency(item.price)}</TableCell>
                       <TableCell>{formatCurrency(item.quantity * item.price)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center justify-center gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-blue-400">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleViewMovements(item)} className="h-8 w-8 text-purple-400" title="حركة الصنف">
+                            <History size={14} />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 text-blue-400" title="تعديل">
                             <Edit2 size={14} />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)} className="h-8 w-8 text-red-400">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item._id)} className="h-8 w-8 text-red-400" title="حذف">
                             <Trash2 size={14} />
                           </Button>
                         </div>
@@ -656,6 +685,101 @@ export default function DashboardPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Item Movements Modal */}
+      <Modal
+        isOpen={movementsModalOpen}
+        onClose={() => { setMovementsModalOpen(false); setMovements([]); setSelectedItemForMovements(null); }}
+        title={selectedItemForMovements ? `حركة الصنف: ${selectedItemForMovements.name}` : 'حركة الصنف'}
+        maxWidth="2xl"
+      >
+        <div className="space-y-4">
+          {selectedItemForMovements && (
+            <div className="flex gap-4 p-3 bg-gray-800/60 rounded-xl border border-gray-700 text-sm">
+              <span className="text-gray-400">موديل: <span className="text-blue-400 font-bold">{selectedItemForMovements.modelNumber}</span></span>
+              <span className="text-gray-400">الكمية الحالية: <span className="text-white font-bold">{selectedItemForMovements.quantity}</span></span>
+              <span className="text-gray-400">سعر البيع: <span className="text-green-400 font-bold">{formatCurrency(selectedItemForMovements.price)}</span></span>
+            </div>
+          )}
+
+          {movementsLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="animate-spin text-purple-400" size={36} />
+            </div>
+          ) : movements.length === 0 ? (
+            <div className="py-12 text-center text-gray-500">
+              <History size={40} className="mx-auto mb-3 opacity-30" />
+              <p>لا توجد حركات مسجلة لهذا الصنف</p>
+            </div>
+          ) : (
+            <>
+              <div className="divide-y divide-gray-800 max-h-[55vh] overflow-y-auto rounded-xl border border-gray-700">
+                {movements.map((mv: any, i: number) => (
+                  <div key={mv._id || i} className="flex items-center gap-4 p-4 hover:bg-gray-800/40 transition">
+                    <div className={`flex-shrink-0 p-2 rounded-full ${
+                      mv.direction === 'IN'
+                        ? 'bg-green-500/15 text-green-400'
+                        : 'bg-red-500/15 text-red-400'
+                    }`}>
+                      {mv.direction === 'IN'
+                        ? <ArrowDownCircle size={20} />
+                        : <ArrowUpCircle size={20} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          mv.direction === 'IN'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {mv.direction === 'IN' ? '▼ وارد' : '▲ صادر'}
+                        </span>
+                        <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full">
+                          {mv.reason === 'SALE' ? 'بيع'
+                            : mv.reason === 'PURCHASE' ? 'شراء'
+                            : mv.reason === 'ADJUSTMENT' ? 'تسوية'
+                            : mv.reason === 'RETURN' ? 'مرتجع'
+                            : mv.reason || '-'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(mv.date || mv.createdAt)}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`text-lg font-bold ${
+                        mv.direction === 'IN' ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {mv.direction === 'IN' ? '+' : '-'}{mv.qty}
+                      </p>
+                      {mv.unitCost > 0 && (
+                        <p className="text-xs text-gray-500">بسعر {formatCurrency(mv.unitCost)} / وحدة</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Movements Pagination */}
+              {movementsPagination.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2">
+                  <Button variant="outline" size="sm"
+                    onClick={() => handleViewMovements(selectedItemForMovements!, movementsPage - 1)}
+                    disabled={movementsPage === 1}>
+                    <ChevronRight size={16} className="ml-1" /> السابق
+                  </Button>
+                  <span className="text-sm text-gray-400">
+                    صفحة {movementsPage} من {movementsPagination.totalPages} ({movementsPagination.total} حركة)
+                  </span>
+                  <Button variant="outline" size="sm"
+                    onClick={() => handleViewMovements(selectedItemForMovements!, movementsPage + 1)}
+                    disabled={movementsPage === movementsPagination.totalPages}>
+                    التالي <ChevronLeft size={16} className="mr-1" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </Modal>
 
     </div>
