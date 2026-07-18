@@ -55,6 +55,10 @@ export default function SalesPage() {
   const [companyName, setCompanyName] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
   const [printingData, setPrintingData] = useState<SaleInvoice | null>(null);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [selectedSaleForAudit, setSelectedSaleForAudit] = useState<SaleInvoice | null>(null);
+  const [editReason, setEditReason] = useState('');
   
   // New Sale states
   const [searchQuery, setSearchQuery] = useState('');
@@ -191,30 +195,58 @@ export default function SalesPage() {
     }
   };
 
+  type SaleUpdatePayload = {
+    price: number;
+    quantity: number;
+    sellerName?: string;
+    clientName?: string;
+    representativeId?: string | null;
+    clientId?: string | null;
+    paidAmount: number;
+    reason?: string;
+  };
+
   const handleUpdateSale = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!editingSale) return;
 
     try {
-      const total = saleData.price * saleData.quantity;
-      const response = await saleService.update(editingSale?._id, {
+      const updatePayload: SaleUpdatePayload = {
         price: saleData.price,
         quantity: saleData.quantity,
         sellerName: saleData.sellerName,
+        clientName: saleData.clientName || undefined,
         representativeId: saleData.representativeId || null,
         clientId: saleData.clientId || null,
         paidAmount: saleData.paidAmount,
-      });
+        reason: editReason || undefined
+      };
+      const response = await saleService.update(editingSale?._id, updatePayload);
 
       if (response.status) {
         toast.success('تم تحديث الفاتورة بنجاح');
         setIsEditModalOpen(false);
         setEditingSale(null);
+        setEditReason('');
         fetchSales();
       }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'حدث خطأ أثناء التحديث');
+    }
+  };
+
+  const handleOpenAuditLogs = async (sale: SaleInvoice) => {
+    setSelectedSaleForAudit(sale);
+    setAuditLogs([]);
+    setIsAuditModalOpen(true);
+    try {
+      const response = await saleService.getAuditLogs(sale._id);
+      if (response.status) {
+        setAuditLogs(response.data || []);
+      }
     } catch (error) {
-      toast.error('حدث خطأ أثناء التحديث');
+      toast.error('فشل جلب سجل التدقيق');
     }
   };
 
@@ -471,6 +503,15 @@ export default function SalesPage() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
+                          onClick={() => handleOpenAuditLogs(sale)}
+                          className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20"
+                          title="سجل التعديلات"
+                        >
+                          <Search size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
                           onClick={() => {
                             setReturningSale(sale);
                             setReturnData({ quantity: sale.quantity, reason: '' });
@@ -486,10 +527,11 @@ export default function SalesPage() {
                         size="icon" 
                         onClick={() => {
                           setEditingSale(sale);
+                          setEditReason('');
                            setSaleData({
                               sellerName: sale.sellerName || '',
                               clientId: typeof sale.clientId === 'object' && sale.clientId !== null ? (sale.clientId as any)._id : (sale.clientId as string) || '',
-                              clientName: '',
+                              clientName: typeof sale.clientId === 'object' ? '' : sale.clientName || '',
                               quantity: sale.quantity,
                               price: sale.price,
                               representativeId: sale.representativeId || '',
@@ -785,6 +827,42 @@ export default function SalesPage() {
               disabled={Boolean(saleData.representativeId)}
             />
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">اختيار عميل (اختياري)</label>
+            <select
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.clientId}
+              onChange={(e) => {
+                const clientId = e.target.value;
+                if (!clientId) {
+                  setSaleData((prev) => ({ ...prev, clientId: '', clientName: '' }));
+                  return;
+                }
+                const client = clients.find((c) => c._id === clientId);
+                setSaleData((prev) => ({ ...prev, clientId, clientName: client?.name || '' }));
+              }}
+            >
+              <option value="">بدون اختيار (إدخال يدوي)</option>
+              {clients.map((client) => (
+                <option key={client._id} value={client._id}>
+                  {client.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">اسم العميل (يدوي)</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              value={saleData.clientName}
+              onChange={(e) => setSaleData({ ...saleData, clientName: e.target.value })}
+              disabled={Boolean(saleData.clientId)}
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">الكمية</label>
             <input
@@ -822,6 +900,16 @@ export default function SalesPage() {
             />
           </div>
 
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300">سبب التعديل (اختياري)</label>
+            <textarea
+              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]"
+              value={editReason}
+              onChange={(e) => setEditReason(e.target.value)}
+              placeholder="اكتب سبب التعديل هنا..."
+            />
+          </div>
+
           <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
             <span className="text-gray-400">الإجمالي الكلي:</span>
             <span className="text-2xl font-bold text-green-400">
@@ -846,6 +934,60 @@ export default function SalesPage() {
       </Modal>
 
       {/* Return Sale Modal */}
+      <Modal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        title="سجل التعديلات"
+        maxWidth="lg"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-gray-900 rounded-2xl border border-gray-700">
+            <p className="text-sm text-gray-400">فاتورة مبيعات</p>
+            <p className="text-lg font-bold text-white">{selectedSaleForAudit?.name || '-'}</p>
+            <p className="text-sm text-gray-400">الموديل: {selectedSaleForAudit?.modelNumber || '-'}</p>
+            <p className="text-sm text-gray-400">رقم الفاتورة: {selectedSaleForAudit?._id || '-'}</p>
+          </div>
+          {auditLogs.length === 0 ? (
+            <p className="text-center text-gray-400 py-10">لا توجد سجلات تعديل لهذه الفاتورة</p>
+          ) : (
+            <div className="space-y-4">
+              {auditLogs.map((log) => (
+                <div key={log._id} className="p-4 bg-gray-900 rounded-2xl border border-gray-700">
+                  <div className="flex items-center justify-between gap-4 flex-col sm:flex-row">
+                    <div>
+                      <p className="text-sm text-gray-400">التاريخ</p>
+                      <p className="text-white">{formatDate(log.at || log.createdAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">المستخدم</p>
+                      <p className="text-white">{log.performedBy || 'غير معروف'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">سبب التعديل</p>
+                      <p className="text-white">{log.details?.reason || 'غير محدد'}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                      <p className="text-xs text-gray-500 uppercase mb-2">قبل التعديل</p>
+                      <p className="text-sm text-gray-300">الكمية: {log.changes?.before?.quantity}</p>
+                      <p className="text-sm text-gray-300">السعر: {formatCurrency(log.changes?.before?.price)}</p>
+                      <p className="text-sm text-gray-300">المدفوع: {formatCurrency(log.changes?.before?.paidAmount)}</p>
+                    </div>
+                    <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                      <p className="text-xs text-gray-500 uppercase mb-2">بعد التعديل</p>
+                      <p className="text-sm text-gray-300">الكمية: {log.changes?.after?.quantity}</p>
+                      <p className="text-sm text-gray-300">السعر: {formatCurrency(log.changes?.after?.price)}</p>
+                      <p className="text-sm text-gray-300">المدفوع: {formatCurrency(log.changes?.after?.paidAmount)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+
       <Modal
         isOpen={isReturnModalOpen}
         onClose={() => setIsReturnModalOpen(false)}

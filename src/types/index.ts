@@ -40,6 +40,7 @@ export interface SaleInvoice {
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'unpaid';
   customerId: string;
+  reason?: string;
   createdAt?: string;
   updatedAt?: string;
 }

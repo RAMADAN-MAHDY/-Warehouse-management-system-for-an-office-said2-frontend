@@ -66,7 +66,7 @@ export const saleService = {
     const response = await axiosInstance.post('/api/sales', sale);
     return response.data;
   },
-  update: async (id: string, sale: Partial<SaleInvoice>) => {
+  update: async (id: string, sale: Partial<SaleInvoice> & { reason?: string }) => {
     const response = await axiosInstance.put(`/api/sales/${id}`, sale);
     return response.data;
   },
@@ -76,6 +76,10 @@ export const saleService = {
   },
   bulkDelete: async (ids: string[]) => {
     const response = await axiosInstance.post('/api/sales/bulk-delete', { ids });
+    return response.data;
+  },
+  getAuditLogs: async (id: string) => {
+    const response = await axiosInstance.get(`/api/sales/${id}/audit-logs`);
     return response.data;
   },
   exportExcel: async (params?: { from?: string; to?: string }) => {
