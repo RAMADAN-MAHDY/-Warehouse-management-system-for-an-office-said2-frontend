@@ -988,24 +988,48 @@ export default function SalesPage() {
                       <p className="text-white">{log.performedBy || 'غير معروف'}</p>
                     </div>
                     <div>
+                      <p className="text-sm text-gray-400">نوع السجل</p>
+                      <p className="text-white">
+                        {log.action === 'return_sale_invoice' ? 'مرتجع' : log.action === 'update_sale_invoice' ? 'تعديل فاتورة' : log.action}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm text-gray-400">سبب التعديل</p>
                       <p className="text-white">{log.details?.reason || 'غير محدد'}</p>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
-                      <p className="text-xs text-gray-500 uppercase mb-2">قبل التعديل</p>
-                      <p className="text-sm text-gray-300">الكمية: {log.changes?.before?.quantity}</p>
-                      <p className="text-sm text-gray-300">السعر: {formatCurrency(log.changes?.before?.price)}</p>
-                      <p className="text-sm text-gray-300">المدفوع: {formatCurrency(log.changes?.before?.paidAmount)}</p>
+                  {log.action === 'return_sale_invoice' ? (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                        <p className="text-xs text-gray-500 uppercase mb-2">تفاصيل المرتجع</p>
+                        <p className="text-sm text-gray-300">الموديل: {log.details?.item?.modelNumber || '-'}</p>
+                        <p className="text-sm text-gray-300">المنتج: {log.details?.item?.name || '-'}</p>
+                        <p className="text-sm text-gray-300">الكمية المرتجعة: {log.details?.quantity || 0}</p>
+                        <p className="text-sm text-gray-300">المبلغ المسترد: {formatCurrency(log.details?.refundAmount || 0)}</p>
+                        <p className="text-sm text-gray-300">معرف المرتجع: {log.details?.returnId || '-'}</p>
+                      </div>
+                      <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                        <p className="text-xs text-gray-500 uppercase mb-2">حالة الفاتورة الأصلية</p>
+                        <p className="text-sm text-gray-300">رقم الفاتورة: {selectedSaleForAudit?._id || '-'}</p>
+                        <p className="text-sm text-gray-300">اسم العميل: {selectedSaleForAudit?.clientName || selectedSaleForAudit?.sellerName || '-'}</p>
+                      </div>
                     </div>
-                    <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
-                      <p className="text-xs text-gray-500 uppercase mb-2">بعد التعديل</p>
-                      <p className="text-sm text-gray-300">الكمية: {log.changes?.after?.quantity}</p>
-                      <p className="text-sm text-gray-300">السعر: {formatCurrency(log.changes?.after?.price)}</p>
-                      <p className="text-sm text-gray-300">المدفوع: {formatCurrency(log.changes?.after?.paidAmount)}</p>
+                  ) : (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                        <p className="text-xs text-gray-500 uppercase mb-2">قبل التعديل</p>
+                        <p className="text-sm text-gray-300">الكمية: {log.changes?.before?.quantity}</p>
+                        <p className="text-sm text-gray-300">السعر: {formatCurrency(log.changes?.before?.price)}</p>
+                        <p className="text-sm text-gray-300">المدفوع: {formatCurrency(log.changes?.before?.paidAmount)}</p>
+                      </div>
+                      <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                        <p className="text-xs text-gray-500 uppercase mb-2">بعد التعديل</p>
+                        <p className="text-sm text-gray-300">الكمية: {log.changes?.after?.quantity}</p>
+                        <p className="text-sm text-gray-300">السعر: {formatCurrency(log.changes?.after?.price)}</p>
+                        <p className="text-sm text-gray-300">المدفوع: {formatCurrency(log.changes?.after?.paidAmount)}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
