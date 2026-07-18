@@ -130,12 +130,37 @@ export default function SalesPage() {
   const handlePrint = (sale: SaleInvoice) => {
     setPrintingData(sale);
     setIsPrinting(true);
-    setTimeout(() => {
-      window.print();
+  };
+
+  React.useEffect(() => {
+    if (!isPrinting || !printingData) return;
+
+    const handleAfterPrint = () => {
       setIsPrinting(false);
       setPrintingData(null);
-    }, 500);
-  };
+    };
+
+    const printAfterRender = () => {
+      requestAnimationFrame(() => {
+        window.print();
+      });
+    };
+
+    const timeoutId = window.setTimeout(printAfterRender, 500);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    const fallbackId = window.setTimeout(() => {
+      if (isPrinting) {
+        handleAfterPrint();
+      }
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(fallbackId);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [isPrinting, printingData]);
 
   const handleSearchProduct = async (query: string) => {
     setSearchQuery(query);

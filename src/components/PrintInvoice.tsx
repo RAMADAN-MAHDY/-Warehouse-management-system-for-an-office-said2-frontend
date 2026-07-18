@@ -131,17 +131,21 @@ export const PrintInvoice = React.forwardRef<HTMLDivElement, PrintInvoiceProps>(
         @media print {
           body * {
             visibility: hidden !important;
+            background: transparent !important;
+            color: black !important;
           }
           .print-area, .print-area * {
             visibility: visible !important;
           }
           .print-area {
-            position: absolute !important;
+            position: fixed !important;
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
+            min-height: 100vh !important;
             background: white !important;
             color: black !important;
+            z-index: 9999 !important;
           }
         }
       `}} />

@@ -145,12 +145,37 @@ export default function PurchaseInvoicesPage() {
   const handlePrint = (invoice: PurchaseInvoice) => {
     setPrintingData(invoice);
     setIsPrinting(true);
-    setTimeout(() => {
-      window.print();
+  };
+
+  useEffect(() => {
+    if (!isPrinting || !printingData) return;
+
+    const handleAfterPrint = () => {
       setIsPrinting(false);
       setPrintingData(null);
-    }, 500);
-  };
+    };
+
+    const printAfterRender = () => {
+      requestAnimationFrame(() => {
+        window.print();
+      });
+    };
+
+    const timeoutId = window.setTimeout(printAfterRender, 500);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    const fallbackId = window.setTimeout(() => {
+      if (isPrinting) {
+        handleAfterPrint();
+      }
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearTimeout(fallbackId);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [isPrinting, printingData]);
 
   useEffect(() => {
     fetchInvoices();
