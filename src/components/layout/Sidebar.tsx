@@ -5,24 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  TrendingUp, 
-  Wallet, 
-  FileSpreadsheet, 
   LogOut, 
   Menu, 
   X,
-  ShoppingBag,
-  CreditCard,
-  Home,
-  ShieldCheck,
-  Users,
-  CreditCard as PaymentIcon,
-  ListRestart,
-  FileText,
-  Building2,
-  User
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -32,28 +17,7 @@ import { cn } from '@/lib/utils';
 import { authService } from '@/services/api';
 import NotificationBell from '../ui/NotificationBell';
 
-const navItems = [
-  { name: 'الرئيسية', href: '/', icon: Home },
-  { name: 'المخزون', href: '/store', icon: LayoutDashboard },
-  { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
-  { name: 'المناديب', href: '/representatives', icon: Users },
-  { name: 'العملاء', href: '/clients', icon: User },
-  { name: 'المرتجعات', href: '/returns', icon: ListRestart },
-  { name: 'الموردين', href: '/suppliers', icon: Building2 },
-  { name: 'المشتريات', href: '/purchases', icon: ShoppingBag },
-  { name: 'فواتير المشتريات', href: '/purchase-invoices', icon: FileText },
-  { name: 'الأرباح والتقارير', href: '/profit', icon: TrendingUp },
-  { name: 'المصروفات', href: '/expenses', icon: Wallet },
-  // { name: 'ملفات الإكسل', href: '/excel-files', icon: FileSpreadsheet },
-  { name: 'الاشتراك', href: '/subscription', icon: CreditCard },
-];
-
-const adminItems = [
-  { name: 'إدارة النظام', href: '/admin/dashboard', icon: ShieldCheck },
-  { name: 'المستخدمين', href: '/admin/users', icon: Users },
-  { name: 'الاشتراكات', href: '/admin/plans', icon: PaymentIcon },
-  { name: 'سجلات النظام', href: '/admin/audit', icon: ListRestart },
-];
+import { navItems, adminItems } from '@/lib/nav';
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -103,22 +67,22 @@ export default function Sidebar() {
       )}>
         <div className="flex flex-col h-full">
           <div className="p-6">
-            <div className="flex items-center mt-10 md:mt-3 justify-between">
-              <Link href="/" className="flex items-center gap-3">
+            <div className="flex items-center mt-10 md:mt-11 lg:mt-3 justify-between">
+              <Link href="/" className="flex items-center gap-2">
                 <Image 
                   src="/logo.png" 
-                  alt="Logo" 
-                  width={40} 
-                  height={40} 
-                  className="rounded-lg shadow-lg"
+                  alt="المخزنجي" 
+                  width={160} 
+                  height={400} 
+                  className="rounded-[90] mt-[-50] lg:mt-[0]  mr-11 lg:mr-5 shadow-lg object-contain"
                 />
-                <h1 className="text-xl font-bold text-blue-400">نظام الإدارة</h1>
+                {/* <h1 className="text-xl font-bold text-blue-400">المخزنجي</h1> */}
               </Link>
-              <div className="lg:hidden ml-8">
+              {/* <div className="lg:hidden ml-8 ">
                 {mounted && <NotificationBell />}
-              </div>
+              </div> */}
             </div>
-            <div className="hidden lg:flex items-center justify-between mt-4 bg-gray-900/40 p-2 rounded-xl border border-gray-700/50">
+            <div className=" flex items-center justify-between mt-4 bg-gray-900/40 p-2 rounded-xl border border-gray-700/50">
               <div className="flex-1">
                 {mounted && user && (
                   <p className="text-xs text-gray-400 font-medium truncate">

@@ -20,14 +20,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "نظام إدارة المخازن | Warehouse Management System",
+  title: "المخزنجي",
   description: "نظام متطور لإدارة المخازن والمبيعات والمشتريات والمصروفات بدقة وكفاءة عالية.",
   keywords: ["مخازن", "إدارة", "مبيعات", "مشتريات", "فواتير", "نظام محاسبي"],
   authors: [{ name: "Said" }],
   robots: "index, follow",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
+      { url: "/logo.png" },
       { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],

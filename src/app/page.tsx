@@ -66,7 +66,7 @@ export default function LandingPage() {
                   <Button variant="outline" size="sm" onClick={handleLogout} icon={<LogOut size={16} />}>
                     خروج
                   </Button>
-                  <Link href="/store">
+                  <Link href="/dashboard">
                     <Button variant="primary" size="sm" icon={<LayoutDashboard size={16} />}>
                       لوحة التحكم
                     </Button>
@@ -87,8 +87,8 @@ export default function LandingPage() {
           </div>
           
           <Link href="/" className="flex items-center gap-3">
-            <span className="text-xl font-bold text-blue-400 hidden sm:inline-block">نظام الإدارة</span>
-            <Image src="/logo.png" alt="Logo" width={40} height={40} className="rounded-lg shadow-lg" />
+            <span className="text-xl font-bold text-blue-400 hidden sm:inline-block">المخزنجي</span>
+            <Image src="/Al Mokhazangy - Concept 1_ Minimal Luxury SaaS Icon.png" alt="المخزنجي" width={40} height={40} className="rounded-lg shadow-lg object-contain" />
           </Link>
         </div>
       </nav>
@@ -113,7 +113,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row-reverse items-center justify-center gap-4">
             {mounted && (
               <>
-                <Link href={isAuthenticated ? "/store" : "/register"}>
+                <Link href={isAuthenticated ? "/dashboard" : "/register"}>
                   <Button size="lg" className="px-10 h-16 text-lg" icon={<ArrowRight size={20} className="mr-2" />}>
                     {isAuthenticated ? "انتقل للوحة التحكم" : "ابدأ الآن"}
                   </Button>
@@ -212,7 +212,7 @@ export default function LandingPage() {
       <footer className="py-12 border-t border-gray-800 bg-gray-950">
         <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} className="rounded-lg opacity-70" />
+            <Image src="/logo.png" alt="المخزنجي" width={40} height={40} className="rounded-lg opacity-70 object-contain" />
             <span className="text-gray-500">© 2026 جميع الحقوق محفوظة</span>
           </div>
           <div className="flex gap-8 text-gray-500">

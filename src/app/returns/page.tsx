@@ -94,13 +94,13 @@ export default function ReturnsPage() {
           <div className="grid grid-cols-2 gap-2">
             <input 
               type="date" 
-              className="bg-gray-800 border-gray-700 rounded-xl text-white focus:ring-orange-500 focus:border-orange-500 w-full p-2.5 text-sm"
+              className="bg-gray-800 border-gray-700 rounded-xl text-white focus:ring-orange-500 focus:border-orange-500 w-full p-2.5 text-sm [&::-webkit-calendar-picker-indicator]:invert"
               value={filter.from}
               onChange={(e) => setFilter({ ...filter, from: e.target.value })}
             />
             <input 
               type="date" 
-              className="bg-gray-800 border-gray-700 rounded-xl text-white focus:ring-orange-500 focus:border-orange-500 w-full p-2.5 text-sm"
+              className="bg-gray-800 border-gray-700 rounded-xl text-white focus:ring-orange-500 focus:border-orange-500 w-full p-2.5 text-sm [&::-webkit-calendar-picker-indicator]:invert"
               value={filter.to}
               onChange={(e) => setFilter({ ...filter, to: e.target.value })}
             />

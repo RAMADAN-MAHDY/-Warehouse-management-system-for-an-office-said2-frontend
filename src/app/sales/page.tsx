@@ -370,7 +370,7 @@ export default function SalesPage() {
           <p className="text-gray-400 mt-1">تتبع وإدارة كافة عمليات البيع</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {selectedIds.length > 0 && (
             <Button 
               variant="danger" 
@@ -407,13 +407,14 @@ export default function SalesPage() {
       <div className="glass p-6 rounded-2xl border border-gray-700 shadow-xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
           <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-white">تصنيف حسب التاريخ</h3>
             <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <Calendar size={16} />
               من تاريخ
             </label>
             <input
               type="date"
-              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition [&::-webkit-calendar-picker-indicator]:invert"
               value={filter.from}
               onChange={(e) => setFilter({ ...filter, from: e.target.value })}
             />
@@ -425,7 +426,7 @@ export default function SalesPage() {
             </label>
             <input
               type="date"
-              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition [&::-webkit-calendar-picker-indicator]:invert"
               value={filter.to}
               onChange={(e) => setFilter({ ...filter, to: e.target.value })}
             />
