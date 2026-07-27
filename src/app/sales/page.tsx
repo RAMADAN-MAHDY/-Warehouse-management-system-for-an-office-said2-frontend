@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { 
   ShoppingCart, 
   Search, 
+  FileText,
   Plus, 
   Download, 
   Trash2, 
@@ -533,7 +534,7 @@ export default function SalesPage() {
                           className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20"
                           title="سجل التعديلات"
                         >
-                          <Search size={16} />
+                          <FileText size={16} />
                         </Button>
                         <Button 
                           variant="ghost" 
