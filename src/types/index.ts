@@ -161,6 +161,38 @@ export interface ProfitSummary {
   expenses?: Expense[];
 }
 
+export interface ReportSummaryData {
+  customerId: string;
+  companyName?: string;
+  inventory: {
+    totalItems: number;
+    lowStockItems: Item[];
+  };
+  financials: {
+    totalSales: number;
+    grossSales: number;
+    totalReturns: number;
+    salesCount: number;
+    totalCOGS: number;
+    grossCOGS: number;
+    returnsCOGS: number;
+    totalPurchases: number;
+    purchasesCount: number;
+    totalExpenses: number;
+    netProfit: number;
+    unpaidInvoicesCount?: number;
+    partiallyPaidCount?: number;
+  };
+  topDebtorClient?: {
+    _id: string;
+    name: string;
+    code: string;
+    phone?: string;
+    balance: number;
+  } | null;
+  recentSales: SaleInvoice[];
+}
+
 export interface Return {
   _id: string;
   saleInvoiceId: string;

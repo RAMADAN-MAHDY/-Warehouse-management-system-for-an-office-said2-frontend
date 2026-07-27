@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios';
-import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse, Client, ClientListResponse } from '@/types';
+import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse, Client, ClientListResponse, ReportSummaryData } from '@/types';
 
 export const authService = {
   login: async (credentials: Record<string, string>) => {
@@ -363,7 +363,7 @@ export const profitService = {
 // Service for report-related operations
 export const reportService = {
   getSummary: async () => {
-    const response = await axiosInstance.get('/api/reports/summary');
+    const response = await axiosInstance.get<ApiResponse<ReportSummaryData>>('/api/reports/summary');
     return response.data;
   },
   getProfit: async (params?: { from?: string; to?: string }) => {
