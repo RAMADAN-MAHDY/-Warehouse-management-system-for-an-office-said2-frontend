@@ -92,6 +92,18 @@ export const saleService = {
   addPayment: async (id: string, data: { amount: number; method?: string; referenceNumber?: string; note?: string }) => {
     const response = await axiosInstance.post(`/api/sales/${id}/payment`, data);
     return response.data;
+  },
+  createGroup: async (data: { items: Array<{ modelNumber: string; name: string; quantity: number; price: number }>; sellerName?: string; clientName?: string; clientId?: string; representativeId?: string; paidAmount?: number }) => {
+    const response = await axiosInstance.post('/api/sales/group', data);
+    return response.data;
+  },
+  addGroupPayment: async (groupId: string, data: { amount: number; method?: string; referenceNumber?: string; note?: string }) => {
+    const response = await axiosInstance.post(`/api/sales/group/${groupId}/payment`, data);
+    return response.data;
+  },
+  getGroup: async (groupId: string) => {
+    const response = await axiosInstance.get(`/api/sales/group/${groupId}`);
+    return response.data;
   }
 };
 

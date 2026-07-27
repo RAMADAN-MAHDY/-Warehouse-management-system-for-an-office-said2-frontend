@@ -41,6 +41,7 @@ export interface SaleInvoice {
   paidAmount: number;
   paymentStatus: 'paid' | 'partial' | 'unpaid';
   customerId: string;
+  invoiceGroupId?: string | null;
   reason?: string;
   createdAt?: string;
   updatedAt?: string;

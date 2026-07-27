@@ -16,7 +16,10 @@ import {
   ChevronRight,
   RotateCcw,
   Printer,
-  CreditCard
+  CreditCard,
+  ChevronDown,
+  ChevronUp,
+  Layers
 } from 'lucide-react';
 import { saleService, itemService, returnService, representativeService, authService, clientService } from '@/services/api';
 import { SaleInvoice, Item, Representative, Client } from '@/types';
@@ -33,7 +36,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Modal from '@/components/ui/Modal';
 import { PrintInvoice } from '@/components/PrintInvoice';
-import AddSalePaymentModal from '@/components/sales/AddSalePaymentModal';
+import AddSalePaymentModal, { GroupPaymentTarget } from '@/components/sales/AddSalePaymentModal';
 
 
 export default function SalesPage() {
@@ -64,8 +67,65 @@ export default function SalesPage() {
   const [editReason, setEditReason] = useState('');
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
   const [selectedSaleForPayment, setSelectedSaleForPayment] = useState<SaleInvoice | null>(null);
+  const [groupPaymentTarget, setGroupPaymentTarget] = useState<GroupPaymentTarget | null>(null);
+  const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([]);
   
-  // New Sale states
+  const toggleExpandGroup = (groupId: string) => {
+    setExpandedGroupIds((prev) =>
+      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+    );
+  };
+
+  type GroupedSaleEntry =
+    | { type: 'single'; sale: SaleInvoice }
+    | { type: 'group'; groupId: string; invoices: SaleInvoice[] };
+
+  const groupedSales = useMemo<GroupedSaleEntry[]>(() => {
+    const groups: Record<string, SaleInvoice[]> = {};
+
+    sales.forEach((sale) => {
+      if (sale.invoiceGroupId) {
+        if (!groups[sale.invoiceGroupId]) {
+          groups[sale.invoiceGroupId] = [];
+        }
+        groups[sale.invoiceGroupId].push(sale);
+      }
+    });
+
+    const result: GroupedSaleEntry[] = [];
+    const processedGroupIds = new Set<string>();
+
+    sales.forEach((sale) => {
+      if (sale.invoiceGroupId) {
+        if (!processedGroupIds.has(sale.invoiceGroupId)) {
+          processedGroupIds.add(sale.invoiceGroupId);
+          const groupInvoices = groups[sale.invoiceGroupId];
+          if (groupInvoices && groupInvoices.length > 1) {
+            result.push({
+              type: 'group',
+              groupId: sale.invoiceGroupId,
+              invoices: groupInvoices,
+            });
+          } else if (groupInvoices && groupInvoices.length === 1) {
+            result.push({
+              type: 'single',
+              sale: groupInvoices[0],
+            });
+          }
+        }
+      } else {
+        result.push({
+          type: 'single',
+          sale,
+        });
+      }
+    });
+
+    return result;
+  }, [sales]);
+  
+  // Cart & New Sale states
+  const [cartItems, setCartItems] = useState<Array<{ id: string; item: Item; quantity: number; price: number }>>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Item | null>(null);
@@ -194,28 +254,74 @@ export default function SalesPage() {
     setSearchQuery('');
   };
 
+  const handleAddToCart = () => {
+    if (!selectedProduct) return;
+    if (saleData.quantity <= 0) {
+      toast.error('الكمية يجب أن تكون أكبر من صفر');
+      return;
+    }
+    if (saleData.quantity > selectedProduct.quantity) {
+      toast.error(`الكمية المتاحة فقط ${selectedProduct.quantity}`);
+      return;
+    }
+
+    setCartItems(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substring(2, 9),
+        item: selectedProduct,
+        quantity: saleData.quantity,
+        price: saleData.price
+      }
+    ]);
+    setSelectedProduct(null);
+    setSearchQuery('');
+    setSearchResults([]);
+    toast.success(`تم إضافة (${selectedProduct.name}) إلى السلة`);
+  };
+
+  const handleRemoveFromCart = (id: string) => {
+    setCartItems(prev => prev.filter(c => c.id !== id));
+  };
+
   const handleAddSale = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProduct) return;
-    
+    let itemsToSubmit = [...cartItems];
+    if (itemsToSubmit.length === 0 && selectedProduct) {
+      itemsToSubmit = [
+        {
+          id: 'temp',
+          item: selectedProduct,
+          quantity: saleData.quantity,
+          price: saleData.price
+        }
+      ];
+    }
+
+    if (itemsToSubmit.length === 0) {
+      toast.error('يرجى اختيار منتج وإضافته للسلة');
+      return;
+    }
+
     try {
-      const total = saleData.price * saleData.quantity;
-      const response = await saleService.create({
-        modelNumber: selectedProduct.modelNumber,
-        name: selectedProduct.name,
+      const response = await saleService.createGroup({
+        items: itemsToSubmit.map(c => ({
+          modelNumber: c.item.modelNumber,
+          name: c.item.name,
+          quantity: c.quantity,
+          price: c.price
+        })),
         sellerName: saleData.sellerName,
         representativeId: saleData.representativeId || undefined,
         clientId: saleData.clientId || undefined,
         clientName: saleData.clientName || undefined,
-        price: saleData.price,
-        quantity: saleData.quantity,
-        total,
         paidAmount: saleData.paidAmount
       });
 
       if (response.status) {
         toast.success('تمت عملية البيع بنجاح');
         setIsModalOpen(false);
+        setCartItems([]);
         setSelectedProduct(null);
         setSaleData({ sellerName: '', representativeId: '', clientId: '', clientName: '', quantity: 1, price: 0, paidAmount: 0 });
         fetchSales();
@@ -377,42 +483,18 @@ export default function SalesPage() {
         
         <div className="flex flex-wrap gap-2">
           {selectedIds.length > 0 && (
-            <Button 
-              variant="danger" 
-              icon={<Trash2 size={20} />}
-              onClick={handleBulkDelete}
-            >
-              حذف المحدد ({selectedIds.length})
+            <Button variant="danger" size="sm" onClick={handleBulkDelete} className="flex items-center gap-1">
+              <Trash2 size={16} />
+              حذف المحدّد
             </Button>
           )}
-          <Button 
-            variant="outline" 
-            icon={<Download size={20} />}
-            onClick={handleExport}
-          >
-            تصدير Excel
-          </Button>
-          <Button 
-            variant="outline" 
-            icon={<Printer size={20} />}
-            onClick={() => window.print()}
-          >
-            طباعة الصفحة
-          </Button>
-          <Button 
-            variant="primary" 
-            icon={<Plus size={20} />}
-            onClick={() => setIsModalOpen(true)}
-          >
-            إضافة بيع جديد
-          </Button>
         </div>
       </div>
 
-      <div className="glass p-6 rounded-2xl border border-gray-700 shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-white">تصنيف حسب التاريخ</h3>
+      {/* Date Filters */}
+      <div className="bg-gray-900/40 p-4 rounded-xl border border-gray-800 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4 flex-1">
+          <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <Calendar size={16} />
               من تاريخ
@@ -424,7 +506,7 @@ export default function SalesPage() {
               onChange={(e) => setFilter({ ...filter, from: e.target.value })}
             />
           </div>
-          <div className="space-y-2">
+          <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium text-gray-400 flex items-center gap-2">
               <Calendar size={16} />
               إلى تاريخ
@@ -436,13 +518,13 @@ export default function SalesPage() {
               onChange={(e) => setFilter({ ...filter, to: e.target.value })}
             />
           </div>
-          <Button variant="secondary" onClick={() => {
-            setFilter({ from: '', to: '' });
-            setPage(1);
-          }}>
-            إعادة تعيين
-          </Button>
         </div>
+        <Button variant="secondary" onClick={() => {
+          setFilter({ from: '', to: '' });
+          setPage(1);
+        }}>
+          إعادة تعيين
+        </Button>
       </div>
 
       {loading ? (
@@ -464,7 +546,7 @@ export default function SalesPage() {
                   />
                 </TableHead>
                 <TableHead>التاريخ</TableHead>
-                <TableHead>رقم الموديل</TableHead>
+                <TableHead>رقم الموديل / النوع</TableHead>
                 <TableHead>المندوب</TableHead>
                 <TableHead>اسم العميل</TableHead>
                 <TableHead>اسم القطعة</TableHead>
@@ -477,132 +559,315 @@ export default function SalesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sales.length > 0 ? (
-                sales.map((sale) => {
-                  let statusClass = '';
-                  let statusLabel = '';
-                  switch(sale.paymentStatus) {
-                    case 'paid':
-                      statusClass = 'bg-green-100 text-green-800 border-green-300';
-                      statusLabel = 'مدفوعة';
-                      break;
-                    case 'partial':
-                      statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
-                      statusLabel = 'جزئية';
-                      break;
-                    default:
-                      statusClass = 'bg-red-100 text-red-800 border-red-300';
-                      statusLabel = 'غير مدفوعة';
+              {groupedSales.length > 0 ? (
+                groupedSales.map((entry) => {
+                  if (entry.type === 'single' && entry.sale) {
+                    const sale = entry.sale;
+                    let statusClass = '';
+                    let statusLabel = '';
+                    switch(sale.paymentStatus) {
+                      case 'paid':
+                        statusClass = 'bg-green-100 text-green-800 border-green-300';
+                        statusLabel = 'مدفوعة';
+                        break;
+                      case 'partial':
+                        statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+                        statusLabel = 'جزئية';
+                        break;
+                      default:
+                        statusClass = 'bg-red-100 text-red-800 border-red-300';
+                        statusLabel = 'غير مدفوعة';
+                    }
+                    return (
+                      <TableRow key={sale._id}>
+                        <TableCell>
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                            checked={selectedIds.includes(sale._id)}
+                            onChange={() => toggleSelect(sale._id)}
+                          />
+                        </TableCell>
+                        <TableCell>{formatDate(sale.createdAt || '')}</TableCell>
+                        <TableCell className="font-medium text-blue-400">{sale.modelNumber}</TableCell>
+                        <TableCell className="text-gray-300">{representatives.find(r => r._id === sale.representativeId)?.name || sale.sellerName || '-'}</TableCell>
+                        <TableCell className="text-gray-300">{(sale.clientId as any)?.name || clients.find(c => c._id === sale.clientId)?.name || (sale as any).clientName || '-'}</TableCell>
+                        <TableCell>{sale.name}</TableCell>
+                        <TableCell>{sale.quantity}</TableCell>
+                        <TableCell>{formatCurrency(sale.price)}</TableCell>
+                        <TableCell className="font-bold text-green-400">
+                          {formatCurrency(sale.total)}
+                        </TableCell>
+                        <TableCell>{formatCurrency(sale.paidAmount || 0)}</TableCell>
+                        <TableCell>
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
+                            {statusLabel}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handlePrint(sale)}
+                              className="text-green-400 hover:text-green-300 hover:bg-green-900/20"
+                              title="طباعة الفاتورة"
+                            >
+                              <Printer size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              disabled={(sale.paidAmount || 0) >= sale.total}
+                              onClick={() => {
+                                setGroupPaymentTarget(null);
+                                setSelectedSaleForPayment(sale);
+                                setIsAddPaymentModalOpen(true);
+                              }}
+                              className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20 disabled:opacity-30"
+                              title="تسجيل دفعة"
+                            >
+                              <CreditCard size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleOpenAuditLogs(sale)}
+                              className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20"
+                              title="سجل التعديلات"
+                            >
+                              <FileText size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => {
+                                setReturningSale(sale);
+                                setReturnData({ quantity: sale.quantity, reason: '' });
+                                setIsReturnModalOpen(true);
+                              }}
+                              className="text-orange-400 hover:text-orange-300 hover:bg-orange-900/20"
+                              title="مرتجع"
+                            >
+                              <RotateCcw size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => {
+                                setEditingSale(sale);
+                                setEditReason('');
+                                setSaleData({
+                                  sellerName: sale.sellerName || '',
+                                  clientId: typeof sale.clientId === 'object' && sale.clientId !== null ? (sale.clientId as any)._id : (sale.clientId as string) || '',
+                                  clientName: typeof sale.clientId === 'object' ? '' : sale.clientName || '',
+                                  quantity: sale.quantity,
+                                  price: sale.price,
+                                  representativeId: sale.representativeId || '',
+                                  paidAmount: sale.paidAmount || 0
+                                });
+                                setIsEditModalOpen(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                            >
+                              <Edit2 size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDeleteSale(sale._id)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  } else if (entry.type === 'group' && entry.invoices && entry.groupId) {
+                    const invoices = entry.invoices;
+                    const groupId = entry.groupId;
+                    const isExpanded = expandedGroupIds.includes(groupId);
+                    const totalGrand = invoices.reduce((sum, i) => sum + i.total, 0);
+                    const totalPaid = invoices.reduce((sum, i) => sum + (i.paidAmount || 0), 0);
+                    const groupStatus = totalPaid >= totalGrand ? 'paid' : totalPaid > 0 ? 'partial' : 'unpaid';
+
+                    let statusClass = '';
+                    let statusLabel = '';
+                    switch(groupStatus) {
+                      case 'paid':
+                        statusClass = 'bg-green-100 text-green-800 border-green-300';
+                        statusLabel = 'مدفوعة بالكامل';
+                        break;
+                      case 'partial':
+                        statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+                        statusLabel = 'جزئية';
+                        break;
+                      default:
+                        statusClass = 'bg-red-100 text-red-800 border-red-300';
+                        statusLabel = 'غير مدفوعة';
+                    }
+
+                    const repName = representatives.find(r => r._id === invoices[0].representativeId)?.name || invoices[0].sellerName || '-';
+                    const clientName = (invoices[0].clientId as any)?.name || clients.find(c => c._id === invoices[0].clientId)?.name || (invoices[0] as any).clientName || '-';
+                    const totalQty = invoices.reduce((sum, i) => sum + i.quantity, 0);
+
+                    return (
+                      <React.Fragment key={`group-${groupId}`}>
+                        {/* Group Master Row */}
+                        <TableRow className="bg-gray-900/90 font-medium hover:bg-gray-900 border-b border-gray-800">
+                          <TableCell>
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandGroup(groupId)}
+                              className="p-1 text-gray-400 hover:text-white rounded-lg transition"
+                            >
+                              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            </button>
+                          </TableCell>
+                          <TableCell>{formatDate(invoices[0].createdAt || '')}</TableCell>
+                          <TableCell>
+                            <span className="px-2.5 py-1 rounded-lg bg-blue-950 text-blue-300 border border-blue-800/60 text-xs font-semibold flex items-center gap-1.5 w-fit">
+                              <Layers size={13} /> مجموعة ({invoices.length} أصناف)
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-gray-300">{repName}</TableCell>
+                          <TableCell className="text-gray-300">{clientName}</TableCell>
+                          <TableCell className="text-gray-300 font-semibold">{invoices.map(i => i.name).join('، ')}</TableCell>
+                          <TableCell className="font-semibold">{totalQty}</TableCell>
+                          <TableCell className="text-gray-500">-</TableCell>
+                          <TableCell className="font-bold text-green-400">{formatCurrency(totalGrand)}</TableCell>
+                          <TableCell className="font-semibold text-green-300">{formatCurrency(totalPaid)}</TableCell>
+                          <TableCell>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
+                              {statusLabel}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={totalPaid >= totalGrand}
+                                onClick={() => {
+                                  setSelectedSaleForPayment(null);
+                                  setGroupPaymentTarget({
+                                    groupId,
+                                    total: totalGrand,
+                                    paidAmount: totalPaid,
+                                    title: `مجموعة ${invoices.length} أصناف`
+                                  });
+                                  setIsAddPaymentModalOpen(true);
+                                }}
+                                className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20 disabled:opacity-30 flex items-center gap-1 px-2.5 py-1 text-xs"
+                                title="تسجيل دفعة للمجموعة"
+                              >
+                                <CreditCard size={14} />
+                                تسجيل دفعة
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => toggleExpandGroup(groupId)}
+                                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                                title={isExpanded ? 'إخفاء التفاصيل' : 'عرض التفاصيل'}
+                              >
+                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+
+                        {/* Sub-rows for group items */}
+                        {isExpanded && invoices.map((inv) => {
+                          let subStatusClass = '';
+                          let subStatusLabel = '';
+                          switch(inv.paymentStatus) {
+                            case 'paid':
+                              subStatusClass = 'bg-green-900/30 text-green-400 border-green-800/40';
+                              subStatusLabel = 'مدفوعة';
+                              break;
+                            case 'partial':
+                              subStatusClass = 'bg-yellow-900/30 text-yellow-400 border-yellow-800/40';
+                              subStatusLabel = 'جزئية';
+                              break;
+                            default:
+                              subStatusClass = 'bg-red-900/30 text-red-400 border-red-800/40';
+                              subStatusLabel = 'غير مدفوعة';
+                          }
+                          return (
+                            <TableRow key={inv._id} className="bg-gray-950/70 hover:bg-gray-950 border-b border-gray-800/60 text-xs">
+                              <TableCell className="text-gray-500 pl-6">↳</TableCell>
+                              <TableCell className="text-gray-400">{formatDate(inv.createdAt || '')}</TableCell>
+                              <TableCell className="font-medium text-blue-400">{inv.modelNumber}</TableCell>
+                              <TableCell className="text-gray-500">-</TableCell>
+                              <TableCell className="text-gray-500">-</TableCell>
+                              <TableCell className="text-white font-medium">{inv.name}</TableCell>
+                              <TableCell className="text-gray-200">{inv.quantity}</TableCell>
+                              <TableCell className="text-gray-300">{formatCurrency(inv.price)}</TableCell>
+                              <TableCell className="font-bold text-green-400">{formatCurrency(inv.total)}</TableCell>
+                              <TableCell className="text-gray-300">{formatCurrency(inv.paidAmount || 0)}</TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${subStatusClass}`}>
+                                  {subStatusLabel}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handlePrint(inv)}
+                                    className="text-green-400 hover:text-green-300 hover:bg-green-900/20 w-7 h-7"
+                                    title="طباعة الصنف"
+                                  >
+                                    <Printer size={14} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenAuditLogs(inv)}
+                                    className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20 w-7 h-7"
+                                    title="سجل التعديلات"
+                                  >
+                                    <FileText size={14} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      setReturningSale(inv);
+                                      setReturnData({ quantity: inv.quantity, reason: '' });
+                                      setIsReturnModalOpen(true);
+                                    }}
+                                    className="text-orange-400 hover:text-orange-300 hover:bg-orange-900/20 w-7 h-7"
+                                    title="مرتجع"
+                                  >
+                                    <RotateCcw size={14} />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => handleDeleteSale(inv._id)}
+                                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 w-7 h-7"
+                                    title="حذف المستند"
+                                  >
+                                    <Trash2 size={14} />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </React.Fragment>
+                    );
                   }
-                  return (
-                  <TableRow key={sale._id}>
-                    <TableCell>
-                      <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-blue-600 focus:ring-blue-500"
-                        checked={selectedIds.includes(sale._id)}
-                        onChange={() => toggleSelect(sale._id)}
-                      />
-                    </TableCell>
-                    <TableCell>{formatDate(sale.createdAt || '')}</TableCell>
-                    <TableCell className="font-medium text-blue-400">{sale.modelNumber}</TableCell>
-                     <TableCell className="text-gray-300">{representatives.find(r => r._id === sale.representativeId)?.name || sale.sellerName || '-'}</TableCell>
-                      <TableCell className="text-gray-300">{(sale.clientId as any)?.name || clients.find(c => c._id === sale.clientId)?.name || (sale as any).clientName || '-'}</TableCell>
-                    <TableCell>{sale.name}</TableCell>
-                    <TableCell>{sale.quantity}</TableCell>
-                    <TableCell>{formatCurrency(sale.price)}</TableCell>
-                    <TableCell className="font-bold text-green-400">
-                      {formatCurrency(sale.total)}
-                    </TableCell>
-                    <TableCell>{formatCurrency(sale.paidAmount || 0)}</TableCell>
-                    <TableCell>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusClass}`}>
-                        {statusLabel}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handlePrint(sale)}
-                          className="text-green-400 hover:text-green-300 hover:bg-green-900/20"
-                          title="طباعة الفاتورة"
-                        >
-                          <Printer size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          disabled={(sale.paidAmount || 0) >= sale.total}
-                          onClick={() => {
-                            setSelectedSaleForPayment(sale);
-                            setIsAddPaymentModalOpen(true);
-                          }}
-                          className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20 disabled:opacity-30"
-                          title="تسجيل دفعة"
-                        >
-                          <CreditCard size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleOpenAuditLogs(sale)}
-                          className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20"
-                          title="سجل التعديلات"
-                        >
-                          <FileText size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => {
-                            setReturningSale(sale);
-                            setReturnData({ quantity: sale.quantity, reason: '' });
-                            setIsReturnModalOpen(true);
-                          }}
-                          className="text-orange-400 hover:text-orange-300 hover:bg-orange-900/20"
-                          title="مرتجع"
-                        >
-                          <RotateCcw size={16} />
-                        </Button>
-                        <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => {
-                          setEditingSale(sale);
-                          setEditReason('');
-                           setSaleData({
-                              sellerName: sale.sellerName || '',
-                              clientId: typeof sale.clientId === 'object' && sale.clientId !== null ? (sale.clientId as any)._id : (sale.clientId as string) || '',
-                              clientName: typeof sale.clientId === 'object' ? '' : sale.clientName || '',
-                              quantity: sale.quantity,
-                              price: sale.price,
-                              representativeId: sale.representativeId || '',
-                              paidAmount: sale.paidAmount || 0
-                           });
-                          setIsEditModalOpen(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
-                      >
-                        <Edit2 size={16} />
-                      </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleDeleteSale(sale._id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
+                  return null;
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-10 text-gray-500">
+                  <TableCell colSpan={12} className="text-center py-10 text-gray-500">
                     لا توجد فواتير في هذه الفترة
                   </TableCell>
                 </TableRow>
@@ -655,177 +920,253 @@ export default function SalesPage() {
         </div>
       )}
 
-      {/* Add Sale Modal */}
+      {/* Add Sale Modal (Cart Enabled) */}
         <Modal
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false);
+            setCartItems([]);
             setSelectedProduct(null);
             setSaleData({ sellerName: '', representativeId: '', clientId: '', clientName: '', quantity: 1, price: 0, paidAmount: 0 });
           }}
-          title="عملية بيع جديدة"
-          maxWidth="xl"
+          title="عملية بيع جديدة (يدعم أصناف متعددة)"
+          maxWidth="2xl"
         >
         <div className="space-y-6">
+          {/* Search Product */}
           <div className="relative">
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="ابحث عن منتج بالاسم أو الموديل..."
-              className="w-full pr-12 pl-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
-              value={searchQuery}
-              onChange={(e) => handleSearchProduct(e.target.value)}
-            />
-            
-            {searchResults.length > 0 && (
-              <div className="absolute top-full mt-2 w-full bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-20 max-h-60 overflow-y-auto">
-                {searchResults.map((product) => (
-                  <button
-                    key={product._id}
-                    className="w-full px-4 py-3 text-right hover:bg-gray-700 transition flex justify-between items-center"
-                    onClick={() => handleSelectProduct(product)}
-                  >
-                    <span className="text-white">{product.name} ({product.modelNumber})</span>
-                    <span className="text-xs text-gray-400">متاح: {product.quantity}</span>
-                  </button>
-                ))}
+            <label className="text-sm font-medium text-gray-300 mb-1 block">البحث عن منتج وإضافته للسلة</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-400">
+                <Search size={18} />
               </div>
-            )}
+              <input
+                type="text"
+                placeholder="ابحث عن منتج بالاسم أو الموديل..."
+                className="w-full pr-12 pl-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+                value={searchQuery}
+                onChange={(e) => handleSearchProduct(e.target.value)}
+              />
+              
+              {searchResults.length > 0 && (
+                <div className="absolute top-full mt-2 w-full bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-20 max-h-60 overflow-y-auto">
+                  {searchResults.map((product) => (
+                    <button
+                      key={product._id}
+                      className="w-full px-4 py-3 text-right hover:bg-gray-700 transition flex justify-between items-center"
+                      onClick={() => handleSelectProduct(product)}
+                    >
+                      <span className="text-white font-medium">{product.name} ({product.modelNumber})</span>
+                      <span className="text-xs text-gray-400">المتاح: {product.quantity} قطعة - السعر: {formatCurrency(product.price)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-            {selectedProduct && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">اختيار عميل (اختياري)</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={saleData.clientId}
-                    onChange={(e) => {
-                      const clientId = e.target.value;
-                      if (!clientId) {
-                        setSaleData((prev) => ({ ...prev, clientId: '', clientName: '' }));
-                        return;
-                      }
-                      const client = clients.find((c) => c._id === clientId);
-                      setSaleData((prev) => ({ ...prev, clientId, clientName: client?.name || '' }));
-                    }}
-                  >
-                    <option value="">بدون اختيار (إدخال يدوي)</option>
-                    {clients.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">اسم العميل (يدوي)</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={saleData.clientName}
-                      onChange={(e) => setSaleData({ ...saleData, clientName: e.target.value })}
-                      disabled={Boolean(saleData.clientId)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">اختيار مندوب (اختياري)</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={saleData.representativeId}
-                    onChange={(e) => {
-                      const repId = e.target.value;
-                      if (!repId) {
-                        setSaleData((prev) => ({ ...prev, representativeId: '', sellerName: '' }));
-                        return;
-                      }
-                      const rep = representatives.find((r) => r._id === repId);
-                      setSaleData((prev) => ({ ...prev, representativeId: repId, sellerName: rep?.name || '' }));
-                    }}
-                  >
-                    <option value="">بدون اختيار (إدخال يدوي)</option>
-                    {representatives.map((rep) => (
-                      <option key={rep._id} value={rep._id}>
-                        {rep.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">اسم المندوب (يدوي)</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={saleData.sellerName}
-                      onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
-                      disabled={Boolean(saleData.representativeId)}
-                  />
-                </div>
+          {/* Selected Product Controls */}
+          {selectedProduct && (
+            <div className="bg-gray-900/90 p-4 rounded-xl border border-blue-900/50 space-y-3">
+              <div className="flex justify-between items-center border-b border-gray-800 pb-2">
+                <span className="font-semibold text-blue-400">{selectedProduct.name} ({selectedProduct.modelNumber})</span>
+                <span className="text-xs text-gray-400">المتاح بالمخزن: {selectedProduct.quantity}</span>
               </div>
-            )}
-
-            <form onSubmit={handleAddSale} className="space-y-4 border-t border-gray-700 pt-6 animate-in">
-              <div className="p-4 bg-blue-900/20 rounded-xl border border-blue-500/30">
-                <p className="text-sm text-blue-400 font-medium">المنتج المختار:</p>
-                <p className="text-lg font-bold text-white">{selectedProduct?.name ?? ''}</p>
-                <p className="text-sm text-gray-400">الموديل: {selectedProduct?.modelNumber ?? ''}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">الكمية</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">الكمية</label>
                   <input
                     type="number"
-                    required
                     min="1"
-                    max={selectedProduct?.quantity ?? 0}
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={saleData.quantity || ''}
-                    onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) || 0 })}
+                    max={selectedProduct.quantity}
+                    className="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-white text-sm"
+                    value={saleData.quantity}
+                    onChange={(e) => setSaleData({ ...saleData, quantity: parseInt(e.target.value) || 1 })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">السعر</label>
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">السعر الفردي</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    value={saleData.price || ''}
+                    className="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-white text-sm"
+                    value={saleData.price}
                     onChange={(e) => setSaleData({ ...saleData, price: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1"
+                    onClick={handleAddToCart}
+                  >
+                    <Plus size={16} /> إضافة للسلة
+                  </Button>
+                </div>
               </div>
+            </div>
+          )}
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">المبلغ المدفوع</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  max={saleData.price * saleData.quantity}
-                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={saleData.paidAmount || ''}
-                  onChange={(e) => setSaleData({ ...saleData, paidAmount: parseFloat(e.target.value) || 0 })}
-                />
+          {/* Cart Items List */}
+          {cartItems.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-semibold text-gray-200">سلة المبيعات ({cartItems.length} أصناف):</label>
+                <button
+                  type="button"
+                  onClick={() => setCartItems([])}
+                  className="text-xs text-red-400 hover:underline"
+                >
+                  محي السلة
+                </button>
               </div>
-
-              <div className="p-4 bg-gray-800/50 rounded-xl flex justify-between items-center">
-                <span className="text-gray-400">الإجمالي الكلي:</span>
-                <span className="text-2xl font-bold text-green-400">
-                  {formatCurrency(saleData.price * saleData.quantity)}
+              <div className="bg-gray-950 rounded-xl border border-gray-800 overflow-hidden max-h-48 overflow-y-auto">
+                <table className="w-full text-right text-xs">
+                  <thead className="bg-gray-900 text-gray-400 border-b border-gray-800">
+                    <tr>
+                      <th className="p-2.5">الموديل</th>
+                      <th className="p-2.5">الاسم</th>
+                      <th className="p-2.5">الكمية</th>
+                      <th className="p-2.5">السعر</th>
+                      <th className="p-2.5">الإجمالي</th>
+                      <th className="p-2.5 text-center">إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/60">
+                    {cartItems.map((c) => (
+                      <tr key={c.id} className="text-gray-300">
+                        <td className="p-2.5 font-mono text-blue-400">{c.item.modelNumber}</td>
+                        <td className="p-2.5">{c.item.name}</td>
+                        <td className="p-2.5">{c.quantity}</td>
+                        <td className="p-2.5">{formatCurrency(c.price)}</td>
+                        <td className="p-2.5 font-bold text-green-400">{formatCurrency(c.quantity * c.price)}</td>
+                        <td className="p-2.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFromCart(c.id)}
+                            className="text-red-400 hover:text-red-300 p-1"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-900 rounded-xl border border-gray-800 text-sm">
+                <span className="font-bold text-white">إجمالي الطلب:</span>
+                <span className="font-extrabold text-green-400 text-base">
+                  {formatCurrency(cartItems.reduce((sum, c) => sum + c.quantity * c.price, 0))}
                 </span>
               </div>
+            </div>
+          )}
 
-              <Button type="submit" variant="primary" className="w-full py-4 text-lg">
+          {/* Client & Representative & Paid Amount */}
+          <form onSubmit={handleAddSale} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">اختيار عميل (اختياري)</label>
+                <select
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.clientId}
+                  onChange={(e) => {
+                    const clientId = e.target.value;
+                    if (!clientId) {
+                      setSaleData((prev) => ({ ...prev, clientId: '', clientName: '' }));
+                      return;
+                    }
+                    const client = clients.find((c) => c._id === clientId);
+                    setSaleData((prev) => ({ ...prev, clientId, clientName: client?.name || '' }));
+                  }}
+                >
+                  <option value="">بدون اختيار (إدخال يدوي)</option>
+                  {clients.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">اسم العميل (يدوي)</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.clientName}
+                  onChange={(e) => setSaleData({ ...saleData, clientName: e.target.value })}
+                  disabled={Boolean(saleData.clientId)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">اختيار مندوب (اختياري)</label>
+                <select
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.representativeId}
+                  onChange={(e) => {
+                    const repId = e.target.value;
+                    if (!repId) {
+                      setSaleData((prev) => ({ ...prev, representativeId: '', sellerName: '' }));
+                      return;
+                    }
+                    const rep = representatives.find((r) => r._id === repId);
+                    setSaleData((prev) => ({ ...prev, representativeId: repId, sellerName: rep?.name || '' }));
+                  }}
+                >
+                  <option value="">بدون اختيار (إدخال يدوي)</option>
+                  {representatives.map((rep) => (
+                    <option key={rep._id} value={rep._id}>
+                      {rep.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">اسم البائع / المندوب (يدوي)</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={saleData.sellerName}
+                  onChange={(e) => setSaleData({ ...saleData, sellerName: e.target.value })}
+                  disabled={Boolean(saleData.representativeId)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-gray-800">
+              <label className="text-sm font-medium text-gray-300">المبلغ المدفوع الآن</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={saleData.paidAmount}
+                onChange={(e) => setSaleData({ ...saleData, paidAmount: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-gray-800">
+              <Button type="submit" variant="primary" className="flex-1">
                 تأكيد عملية البيع
               </Button>
-            </form>
-          </div>
-
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setCartItems([]);
+                  setSelectedProduct(null);
+                }}
+              >
+                إلغاء
+              </Button>
+            </div>
+          </form>
+        </div>
       </Modal>
 
 
@@ -1142,8 +1483,13 @@ export default function SalesPage() {
 
       <AddSalePaymentModal
         isOpen={isAddPaymentModalOpen}
-        onClose={() => setIsAddPaymentModalOpen(false)}
+        onClose={() => {
+          setIsAddPaymentModalOpen(false);
+          setSelectedSaleForPayment(null);
+          setGroupPaymentTarget(null);
+        }}
         sale={selectedSaleForPayment}
+        groupTarget={groupPaymentTarget}
         onSuccess={fetchSales}
       />
 

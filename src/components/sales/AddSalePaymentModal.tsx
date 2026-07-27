@@ -9,10 +9,18 @@ import { SaleInvoice } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 
+export interface GroupPaymentTarget {
+  groupId: string;
+  total: number;
+  paidAmount: number;
+  title?: string;
+}
+
 interface AddSalePaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  sale: SaleInvoice | null;
+  sale?: SaleInvoice | null;
+  groupTarget?: GroupPaymentTarget | null;
   onSuccess: () => void;
 }
 
@@ -20,6 +28,7 @@ export default function AddSalePaymentModal({
   isOpen,
   onClose,
   sale,
+  groupTarget,
   onSuccess,
 }: AddSalePaymentModalProps) {
   const [loading, setLoading] = useState(false);
@@ -28,20 +37,28 @@ export default function AddSalePaymentModal({
   const [referenceNumber, setReferenceNumber] = useState('');
   const [note, setNote] = useState('');
 
-  const remainingDebt = sale ? Math.max(0, sale.total - (sale.paidAmount || 0)) : 0;
+  const totalVal = groupTarget ? groupTarget.total : sale ? sale.total : 0;
+  const paidVal = groupTarget ? groupTarget.paidAmount : sale ? (sale.paidAmount || 0) : 0;
+  const remainingDebt = Math.max(0, totalVal - paidVal);
+
+  const titleText = groupTarget
+    ? `تسجيل دفعة للمجموعة (${groupTarget.title || groupTarget.groupId})`
+    : sale
+    ? `تسجيل دفعة - فاتورة بيع #${sale.modelNumber}`
+    : 'تسجيل دفعة';
 
   useEffect(() => {
-    if (isOpen && sale) {
+    if (isOpen && (sale || groupTarget)) {
       setAmount(remainingDebt > 0 ? remainingDebt.toString() : '');
       setMethod('cash');
       setReferenceNumber('');
       setNote('');
     }
-  }, [isOpen, sale, remainingDebt]);
+  }, [isOpen, sale, groupTarget, remainingDebt]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sale) return;
+    if (!sale && !groupTarget) return;
 
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -56,19 +73,29 @@ export default function AddSalePaymentModal({
 
     setLoading(true);
     try {
-      const response = await saleService.addPayment(sale._id, {
-        amount: numAmount,
-        method,
-        referenceNumber: referenceNumber.trim() || undefined,
-        note: note.trim() || undefined,
-      });
+      let response;
+      if (groupTarget) {
+        response = await saleService.addGroupPayment(groupTarget.groupId, {
+          amount: numAmount,
+          method,
+          referenceNumber: referenceNumber.trim() || undefined,
+          note: note.trim() || undefined,
+        });
+      } else if (sale) {
+        response = await saleService.addPayment(sale._id, {
+          amount: numAmount,
+          method,
+          referenceNumber: referenceNumber.trim() || undefined,
+          note: note.trim() || undefined,
+        });
+      }
 
-      if (response.status) {
+      if (response?.status) {
         toast.success('تم تسجيل الدفعة بنجاح');
         onSuccess();
         onClose();
       } else {
-        toast.error(response.message || 'فشل تسجيل الدفعة');
+        toast.error(response?.message || 'فشل تسجيل الدفعة');
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'حدث خطأ أثناء تسجيل الدفعة');
@@ -77,25 +104,25 @@ export default function AddSalePaymentModal({
     }
   };
 
-  if (!sale) return null;
+  if (!sale && !groupTarget) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`تسجيل دفعة - فاتورة بيع #${sale.modelNumber}`}
+      title={titleText}
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Invoice Summary Card */}
+        {/* Invoice / Group Summary Card */}
         <div className="bg-gray-900/60 p-4 rounded-xl border border-gray-700/60 space-y-2 text-sm">
           <div className="flex justify-between items-center text-gray-300">
-            <span>إجمالي الفاتورة:</span>
-            <span className="font-semibold text-white">{formatCurrency(sale.total)}</span>
+            <span>الإجمالي:</span>
+            <span className="font-semibold text-white">{formatCurrency(totalVal)}</span>
           </div>
           <div className="flex justify-between items-center text-gray-300">
             <span>المبلغ المدفوع سابقًا:</span>
-            <span className="font-semibold text-green-400">{formatCurrency(sale.paidAmount || 0)}</span>
+            <span className="font-semibold text-green-400">{formatCurrency(paidVal)}</span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-800 text-gray-200">
             <span className="font-bold">المتبقي للدفع:</span>
