@@ -20,6 +20,7 @@ export interface Client {
   phone?: string;
   email?: string;
   address?: string;
+  balance?: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

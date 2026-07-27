@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
-  Printer
+  Printer,
+  CreditCard
 } from 'lucide-react';
 import { saleService, itemService, returnService, representativeService, authService, clientService } from '@/services/api';
 import { SaleInvoice, Item, Representative, Client } from '@/types';
@@ -32,6 +33,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils';
 import Modal from '@/components/ui/Modal';
 import { PrintInvoice } from '@/components/PrintInvoice';
+import AddSalePaymentModal from '@/components/sales/AddSalePaymentModal';
 
 
 export default function SalesPage() {
@@ -60,6 +62,8 @@ export default function SalesPage() {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [selectedSaleForAudit, setSelectedSaleForAudit] = useState<SaleInvoice | null>(null);
   const [editReason, setEditReason] = useState('');
+  const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
+  const [selectedSaleForPayment, setSelectedSaleForPayment] = useState<SaleInvoice | null>(null);
   
   // New Sale states
   const [searchQuery, setSearchQuery] = useState('');
@@ -530,6 +534,19 @@ export default function SalesPage() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
+                          disabled={(sale.paidAmount || 0) >= sale.total}
+                          onClick={() => {
+                            setSelectedSaleForPayment(sale);
+                            setIsAddPaymentModalOpen(true);
+                          }}
+                          className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20 disabled:opacity-30"
+                          title="تسجيل دفعة"
+                        >
+                          <CreditCard size={16} />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
                           onClick={() => handleOpenAuditLogs(sale)}
                           className="text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/20"
                           title="سجل التعديلات"
@@ -992,15 +1009,38 @@ export default function SalesPage() {
                     <div>
                       <p className="text-sm text-gray-400">نوع السجل</p>
                       <p className="text-white">
-                        {log.action === 'return_sale_invoice' ? 'مرتجع' : log.action === 'update_sale_invoice' ? 'تعديل فاتورة' : log.action}
+                        {log.action === 'sale_invoice_payment' ? 'تسجيل دفعة' : log.action === 'return_sale_invoice' ? 'مرتجع' : log.action === 'update_sale_invoice' ? 'تعديل فاتورة' : log.action}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">سبب التعديل</p>
-                      <p className="text-white">{log.details?.reason || 'غير محدد'}</p>
+                      <p className="text-sm text-gray-400">سبب التعديل / الملاحظات</p>
+                      <p className="text-white">{log.details?.note || log.details?.reason || 'غير محدد'}</p>
                     </div>
                   </div>
-                  {log.action === 'return_sale_invoice' ? (
+                  {log.action === 'sale_invoice_payment' ? (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gray-950 p-4 rounded-xl border border-emerald-900/40">
+                        <p className="text-xs text-emerald-400 font-semibold uppercase mb-2">تفاصيل الدفعة</p>
+                        <p className="text-sm text-gray-300">المبلغ المدفوع: <span className="font-bold text-green-400">{formatCurrency(log.details?.amount || 0)}</span></p>
+                        <p className="text-sm text-gray-300">طريقة الدفع: {
+                          log.details?.method === 'cash' ? 'نقدي' :
+                          log.details?.method === 'bank_transfer' ? 'تحويل بنكي' :
+                          log.details?.method === 'cheque' ? 'شيك' : 'أخرى'
+                        }</p>
+                        <p className="text-sm text-gray-300">الرقم المرجعي: {log.details?.referenceNumber || '-'}</p>
+                        <p className="text-sm text-gray-300">الملاحظات: {log.details?.note || '-'}</p>
+                      </div>
+                      <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
+                        <p className="text-xs text-gray-500 uppercase mb-2">حالة الفاتورة بعد الدفعة</p>
+                        <p className="text-sm text-gray-300">المبلغ المدفوع الكلي: {formatCurrency(log.changes?.after?.paidAmount || 0)}</p>
+                        <p className="text-sm text-gray-300">إجمالي الفاتورة: {formatCurrency(log.changes?.after?.total || 0)}</p>
+                        <p className="text-sm text-gray-300">حالة الدفع: {
+                          log.changes?.after?.paymentStatus === 'paid' ? 'مدفوعة بالكامل' :
+                          log.changes?.after?.paymentStatus === 'partial' ? 'مدفوعة جزئيًا' : 'غير مدفوعة'
+                        }</p>
+                      </div>
+                    </div>
+                  ) : log.action === 'return_sale_invoice' ? (
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-gray-950 p-4 rounded-xl border border-gray-800">
                         <p className="text-xs text-gray-500 uppercase mb-2">تفاصيل المرتجع</p>
@@ -1099,6 +1139,13 @@ export default function SalesPage() {
           </form>
         )}
       </Modal>
+
+      <AddSalePaymentModal
+        isOpen={isAddPaymentModalOpen}
+        onClose={() => setIsAddPaymentModalOpen(false)}
+        sale={selectedSaleForPayment}
+        onSuccess={fetchSales}
+      />
 
       {isPrinting && printingData && (
         <PrintInvoice 

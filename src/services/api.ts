@@ -88,6 +88,10 @@ export const saleService = {
       responseType: 'blob'
     });
     return response.data;
+  },
+  addPayment: async (id: string, data: { amount: number; method?: string; referenceNumber?: string; note?: string }) => {
+    const response = await axiosInstance.post(`/api/sales/${id}/payment`, data);
+    return response.data;
   }
 };
 
