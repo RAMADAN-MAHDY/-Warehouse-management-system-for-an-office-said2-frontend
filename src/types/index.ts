@@ -114,6 +114,24 @@ export interface PurchaseInvoice {
   updatedAt?: string;
 }
 
+export interface PurchaseInvoicePayment {
+  _id: string;
+  customerId: string;
+  invoiceId: string;
+  supplierId: string;
+  amount: number;
+  method: 'cash' | 'bank_transfer' | 'cheque' | 'other';
+  referenceNumber?: string;
+  note?: string;
+  date: string;
+  createdBy?: { _id: string; name?: string; username?: string } | string;
+  status: 'active' | 'voided';
+  voidedAt?: string;
+  voidedBy?: { _id: string; name?: string; username?: string } | string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface InventoryAdjustment {
   _id: string;
   itemId: string | Item;

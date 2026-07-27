@@ -13,11 +13,15 @@ import {
   ChevronRight,
   FileText,
   Download,
-  Printer
+  Printer,
+  Receipt,
+  RotateCcw,
+  DollarSign
 } from 'lucide-react';
 import { purchaseInvoiceService, supplierService, itemService, authService } from '@/services/api';
-import { PurchaseInvoice, Supplier, Item } from '@/types';
+import { PurchaseInvoice, Supplier, Item, PurchaseInvoicePayment } from '@/types';
 import { PrintInvoice } from '@/components/PrintInvoice';
+import AddPaymentModal from '@/components/purchases/AddPaymentModal';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -51,6 +55,13 @@ export default function PurchaseInvoicesPage() {
   const [companyName, setCompanyName] = useState('');
   const [isPrinting, setIsPrinting] = useState(false);
   const [printingData, setPrintingData] = useState<PurchaseInvoice | null>(null);
+
+  // Payments Ledger state
+  const [selectedInvoiceForPayments, setSelectedInvoiceForPayments] = useState<PurchaseInvoice | null>(null);
+  const [isPaymentsModalOpen, setIsPaymentsModalOpen] = useState(false);
+  const [payments, setPayments] = useState<PurchaseInvoicePayment[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(false);
+  const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -187,6 +198,63 @@ export default function PurchaseInvoicesPage() {
     fetchProfile();
   }, []);
 
+  // Payments Ledger Handlers
+  const fetchPayments = async (invoiceId: string) => {
+    setLoadingPayments(true);
+    try {
+      const res = await purchaseInvoiceService.getPayments(invoiceId);
+      if (res.status) {
+        setPayments(res.data);
+      }
+    } catch (err) {
+      toast.error('حدث خطأ أثناء جلب سجل الدفعات');
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
+  const handleOpenPaymentsModal = (invoice: PurchaseInvoice) => {
+    setSelectedInvoiceForPayments(invoice);
+    setIsPaymentsModalOpen(true);
+    fetchPayments(invoice._id);
+  };
+
+  const handleVoidPayment = async (paymentId: string) => {
+    if (!selectedInvoiceForPayments) return;
+    if (!confirm('هل أنت متأكد من إلغاء هذه الدفعة؟ سيتم إرجاع المبلغ ورصيد المورد تلقائيًا.')) return;
+
+    try {
+      const res = await purchaseInvoiceService.voidPayment(selectedInvoiceForPayments._id, paymentId);
+      if (res.status) {
+        toast.success('تم إلغاء الدفعة بنجاح');
+        fetchPayments(selectedInvoiceForPayments._id);
+        fetchInvoices();
+        if (res.data?.invoice) {
+          setSelectedInvoiceForPayments(prev => prev ? {
+            ...prev,
+            paidAmount: res.data.invoice.paidAmount,
+            paymentStatus: res.data.invoice.paymentStatus
+          } : null);
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'فشل إلغاء الدفعة');
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    if (selectedInvoiceForPayments) {
+      fetchPayments(selectedInvoiceForPayments._id);
+      // Re-fetch updated single invoice info or update manually
+      purchaseInvoiceService.getById(selectedInvoiceForPayments._id).then((res) => {
+        if (res.status && res.data) {
+          setSelectedInvoiceForPayments(res.data);
+        }
+      }).catch(() => {});
+    }
+    fetchInvoices();
+  };
+
   // Add item to invoice
   const addInvoiceItem = () => {
     if (items.length > 0) {
@@ -252,8 +320,9 @@ export default function PurchaseInvoicesPage() {
     e.preventDefault();
     if (!editingInvoice) return;
     try {
+      const { paidAmount, ...updatePayload } = formData;
       const response = await purchaseInvoiceService.update(editingInvoice._id, {
-        ...formData,
+        ...updatePayload,
         items: invoiceItems.map(item => ({
           ...item,
           lineTotal: item.qty * item.unitCost
@@ -328,6 +397,16 @@ export default function PurchaseInvoicesPage() {
       return supplier?.name || 'غير معروف';
     }
     return supplierId.name;
+  };
+
+  const getMethodLabel = (method: string) => {
+    switch (method) {
+      case 'cash': return 'نقدي';
+      case 'bank_transfer': return 'تحويل بنكي';
+      case 'cheque': return 'شيك';
+      case 'other': return 'أخرى';
+      default: return method;
+    }
   };
 
   return (
@@ -451,6 +530,15 @@ export default function PurchaseInvoicesPage() {
                           <Button 
                             variant="ghost" 
                             size="icon" 
+                            onClick={() => handleOpenPaymentsModal(invoice)}
+                            className="text-amber-400 hover:text-amber-300 hover:bg-amber-900/20"
+                            title="سجل الدفعات"
+                          >
+                            <Receipt size={16} />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
                             onClick={() => handlePrint(invoice)}
                             className="text-green-400 hover:text-green-300 hover:bg-green-900/20"
                             title="طباعة الفاتورة"
@@ -464,6 +552,7 @@ export default function PurchaseInvoicesPage() {
                                 size="icon" 
                                 onClick={() => handleEditInvoice(invoice)}
                                 className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                                title="تعديل الفاتورة"
                               >
                                 <Edit2 size={16} />
                               </Button>
@@ -472,6 +561,7 @@ export default function PurchaseInvoicesPage() {
                                 size="icon" 
                                 onClick={() => handleCancelInvoice(invoice._id)}
                                 className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                title="إلغاء الفاتورة"
                               >
                                 <X size={16} />
                               </Button>
@@ -584,7 +674,7 @@ export default function PurchaseInvoicesPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">المبلغ المدفوع</label>
+              <label className="text-sm font-medium text-gray-300">الدفعة الأولى (اختياري)</label>
               <input
                 type="number"
                 min="0"
@@ -611,7 +701,6 @@ export default function PurchaseInvoicesPage() {
             ) : (
               <div className="space-y-2">
                 {invoiceItems.map((item, index) => {
-                  const product = items.find(i => i._id === item.itemId);
                   return (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end bg-gray-900/50 p-4 rounded-xl border border-gray-700">
                       <div className="space-y-2">
@@ -760,15 +849,13 @@ export default function PurchaseInvoicesPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">المبلغ المدفوع</label>
+              <label className="text-sm font-medium text-gray-300">المبلغ المدفوع (من سجل الدفعات)</label>
               <input
-                type="number"
-                min="0"
-                step="0.01"
-                max={formData.grandTotal}
-                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                value={formData.paidAmount}
-                onChange={(e) => setFormData({ ...formData, paidAmount: parseFloat(e.target.value) || 0 })}
+                type="text"
+                readOnly
+                disabled
+                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-gray-400 cursor-not-allowed outline-none font-semibold"
+                value={formatCurrency(editingInvoice?.paidAmount || 0)}
               />
             </div>
           </div>
@@ -889,6 +976,127 @@ export default function PurchaseInvoicesPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Payments Ledger Modal */}
+      <Modal
+        isOpen={isPaymentsModalOpen}
+        onClose={() => setIsPaymentsModalOpen(false)}
+        title={`سجل دفعات الفاتورة #${selectedInvoiceForPayments?.invoiceNumber || ''}`}
+        maxWidth="4xl"
+      >
+        {selectedInvoiceForPayments && (
+          <div className="space-y-6">
+            {/* Invoice Financial Summary Header Card */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-gray-900/60 p-4 rounded-xl border border-gray-700/60">
+              <div>
+                <p className="text-xs text-gray-400">إجمالي الفاتورة</p>
+                <p className="text-lg font-bold text-white">{formatCurrency(selectedInvoiceForPayments.grandTotal)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">المبلغ المدفوع</p>
+                <p className="text-lg font-bold text-green-400">{formatCurrency(selectedInvoiceForPayments.paidAmount)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400">المتبقي للدفع</p>
+                <p className="text-lg font-bold text-amber-400">
+                  {formatCurrency(Math.max(0, selectedInvoiceForPayments.grandTotal - selectedInvoiceForPayments.paidAmount))}
+                </p>
+              </div>
+              <div className="flex items-center justify-end">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={<Plus size={16} />}
+                  disabled={
+                    selectedInvoiceForPayments.status === 'cancelled' ||
+                    selectedInvoiceForPayments.paidAmount >= selectedInvoiceForPayments.grandTotal
+                  }
+                  onClick={() => setIsAddPaymentModalOpen(true)}
+                >
+                  إضافة دفعة
+                </Button>
+              </div>
+            </div>
+
+            {/* Payments Table */}
+            {loadingPayments ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="animate-spin text-blue-500" size={32} />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table data={payments}>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>التاريخ</TableHead>
+                      <TableHead>المبلغ</TableHead>
+                      <TableHead>طريقة الدفع</TableHead>
+                      <TableHead>الرقم المرجعي</TableHead>
+                      <TableHead>الملاحظات</TableHead>
+                      <TableHead>بواسطة</TableHead>
+                      <TableHead className="text-center">إجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.length > 0 ? (
+                      payments.map((payment) => (
+                        <TableRow key={payment._id}>
+                          <TableCell>{formatDate(payment.date)}</TableCell>
+                          <TableCell className="font-bold text-green-400">{formatCurrency(payment.amount)}</TableCell>
+                          <TableCell>{getMethodLabel(payment.method)}</TableCell>
+                          <TableCell>{payment.referenceNumber || '-'}</TableCell>
+                          <TableCell>{payment.note || '-'}</TableCell>
+                          <TableCell>
+                            {typeof payment.createdBy === 'object' && payment.createdBy?.name
+                              ? payment.createdBy.name
+                              : typeof payment.createdBy === 'object' && payment.createdBy?.username
+                              ? payment.createdBy.username
+                              : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {selectedInvoiceForPayments.status !== 'cancelled' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleVoidPayment(payment._id)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                title="إلغاء الدفعة"
+                              >
+                                <RotateCcw size={15} className="ml-1" />
+                                إلغاء
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          لا توجد دفعات مسجلة لهذه الفاتورة
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2">
+              <Button variant="outline" onClick={() => setIsPaymentsModalOpen(false)}>
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Add Payment Modal */}
+      <AddPaymentModal
+        isOpen={isAddPaymentModalOpen}
+        onClose={() => setIsAddPaymentModalOpen(false)}
+        invoice={selectedInvoiceForPayments}
+        onSuccess={handlePaymentSuccess}
+      />
 
       {isPrinting && printingData && (
         <PrintInvoice 

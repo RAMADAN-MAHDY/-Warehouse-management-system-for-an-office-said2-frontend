@@ -205,6 +205,18 @@ export const purchaseInvoiceService = {
       responseType: 'blob'
     });
     return response.data;
+  },
+  getPayments: async (invoiceId: string) => {
+    const response = await axiosInstance.get(`/api/purchase-invoices/${invoiceId}/payments`);
+    return response.data;
+  },
+  addPayment: async (invoiceId: string, data: { amount: number; method?: string; referenceNumber?: string; note?: string; date?: string }) => {
+    const response = await axiosInstance.post(`/api/purchase-invoices/${invoiceId}/payments`, data);
+    return response.data;
+  },
+  voidPayment: async (invoiceId: string, paymentId: string) => {
+    const response = await axiosInstance.post(`/api/purchase-invoices/${invoiceId}/payments/${paymentId}/void`);
+    return response.data;
   }
 };
 
