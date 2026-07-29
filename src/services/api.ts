@@ -186,6 +186,10 @@ export const supplierService = {
   delete: async (id: string) => {
     const response = await axiosInstance.delete(`/api/suppliers/${id}`);
     return response.data;
+  },
+  getPayments: async (id: string) => {
+    const response = await axiosInstance.get(`/api/suppliers/${id}/payments`);
+    return response.data;
   }
 };
 
@@ -450,6 +454,10 @@ export const clientService = {
   },
   delete: async (id: string) => {
     const response = await axiosInstance.delete<ApiResponse<Client>>(`/api/clients/${id}`);
+    return response.data;
+  },
+  getPayments: async (id: string) => {
+    const response = await axiosInstance.get(`/api/clients/${id}/payments`);
     return response.data;
   }
 };

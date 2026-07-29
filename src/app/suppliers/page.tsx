@@ -55,6 +55,10 @@ export default function SuppliersPage() {
   const [invoicesPage, setInvoicesPage] = useState(1);
   const [invoicesPagination, setInvoicesPagination] = useState({ totalPages: 1, total: 0 });
 
+  const [activeTab, setActiveTab] = useState<'invoices' | 'payments'>('invoices');
+  const [supplierPayments, setSupplierPayments] = useState<any[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
@@ -102,8 +106,23 @@ export default function SuppliersPage() {
   const handleViewInvoices = async (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setInvoicesPage(1);
+    setActiveTab('invoices');
     setIsInvoicesModalOpen(true);
     await fetchInvoicesForSupplier(supplier._id, 1);
+  };
+
+  const fetchPaymentsForSupplier = async (supplierId: string) => {
+    setPaymentsLoading(true);
+    try {
+      const response = await supplierService.getPayments(supplierId);
+      if (response.status) {
+        setSupplierPayments(response.data || []);
+      }
+    } catch (error) {
+      toast.error('حدث خطأ أثناء جلب سجل الدفعات');
+    } finally {
+      setPaymentsLoading(false);
+    }
   };
 
   const fetchInvoicesForSupplier = async (supplierId: string, currentPage: number) => {
@@ -123,9 +142,13 @@ export default function SuppliersPage() {
 
   useEffect(() => {
     if (isInvoicesModalOpen && selectedSupplier) {
-      fetchInvoicesForSupplier(selectedSupplier._id, invoicesPage);
+      if (activeTab === 'invoices') {
+        fetchInvoicesForSupplier(selectedSupplier._id, invoicesPage);
+      } else if (activeTab === 'payments') {
+        fetchPaymentsForSupplier(selectedSupplier._id);
+      }
     }
-  }, [invoicesPage]);
+  }, [invoicesPage, activeTab]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,7 +321,7 @@ export default function SuppliersPage() {
                 className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
                   page === p 
                     ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
                 }`}
               >
                 {p}
@@ -319,36 +342,33 @@ export default function SuppliersPage() {
         </div>
       )}
 
-      {/* Add/Edit Supplier Modal */}
-      <Modal
-        isOpen={isModalOpen || isEditModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setIsEditModalOpen(false);
-          setEditingSupplier(null);
-        }}
-        title={editingSupplier ? 'تعديل مورد' : 'إضافة مورد جديد'}
-        maxWidth="md"
-      >
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">الاسم</label>
-            <input
-              type="text"
-              required
-              placeholder="اسم المورد"
-              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            />
-          </div>
+      {/* Create / Edit Supplier Modal */}
+      {(isModalOpen || isEditModalOpen) && (
+        <Modal
+          isOpen={isModalOpen || isEditModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setIsEditModalOpen(false);
+            setEditingSupplier(null);
+          }}
+          title={editingSupplier ? 'تعديل بيانات مورد' : 'إضافة مورد جديد'}
+        >
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">الاسم *</label>
+              <input
+                type="text"
+                required
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">الهاتف</label>
               <input
                 type="text"
-                placeholder="رقم الهاتف"
                 className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -359,139 +379,223 @@ export default function SuppliersPage() {
               <label className="text-sm font-medium text-gray-300">البريد الالكتروني</label>
               <input
                 type="email"
-                placeholder="البريد الالكتروني"
                 className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300">العنوان</label>
-            <input
-              type="text"
-              placeholder="العنوان"
-              className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            />
-          </div>
-
-          {editingSupplier && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                <DollarSign size={16} />
-                الرصيد
-              </label>
+              <label className="text-sm font-medium text-gray-300">العنوان</label>
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
                 className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                value={formData.balance}
-                onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
             </div>
-          )}
 
-          <div className="pt-4 flex gap-3">
-            <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
-              حفظ
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => {
-                setIsModalOpen(false);
-                setIsEditModalOpen(false);
-                setEditingSupplier(null);
-              }}
-            >
-              إلغاء
-            </Button>
-          </div>
-        </form>
-      </Modal>
+            {!editingSupplier && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">الرصيد الأولي</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={formData.balance}
+                  onChange={(e) => setFormData({ ...formData, balance: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            )}
 
+            <div className="pt-4 flex gap-3">
+              <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
+                حفظ
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setIsEditModalOpen(false);
+                  setEditingSupplier(null);
+                }}
+              >
+                إلغاء
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Supplier Ledger / Financial Modal */}
       {isInvoicesModalOpen && selectedSupplier && (
-        <Modal 
-          isOpen={isInvoicesModalOpen} 
-          onClose={() => setIsInvoicesModalOpen(false)} 
-          title={`فواتير المورد: ${selectedSupplier.name}`}
-          maxWidth="4xl"
+        <Modal
+          isOpen={isInvoicesModalOpen}
+          onClose={() => setIsInvoicesModalOpen(false)}
+          title={`الكشف المالي للمورد: ${selectedSupplier.name}`}
         >
           <div className="space-y-4">
-            {invoicesLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3">
-                <Loader2 className="animate-spin text-blue-500" size={32} />
-                <p className="text-gray-400">جاري تحميل الفواتير...</p>
-              </div>
-            ) : purchaseInvoices.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">لا توجد فواتير لهذا المورد</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <Table data={purchaseInvoices}>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>رقم الفاتورة</TableHead>
-                        <TableHead>التاريخ</TableHead>
-                        <TableHead>الإجمالي</TableHead>
-                        <TableHead>المدفوع</TableHead>
-                        <TableHead>الحالة</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {purchaseInvoices.map((invoice) => (
-                        <TableRow key={invoice._id}>
-                          <TableCell className="text-white">{invoice.invoiceNumber}</TableCell>
-                          <TableCell className="text-gray-300">{formatDate(invoice.date)}</TableCell>
-                          <TableCell className="text-gray-300 font-bold">{formatCurrency(invoice.grandTotal)}</TableCell>
-                          <TableCell className="text-gray-300">{formatCurrency(invoice.paidAmount)}</TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                              invoice.paymentStatus === 'paid' ? 'bg-green-900/50 text-green-400' :
-                              invoice.paymentStatus === 'partial' ? 'bg-yellow-900/50 text-yellow-400' :
-                              'bg-red-900/50 text-red-400'
-                            }`}>
-                              {invoice.paymentStatus === 'paid' ? 'مدفوع' :
-                               invoice.paymentStatus === 'partial' ? 'جزئي' : 'غير مدفوع'}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+            {/* Tabs Header */}
+            <div className="flex border-b border-gray-700 gap-4">
+              <button
+                onClick={() => setActiveTab('invoices')}
+                className={`pb-2 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+                  activeTab === 'invoices'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <FileText size={16} />
+                فواتير الشراء
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`pb-2 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+                  activeTab === 'payments'
+                    ? 'border-emerald-500 text-emerald-400'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <DollarSign size={16} />
+                سجل الدفعات المسددة
+              </button>
+            </div>
 
-                {invoicesPagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4">
-                    <span className="text-sm text-gray-400">إجمالي: {invoicesPagination.total}</span>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setInvoicesPage(p => Math.max(1, p - 1))}
-                        disabled={invoicesPage <= 1}
-                      >
-                        السابق
-                      </Button>
-                      <span className="text-sm text-gray-400 px-2">
-                        صفحة {invoicesPage} / {invoicesPagination.totalPages}
-                      </span>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setInvoicesPage(p => Math.min(invoicesPagination.totalPages, p + 1))}
-                        disabled={invoicesPage >= invoicesPagination.totalPages}
-                      >
-                        التالي
-                      </Button>
+            {/* Invoices Tab */}
+            {activeTab === 'invoices' && (
+              <>
+                {invoicesLoading ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-2">
+                    <Loader2 className="animate-spin text-blue-500" size={30} />
+                    <p className="text-gray-400 text-sm">جار تحميل الفواتير...</p>
+                  </div>
+                ) : purchaseInvoices.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    لا توجد فواتير لهذا المورد
+                  </div>
+                ) : (
+                  <>
+                    <div className="border border-gray-700 rounded-xl overflow-hidden">
+                      <Table data={purchaseInvoices}>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>رقم الفاتورة</TableHead>
+                            <TableHead>التاريخ</TableHead>
+                            <TableHead>الإجمالي</TableHead>
+                            <TableHead>المدفوع</TableHead>
+                            <TableHead>الحالة</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {purchaseInvoices.map((invoice) => (
+                            <TableRow key={invoice._id}>
+                              <TableCell className="text-white font-medium">{invoice.invoiceNumber}</TableCell>
+                              <TableCell className="text-gray-300">{formatDate(invoice.date)}</TableCell>
+                              <TableCell className="text-gray-300 font-bold">{formatCurrency(invoice.grandTotal)}</TableCell>
+                              <TableCell className="text-emerald-400">{formatCurrency(invoice.paidAmount)}</TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                  invoice.paymentStatus === 'paid' ? 'bg-green-900/50 text-green-400' :
+                                  invoice.paymentStatus === 'partial' ? 'bg-yellow-900/50 text-yellow-400' :
+                                  'bg-red-900/50 text-red-400'
+                                }`}>
+                                  {invoice.paymentStatus === 'paid' ? 'مدفوع' :
+                                   invoice.paymentStatus === 'partial' ? 'جزئي' : 'غير مدفوع'}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
+
+                    {invoicesPagination.totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-4">
+                        <span className="text-sm text-gray-400">إجمالي: {invoicesPagination.total}</span>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setInvoicesPage(p => Math.max(1, p - 1))}
+                            disabled={invoicesPage <= 1}
+                          >
+                            السابق
+                          </Button>
+                          <span className="text-sm text-gray-400 px-2">
+                            صفحة {invoicesPage} / {invoicesPagination.totalPages}
+                          </span>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setInvoicesPage(p => Math.min(invoicesPagination.totalPages, p + 1))}
+                            disabled={invoicesPage >= invoicesPagination.totalPages}
+                          >
+                            التالي
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Payments Tab */}
+            {activeTab === 'payments' && (
+              <>
+                {paymentsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-2">
+                    <Loader2 className="animate-spin text-emerald-500" size={30} />
+                    <p className="text-gray-400 text-sm">جار تحميل سجل الدفعات...</p>
+                  </div>
+                ) : supplierPayments.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    لا توجد دفعات مسجلة لهذا المورد
+                  </div>
+                ) : (
+                  <div className="border border-gray-700 rounded-xl overflow-hidden">
+                    <Table data={supplierPayments}>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>التاريخ</TableHead>
+                          <TableHead>الفاتورة المرتبطة</TableHead>
+                          <TableHead>المبلغ المدفوع</TableHead>
+                          <TableHead>طريقة الدفع</TableHead>
+                          <TableHead>المرجع / الملاحظات</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {supplierPayments.map((pmt) => {
+                          const methodLabels: Record<string, string> = {
+                            cash: 'نقداً',
+                            bank_transfer: 'تحويل بنكي',
+                            cheque: 'شيك',
+                            other: 'أخرى'
+                          };
+                          const invNumber = pmt.invoiceId?.invoiceNumber || '-';
+                          return (
+                            <TableRow key={pmt._id}>
+                              <TableCell className="text-gray-300 text-xs">{formatDate(pmt.date)}</TableCell>
+                              <TableCell className="text-white font-medium">{invNumber}</TableCell>
+                              <TableCell className="text-emerald-400 font-bold">{formatCurrency(pmt.amount)}</TableCell>
+                              <TableCell>
+                                <span className="px-2 py-0.5 rounded bg-gray-800 text-xs text-gray-300 border border-gray-700">
+                                  {methodLabels[pmt.method] || pmt.method}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-xs text-gray-400">
+                                {pmt.referenceNumber && <div className="font-mono text-gray-300">مرجع: {pmt.referenceNumber}</div>}
+                                {pmt.note && <div>{pmt.note}</div>}
+                                {!pmt.referenceNumber && !pmt.note && '—'}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </>

@@ -64,6 +64,20 @@ const paymentStatusConfig: Record<string, { label: string; color: string; icon: 
   unpaid:  { label: 'غير مدفوع',      color: 'bg-red-500/10 text-red-400 border-red-500/30',            icon: <AlertCircle size={12} /> }
 };
 
+interface ClientPaymentLog {
+  _id: string;
+  date: string;
+  amount: number;
+  method: string;
+  referenceNumber?: string;
+  note?: string;
+  performedBy?: string;
+  invoiceId: string;
+  modelNumber: string;
+  itemName: string;
+  invoiceGroupId?: string;
+}
+
 // ─── Balance Modal Component ──────────────────────────────────────────────────
 function ClientBalanceModal({ 
   clientId, 
@@ -74,6 +88,9 @@ function ClientBalanceModal({
 }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<BalanceData | null>(null);
+  const [payments, setPayments] = useState<ClientPaymentLog[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'invoices' | 'payments'>('invoices');
   const [page, setPage] = useState(1);
 
   const fetchBalance = useCallback(async (p = 1) => {
@@ -88,7 +105,24 @@ function ClientBalanceModal({
     }
   }, [clientId]);
 
+  const fetchPayments = useCallback(async () => {
+    setPaymentsLoading(true);
+    try {
+      const res = await clientService.getPayments(clientId);
+      if (res.status) setPayments(res.data || []);
+    } catch {
+      toast.error('تعذّر جلب سجل التحصيلات');
+    } finally {
+      setPaymentsLoading(false);
+    }
+  }, [clientId]);
+
   useEffect(() => { fetchBalance(page); }, [page, fetchBalance]);
+  useEffect(() => {
+    if (activeTab === 'payments') {
+      fetchPayments();
+    }
+  }, [activeTab, fetchPayments]);
 
   return (
     <div 
@@ -200,64 +234,152 @@ function ClientBalanceModal({
               </div>
             )}
 
-            {/* Invoices Table */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <FileText size={16} className="text-gray-400" />
-                <h3 className="text-sm font-semibold text-gray-200">سجل الفواتير</h3>
-              </div>
-
-              {data.invoices.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  لا توجد فواتير مرتبطة بهذا العميل
-                </div>
-              ) : (
-                <div className="rounded-xl border border-gray-700 overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-700" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <th className="text-right px-4 py-3 text-gray-400 font-medium">التاريخ</th>
-                        <th className="text-right px-4 py-3 text-gray-400 font-medium">الصنف</th>
-                        <th className="text-right px-4 py-3 text-gray-400 font-medium">الكمية</th>
-                        <th className="text-right px-4 py-3 text-gray-400 font-medium">الإجمالي</th>
-                        <th className="text-right px-4 py-3 text-gray-400 font-medium">المدفوع</th>
-                        <th className="text-right px-4 py-3 text-gray-400 font-medium">المتبقي</th>
-                        <th className="text-center px-4 py-3 text-gray-400 font-medium">الحالة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.invoices.map((inv, idx) => {
-                        const remaining = inv.total - inv.paidAmount;
-                        const status = paymentStatusConfig[inv.paymentStatus] ?? paymentStatusConfig['unpaid'];
-                        return (
-                          <tr
-                            key={inv._id}
-                            className="border-b border-gray-800 last:border-0 hover:bg-white/[0.02] transition"
-                          >
-                            <td className="px-4 py-3 text-gray-300 text-xs">{formatDate(inv.createdAt)}</td>
-                            <td className="px-4 py-3 text-white font-medium">{inv.name}</td>
-                            <td className="px-4 py-3 text-gray-300">{inv.quantity}</td>
-                            <td className="px-4 py-3 text-blue-300 font-semibold">{formatCurrency(inv.total)}</td>
-                            <td className="px-4 py-3 text-emerald-400">{formatCurrency(inv.paidAmount)}</td>
-                            <td className="px-4 py-3 font-medium">
-                              <span className={remaining > 0 ? 'text-red-400' : 'text-gray-400'}>
-                                {formatCurrency(remaining)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border font-medium ${status.color}`}>
-                                {status.icon}
-                                {status.label}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+            {/* Tabs Header */}
+            <div className="flex border-b border-gray-700 gap-4">
+              <button
+                onClick={() => setActiveTab('invoices')}
+                className={`pb-2 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+                  activeTab === 'invoices'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <FileText size={16} />
+                سجل الفواتير ({data.balance.invoiceCount})
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`pb-2 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all ${
+                  activeTab === 'payments'
+                    ? 'border-emerald-500 text-emerald-400'
+                    : 'border-transparent text-gray-400 hover:text-white'
+                }`}
+              >
+                <Wallet size={16} />
+                سجل الدفعات والتحصيلات
+              </button>
             </div>
+
+            {/* Invoices Tab */}
+            {activeTab === 'invoices' && (
+              <div>
+                {data.invoices.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    لا توجد فواتير مرتبطة بهذا العميل
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-700 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">التاريخ</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">الصنف / الموديل</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">الكمية</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">الإجمالي</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">المدفوع</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">المتبقي</th>
+                          <th className="text-center px-4 py-3 text-gray-400 font-medium">الحالة</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.invoices.map((inv) => {
+                          const remaining = inv.total - inv.paidAmount;
+                          const status = paymentStatusConfig[inv.paymentStatus] ?? paymentStatusConfig['unpaid'];
+                          return (
+                            <tr
+                              key={inv._id}
+                              className="border-b border-gray-800 last:border-0 hover:bg-white/[0.02] transition"
+                            >
+                              <td className="px-4 py-3 text-gray-300 text-xs">{formatDate(inv.createdAt)}</td>
+                              <td className="px-4 py-3 text-white font-medium">
+                                <div>{inv.name}</div>
+                                {inv.modelNumber && <div className="text-xs text-gray-400 font-mono">{inv.modelNumber}</div>}
+                              </td>
+                              <td className="px-4 py-3 text-gray-300">{inv.quantity}</td>
+                              <td className="px-4 py-3 text-blue-300 font-semibold">{formatCurrency(inv.total)}</td>
+                              <td className="px-4 py-3 text-emerald-400">{formatCurrency(inv.paidAmount)}</td>
+                              <td className="px-4 py-3 font-medium">
+                                <span className={remaining > 0 ? 'text-red-400' : 'text-gray-400'}>
+                                  {formatCurrency(remaining)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border font-medium ${status.color}`}>
+                                  {status.icon}
+                                  {status.label}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Payments Tab */}
+            {activeTab === 'payments' && (
+              <div>
+                {paymentsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2">
+                    <Loader2 className="animate-spin text-emerald-400" size={28} />
+                    <p className="text-xs text-gray-400">جاري تحميل سجل التحصيلات...</p>
+                  </div>
+                ) : payments.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">
+                    لا توجد عمليات سداد/تحصيل مسجلة لهذا العميل
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-700 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">التاريخ</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">الصنف المرتبط</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">المبلغ المسدد</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">طريقة الدفع</th>
+                          <th className="text-right px-4 py-3 text-gray-400 font-medium">رقم المرجع/الملاحظات</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map((pmt) => {
+                          const methodLabels: Record<string, string> = {
+                            cash: 'نقداً',
+                            bank_transfer: 'تحويل بنكي',
+                            cheque: 'شيك',
+                            other: 'أخرى'
+                          };
+                          return (
+                            <tr key={pmt._id} className="border-b border-gray-800 last:border-0 hover:bg-white/[0.02] transition">
+                              <td className="px-4 py-3 text-gray-300 text-xs">{formatDate(pmt.date)}</td>
+                              <td className="px-4 py-3 text-white font-medium">
+                                <div>{pmt.itemName}</div>
+                                {pmt.modelNumber && pmt.modelNumber !== '-' && (
+                                  <span className="text-xs text-gray-400 font-mono">{pmt.modelNumber}</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-emerald-400 font-bold">{formatCurrency(pmt.amount)}</td>
+                              <td className="px-4 py-3 text-gray-300">
+                                <span className="px-2 py-0.5 rounded bg-gray-800 text-xs text-gray-300 border border-gray-700">
+                                  {methodLabels[pmt.method] || pmt.method}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-xs text-gray-400">
+                                {pmt.referenceNumber && <div className="font-mono text-gray-300">مرجع: {pmt.referenceNumber}</div>}
+                                {pmt.note && <div>{pmt.note}</div>}
+                                {!pmt.referenceNumber && !pmt.note && '—'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Pagination */}
             {data.pagination.totalPages > 1 && (
