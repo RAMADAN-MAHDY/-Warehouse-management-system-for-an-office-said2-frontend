@@ -101,6 +101,12 @@ export default function DashboardHome() {
 
   const periodLabel = `عن الـ ${chartDays} يوم السابقين`;
 
+  /* ──── أرقام اليوم الأخير (أمس) ──── */
+  const lastDay = currentPeriod.length > 0 ? currentPeriod[currentPeriod.length - 1] : null;
+  const lastDaySalesText = lastDay ? `أمس: ${formatCurrency(lastDay.sales)}` : '';
+  const lastDayProfitText = lastDay ? `أمس: ${formatCurrency(lastDay.profit)}` : '';
+  const lastDayCountText = lastDay ? `أمس: ${lastDay.count} فاتورة` : '';
+
   /* ──── Line Chart ──── */
   const lineChartData = {
     labels: currentPeriod.map((d) => {
@@ -233,7 +239,7 @@ export default function DashboardHome() {
             color="blue"
             change={salesChange}
             changePeriodLabel={periodLabel}
-            subtitle={`آخر ${chartDays} يوم`}
+            subtitle={lastDaySalesText ? `إجمالي ${chartDays} يوم (${lastDaySalesText})` : `إجمالي آخر ${chartDays} يوم`}
           />
           <SummaryCard
             title="صافي الربح"
@@ -242,7 +248,7 @@ export default function DashboardHome() {
             color={curProfit >= 0 ? 'emerald' : 'red'}
             change={profitChange}
             changePeriodLabel={periodLabel}
-            subtitle={`آخر ${chartDays} يوم`}
+            subtitle={lastDayProfitText ? `إجمالي ${chartDays} يوم (${lastDayProfitText})` : `إجمالي آخر ${chartDays} يوم`}
           />
           <SummaryCard
             title="عدد الفواتير"
@@ -252,7 +258,7 @@ export default function DashboardHome() {
             isCount
             change={countChange}
             changePeriodLabel={periodLabel}
-            subtitle={`آخر ${chartDays} يوم`}
+            subtitle={lastDayCountText ? `إجمالي ${chartDays} يوم (${lastDayCountText})` : `إجمالي آخر ${chartDays} يوم`}
           />
           <SummaryCard
             title="منتجات منخفضة المخزون"
