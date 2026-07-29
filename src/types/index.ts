@@ -193,6 +193,14 @@ export interface ReportSummaryData {
   recentSales: SaleInvoice[];
 }
 
+export interface DailyDataPoint {
+  date: string;
+  sales: number;
+  cogs: number;
+  profit: number;
+  count: number;
+}
+
 export interface Return {
   _id: string;
   saleInvoiceId: string;

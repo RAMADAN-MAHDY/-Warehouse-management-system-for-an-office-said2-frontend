@@ -1,27 +1,33 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Wallet, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Wallet,
+  Plus,
+  Trash2,
   Loader2,
   PieChart as PieChartIcon,
   BarChart3,
   ShoppingCart,
-  RotateCcw,
-  AlertTriangle,
-  FileText,
-  Clock,
-  UserX,
-  PackageCheck,
-  ChevronLeft
+  RotateCcw
 } from 'lucide-react';
-import { reportService } from '@/services/api';
-import { ReportSummaryData } from '@/types';
+import { profitService, purchaseService } from '@/services/api';
+import { SummaryCard } from '@/components/ui/SummaryCard';
+import { ProfitSummary } from '@/types';
 import { toast } from 'sonner';
-import Link from 'next/link';
+// import { Button } from '@/components/ui/Button';
+// import Link from 'next/link';
+// import { 
+//   Table, 
+//   TableHeader, 
+//   TableBody, 
+//   TableRow, 
+//   TableHead, 
+//   TableCell 
+// } from '@/components/ui/Table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   Chart as ChartJS,
@@ -46,20 +52,27 @@ ChartJS.register(
 );
 
 export default function ProfitPage() {
-  const [summaryData, setSummaryData] = useState<ReportSummaryData | null>(null);
+  const [summary, setSummary] = useState<ProfitSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  //   const [isModalOpen, setIsModalOpen] = useState(false);
+  //   const [formLoading, setFormLoading] = useState(false);
+  //   const [purchaseData, setPurchaseData] = useState({
+  //     description: '',
+  //     amount: 0,
+  //     type: 'purchase' as 'purchase' | 'adjustment'
+  //   });
 
   const fetchSummary = async () => {
     setLoading(true);
     try {
-      const response = await reportService.getSummary();
-      if (response.status && response.data) {
-        setSummaryData(response.data);
+      const response = await profitService.getSummary();
+      if (response.status) {
+        setSummary(response.data);
       }
     } catch (error: any) {
       if (error.response?.status !== 402 && error.response?.status !== 403) {
-        console.error('Failed to fetch report summary', error);
-        toast.error('حدث خطأ أثناء جلب ملخص التقارير');
+        console.error('Failed to fetch profit summary', error);
+        toast.error('حدث خطأ أثناء جلب ملخص الأرباح');
       }
     } finally {
       setLoading(false);
@@ -70,31 +83,55 @@ export default function ProfitPage() {
     fetchSummary();
   }, []);
 
-  if (loading || !summaryData) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <Loader2 className="animate-spin text-blue-500" size={40} />
-        <p className="text-gray-400">جاري تحميل ملخص التقارير...</p>
-      </div>
-    );
-  }
+  const totalReturns = summary?.totalReturns ?? 0;
+  const returnsCOGS = summary?.returnsCOGS ?? 0;
 
-  const { financials, inventory, topDebtorClient, recentSales } = summaryData;
-  const totalReturns = financials.totalReturns ?? 0;
-  const returnsCOGS = financials.returnsCOGS ?? 0;
+  //   const handleAddPurchase = async (e: React.FormEvent) => {
+  //     e.preventDefault();
+  //     setFormLoading(true);
+  //     try {
+  //       const response = await purchaseService.create({
+  //         reason: purchaseData.description,
+  //         amount: purchaseData.amount
+  //       });
+  //       if (response.status) {
+  //         toast.success('تمت إضافة القيد بنجاح');
+  //         setIsModalOpen(false);
+  //         setPurchaseData({ description: '', amount: 0, type: 'purchase' });
+  //         fetchSummary();
+  //       }
+  //     } catch (error) {
+  //       toast.error('فشلت عملية الإضافة');
+  //     } finally {
+  //       setFormLoading(false);
+  //     }
+  //   };
+
+  //   const handleDeletePurchase = async (id: string) => {
+  //     if (!confirm('هل أنت متأكد من حذف هذا القيد؟')) return;
+  //     try {
+  //       const response = await purchaseService.delete(id);
+  //       if (response.status) {
+  //         toast.success('تم الحذف بنجاح');
+  //         fetchSummary();
+  //       }
+  //     } catch (error) {
+  //       toast.error('فشل الحذف');
+  //     }
+  //   };
 
   const barChartData = {
-    labels: ['صافي COGS', 'صافي المبيعات', 'المرتجعات', 'المصروفات', 'صافي الربح'],
+    labels: ['صافي تكلفة البضاعة (COGS)', 'صافي المبيعات', 'المرتجعات', 'إجمالي المصروفات', 'صافي الربح'],
     datasets: [
       {
         label: 'المبالغ (ج.م)',
-        data: [
-          financials.totalCOGS,
-          financials.totalSales,
+        data: summary ? [
+          summary.totalCOGS,
+          summary.totalSales,
           totalReturns,
-          financials.totalExpenses,
-          financials.netProfit
-        ],
+          summary.totalExpenses,
+          summary.netProfit
+        ] : [],
         backgroundColor: [
           'rgba(59, 130, 246, 0.6)', // Blue
           'rgba(16, 185, 129, 0.6)', // Green
@@ -119,7 +156,9 @@ export default function ProfitPage() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: false,
+      },
       tooltip: {
         backgroundColor: 'rgba(15, 23, 42, 0.9)',
         padding: 12,
@@ -141,119 +180,87 @@ export default function ProfitPage() {
     }
   };
 
+  if (loading || !summary) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="animate-spin text-blue-500" size={40} />
+        <p className="text-gray-400">جاري تحميل ملخص الأرباح...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 animate-in" dir="rtl">
+    <div className="space-y-8 animate-in">
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
           <TrendingUp className="text-green-500" />
-          الأرباح واللوحة الماليّة المباشرة
+          الأرباح والتقارير المالية
         </h1>
-        <p className="text-gray-400 mt-1">مؤشرات الأداء الرئيسية (KPIs) ونظرة شاملة على حالة المخزن والمالية</p>
+        <p className="text-gray-400 mt-1">نظرة شاملة على أداء مخزنك المالي</p>
       </div>
 
-      {/* 6 KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* 1. Net Profit */}
-        <SummaryCard 
-          title="صافي الربح" 
-          value={financials.netProfit} 
-          isCurrency={true}
-          subtitle={`معدل هامش الربح الإجمالي`}
-          icon={financials.netProfit >= 0 ? <TrendingUp className="text-emerald-400" /> : <TrendingDown className="text-red-400" />}
-          color={financials.netProfit >= 0 ? "emerald" : "red"}
-        />
-
-        {/* 2. Total Net Sales */}
-        <SummaryCard 
-          title="صافي المبيعات" 
-          value={financials.totalSales} 
-          isCurrency={true}
-          subtitle={`عدد الفواتير: ${financials.salesCount || 0}`}
-          icon={<DollarSign className="text-green-400" />}
-          color="green"
-        />
-
-        {/* 3. Low Stock Items Count */}
-        <SummaryCard 
-          title="أصناف منخفضة المخزون" 
-          value={inventory.lowStockItems?.length || 0} 
-          isCurrency={false}
-          subtitle={`إجمالي الأصناف: ${inventory.totalItems || 0}`}
-          icon={<AlertTriangle className="text-amber-400" />}
-          color="amber"
-          badgeText={(inventory.lowStockItems?.length || 0) > 0 ? "تحذير إعادة الطلب" : "المخزون ممتاز"}
-        />
-
-        {/* 4. Unpaid Invoices */}
-        <SummaryCard 
-          title="فواتير غير مدفوعة" 
-          value={financials.unpaidInvoicesCount || 0} 
-          isCurrency={false}
-          subtitle="فواتير مبيعات آجلة بالكامل"
-          icon={<FileText className="text-red-400" />}
-          color="red"
-        />
-
-        {/* 5. Partially Paid Invoices */}
-        <SummaryCard 
-          title="فواتير مدفوعة جزئياً" 
-          value={financials.partiallyPaidCount || 0} 
-          isCurrency={false}
-          subtitle="تحتاج لمتابعة تحصيل المتبقي"
-          icon={<Clock className="text-orange-400" />}
-          color="orange"
-        />
-
-        {/* 6. Top Debtor Client */}
-        <SummaryCard 
-          title="أكبر عميل مديون" 
-          value={topDebtorClient ? topDebtorClient.balance : 0} 
-          isCurrency={true}
-          subtitle={topDebtorClient ? `${topDebtorClient.name} (${topDebtorClient.code})` : 'لا يوجد مديونيات قائمة'}
-          icon={<UserX className="text-purple-400" />}
-          color="purple"
-        />
-      </div>
-
-      {/* Additional breakdown cards: COGS, Returns, Expenses, Purchases */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard 
-          title="صافي تكلفة البضاعة (COGS)" 
-          value={financials.totalCOGS} 
-          isCurrency={true}
+        <SummaryCard
+          title="صافي تكلفة البضاعة المباعة"
+          value={summary.totalCOGS}
           icon={<ShoppingCart className="text-blue-400" />}
           color="blue"
         />
-        <SummaryCard 
-          title="المبيعات قبل المرتجعات" 
-          value={financials.grossSales} 
-          isCurrency={true}
-          icon={<DollarSign className="text-emerald-400" />}
-          color="emerald"
+        <SummaryCard
+          title="صافي المبيعات"
+          value={summary.totalSales}
+          icon={<TrendingUp className="text-green-400" />}
+          color="green"
         />
-        <SummaryCard 
-          title="إجمالي المرتجعات" 
-          value={totalReturns} 
-          isCurrency={true}
-          icon={<RotateCcw className="text-red-400" />}
-          color="red"
-        />
-        <SummaryCard 
-          title="إجمالي المصروفات" 
-          value={financials.totalExpenses} 
-          isCurrency={true}
+        <SummaryCard
+          title="إجمالي المصروفات"
+          value={summary.totalExpenses}
           icon={<Wallet className="text-orange-400" />}
           color="orange"
         />
+        <SummaryCard
+          title="صافي الربح"
+          value={summary.netProfit}
+          icon={summary.netProfit >= 0 ? <TrendingUp className="text-emerald-400" /> : <TrendingDown className="text-red-400" />}
+          color={summary.netProfit >= 0 ? "emerald" : "red"}
+        />
       </div>
 
-      {/* Charts Section */}
+      {(summary.grossSales != null || summary.grossCOGS != null || summary.totalReturns != null || summary.returnsCOGS != null) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <SummaryCard
+            title="المبيعات قبل المرتجعات"
+            value={summary.grossSales ?? summary.totalSales + totalReturns}
+            icon={<DollarSign className="text-green-400" />}
+            color="green"
+          />
+          <SummaryCard
+            title="إجمالي المرتجعات"
+            value={totalReturns}
+            icon={<RotateCcw className="text-red-400" />}
+            color="red"
+          />
+          <SummaryCard
+            title="COGS قبل المرتجعات"
+            value={summary.grossCOGS ?? summary.totalCOGS + returnsCOGS}
+            icon={<ShoppingCart className="text-blue-400" />}
+            color="blue"
+          />
+          <SummaryCard
+            title="COGS المرتجعات"
+            value={returnsCOGS}
+            icon={<RotateCcw className="text-red-400" />}
+            color="red"
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass p-8 rounded-3xl border border-gray-700 shadow-2xl h-[400px]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <BarChart3 className="text-blue-500" />
-              مقارنة ماليّة
+              مقارنة مالية
             </h3>
           </div>
           <div className="h-[300px]">
@@ -264,34 +271,16 @@ export default function ProfitPage() {
         <div className="glass p-8 rounded-3xl border border-gray-700 shadow-2xl">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <PieChartIcon className="text-purple-500" />
-            توزيع المصروفات والربح
+            نسبة المصروفات للربح
           </h3>
           <div className="h-[250px]">
-            <Pie 
+            <Pie
               data={{
                 labels: ['صافي الربح', 'المصروفات', 'صافي COGS', 'صافي المبيعات', 'المرتجعات'],
                 datasets: [{
-                  data: [
-                    Math.max(0, financials.netProfit),
-                    financials.totalExpenses,
-                    financials.totalCOGS,
-                    financials.totalSales,
-                    totalReturns
-                  ],
-                  backgroundColor: [
-                    'rgba(168, 85, 247, 0.6)', 
-                    'rgba(245, 158, 11, 0.6)', 
-                    'rgba(59, 130, 246, 0.6)', 
-                    'rgba(16, 185, 129, 0.6)', 
-                    'rgba(239, 68, 68, 0.6)'
-                  ],
-                  borderColor: [
-                    'rgba(168, 85, 247, 1)',
-                    'rgba(245, 158, 11, 1)',
-                    'rgba(59, 130, 246, 1)',
-                    'rgba(16, 185, 129, 1)',
-                    'rgba(239, 68, 68, 1)'
-                  ],
+                  data: [Math.max(0, summary.netProfit), summary.totalExpenses, summary.totalCOGS, summary.totalSales, totalReturns],
+                  backgroundColor: ['rgba(168, 85, 247, 0.6)', 'rgba(245, 158, 11, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(16, 185, 129, 0.6)', 'rgba(239, 68, 68, 0.6)'],
+                  borderColor: ['rgba(168, 85, 247, 1)', 'rgba(245, 158, 11, 1)', 'rgba(59, 130, 246, 1)', 'rgba(16, 185, 129, 1)', 'rgba(239, 68, 68, 1)'],
                   borderWidth: 1,
                 }]
               }}
@@ -307,143 +296,157 @@ export default function ProfitPage() {
         </div>
       </div>
 
-      {/* Widgets Grid: Low Stock Alert List & Recent Sales Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Low Stock Items List */}
-        <div className="glass p-6 rounded-3xl border border-gray-700 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <AlertTriangle className="text-amber-400" />
-              تنبيهات المخزون المنخفض
-            </h3>
-            <Link href="/store" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
-              عرض المخزن بالكامل <ChevronLeft size={14} />
+      {/* المشتريات الأخيرة */}
+      {/* 
+       <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">آخر المشتريات</h2>
+          <div className="flex gap-2">
+            <Link href="/purchases">
+              <Button variant="outline" size="sm">عرض الكل</Button>
             </Link>
+             <Button variant="primary" size="sm" icon={<Plus size={18} />} onClick={() => setIsModalOpen(true)}>
+              إضافة سريعة
+            </Button> 
           </div>
-
-          {inventory.lowStockItems && inventory.lowStockItems.length > 0 ? (
-            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
-              {inventory.lowStockItems.map((item) => (
-                <div key={item._id} className="flex items-center justify-between p-3 rounded-xl bg-gray-800/60 border border-gray-700/60">
-                  <div>
-                    <div className="font-semibold text-white text-sm">{item.name}</div>
-                    <div className="text-xs text-gray-400">موديل: {item.modelNumber}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                      متبقي {item.quantity} قطع
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-gray-400 flex flex-col items-center gap-2">
-              <PackageCheck className="text-emerald-400" size={36} />
-              <p className="text-sm font-medium">جميع الأصناف متوفرة بنسب أمينات كافية</p>
-            </div>
-          )}
         </div>
 
-        {/* Recent Sales Activity Feed */}
-        <div className="glass p-6 rounded-3xl border border-gray-700 shadow-2xl space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileText className="text-blue-400" />
-              آخر الفواتير الصادرة
-            </h3>
-            <Link href="/sales" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
-              جميع الفواتير <ChevronLeft size={14} />
-            </Link>
-          </div>
-
-          {recentSales && recentSales.length > 0 ? (
-            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
-              {recentSales.map((sale) => (
-                <div key={sale._id} className="flex items-center justify-between p-3 rounded-xl bg-gray-800/60 border border-gray-700/60">
-                  <div className="space-y-0.5">
-                    <div className="font-semibold text-white text-sm">{sale.name}</div>
-                    <div className="text-xs text-gray-400 flex items-center gap-2">
-                      <span>العميل: {sale.clientName || 'عميل عام'}</span>
-                      <span>•</span>
-                      <span>{sale.createdAt ? formatDate(sale.createdAt) : ''}</span>
-                    </div>
-                  </div>
-                  <div className="text-left">
-                    <div className="font-bold text-emerald-400 text-sm">{formatCurrency(sale.total)}</div>
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
-                      sale.paymentStatus === 'paid' 
-                        ? 'bg-emerald-500/20 text-emerald-300' 
-                        : sale.paymentStatus === 'partial'
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : 'bg-red-500/20 text-red-300'
-                    }`}>
-                      {sale.paymentStatus === 'paid' ? 'مدفوعة' : sale.paymentStatus === 'partial' ? 'جزئية' : 'غير مدفوعة'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center text-gray-400">
-              لا توجد فواتير مبيعات مسجلة مؤخراً
-            </div>
-          )}
-        </div>
+        <Table data={(summary.purchases || []).slice(0, 5)}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>التاريخ</TableHead>
+              <TableHead>الوصف</TableHead>
+              <TableHead>النوع</TableHead>
+              <TableHead>المبلغ</TableHead>
+              <TableHead className="text-center">إجراءات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(summary.purchases || []).slice(0, 5).map((p) => (
+              <TableRow key={p._id}>
+                <TableCell>{formatDate(p.date || p.createdAt || '')}</TableCell>
+                <TableCell>{p.description}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    p.type === 'adjustment' ? 'bg-purple-900/30 text-purple-400' : 'bg-blue-900/30 text-blue-400'
+                  }`}>
+                    {p.type === 'adjustment' ? 'تعديل' : 'شراء'}
+                  </span>
+                </TableCell>
+                <TableCell className="font-bold text-green-400">{formatCurrency(p.amount)}</TableCell>
+                <TableCell className="text-center">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => handleDeletePurchase(p._id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
+      
+      
+      */}
+      {/* <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-white">آخر المصروفات</h2>
+        
+          <div className="text-right text-white">
+            <p className="text-lg font-bold">
+              مجموع المصروفات: {formatCurrency(summary.totalExpenses)}
+            </p>
+          </div>
+          <Link href="/expenses">
+            <Button variant="outline" size="sm">عرض الكل</Button>
+          </Link>
+        </div>
+
+        <Table data={(summary.expenses || []).slice(0, 5)}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>التاريخ</TableHead>
+              <TableHead>الوصف</TableHead>
+              <TableHead>المبلغ</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {(summary.expenses || []).slice(0, 5).map((e) => (
+              <TableRow key={e._id}>
+                <TableCell>{formatDate(e.date || e.createdAt || '')}</TableCell>
+                <TableCell>{e.description}</TableCell>
+                <TableCell className="font-bold text-red-400">{formatCurrency(e.amount)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div> */}
+
+      {/* Add Purchase Modal */}
+      {/* {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl border border-gray-700 animate-in">
+            <h2 className="text-2xl font-bold text-white mb-6">إضافة مشتريات أو تعديل مالي</h2>
+            
+            <form onSubmit={handleAddPurchase} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">الوصف</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: شراء بضاعة جديدة، تعديل رصيد..."
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={purchaseData.description}
+                  onChange={(e) => setPurchaseData({ ...purchaseData, description: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">المبلغ</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={purchaseData.amount}
+                  onChange={(e) => setPurchaseData({ ...purchaseData, amount: parseFloat(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">النوع</label>
+                <select
+                  className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                  value={purchaseData.type}
+                  onChange={(e) => setPurchaseData({ ...purchaseData, type: e.target.value as any })}
+                >
+                  <option value="purchase">شراء بضاعة</option>
+                  <option value="adjustment">تعديل مالي</option>
+                </select>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <Button type="submit" variant="primary" className="flex-1" loading={formLoading}>
+                  حفظ القيد
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  إلغاء
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )} */}
     </div>
   );
 }
 
-function SummaryCard({ 
-  title, 
-  value, 
-  isCurrency = true, 
-  subtitle,
-  badgeText,
-  icon, 
-  color 
-}: { 
-  title: string; 
-  value: number; 
-  isCurrency?: boolean; 
-  subtitle?: string;
-  badgeText?: string;
-  icon: React.ReactNode; 
-  color: string;
-}) {
-  const colors: Record<string, string> = {
-    blue: "border-l-blue-500 bg-blue-500/5",
-    green: "border-l-green-500 bg-green-500/5",
-    orange: "border-l-orange-500 bg-orange-500/5",
-    red: "border-l-red-500 bg-red-500/5",
-    emerald: "border-l-emerald-500 bg-emerald-500/5",
-    amber: "border-l-amber-500 bg-amber-500/5",
-    purple: "border-l-purple-500 bg-purple-500/5",
-  };
-
-  return (
-    <div className={`glass p-6 rounded-2xl border border-gray-700 border-l-4 ${colors[color] || colors.blue} shadow-xl transition-transform hover:scale-[1.02]`}>
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-sm text-gray-400 font-medium">{title}</p>
-        <div className="p-2 rounded-lg bg-gray-800/80">
-          {icon}
-        </div>
-      </div>
-      <p className="text-2xl font-bold text-white mb-1">
-        {isCurrency ? formatCurrency(value) : value.toLocaleString('ar-EG')}
-      </p>
-      {subtitle && (
-        <p className="text-xs text-gray-400 truncate">{subtitle}</p>
-      )}
-      {badgeText && (
-        <div className="mt-2">
-          <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300">
-            {badgeText}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
+// SummaryCard moved to @/components/ui/SummaryCard

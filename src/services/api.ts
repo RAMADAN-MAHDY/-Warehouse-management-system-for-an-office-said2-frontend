@@ -1,5 +1,5 @@
 import axiosInstance from '@/lib/axios';
-import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse, Client, ClientListResponse, ReportSummaryData } from '@/types';
+import { Item, SaleInvoice, Expense, Purchase, Supplier, PurchaseInvoice, InventoryAdjustment, Return, Representative, ApiResponse, RepresentativeListResponse, Client, ClientListResponse, ReportSummaryData, DailyDataPoint } from '@/types';
 
 export const authService = {
   login: async (credentials: Record<string, string>) => {
@@ -368,6 +368,10 @@ export const reportService = {
   },
   getProfit: async (params?: { from?: string; to?: string }) => {
     const response = await axiosInstance.get('/api/reports/profit', { params });
+    return response.data;
+  },
+  getDaily: async (days: number = 7) => {
+    const response = await axiosInstance.get<ApiResponse<DailyDataPoint[]>>('/api/reports/daily', { params: { days } });
     return response.data;
   }
 };
