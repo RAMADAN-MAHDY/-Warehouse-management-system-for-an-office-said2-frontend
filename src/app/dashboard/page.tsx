@@ -101,11 +101,12 @@ export default function DashboardHome() {
 
   const periodLabel = `عن الـ ${chartDays} يوم السابقين`;
 
-  /* ──── أرقام اليوم الأخير (أمس) ──── */
-  const lastDay = currentPeriod.length > 0 ? currentPeriod[currentPeriod.length - 1] : null;
-  const lastDaySalesText = lastDay ? `أمس: ${formatCurrency(lastDay.sales)}` : '';
-  const lastDayProfitText = lastDay ? `أمس: ${formatCurrency(lastDay.profit)}` : '';
-  const lastDayCountText = lastDay ? `أمس: ${lastDay.count} فاتورة` : '';
+  /* ──── أرقام أمس (اليوم السابق لليوم الحالي) ──── */
+  // ملاحظة: العنصر الأخير [length - 1] هو اليوم الحالي (النهاردة)، والعنصر قبل الأخير [length - 2] هو أمس.
+  const yesterday = currentPeriod.length > 1 ? currentPeriod[currentPeriod.length - 2] : null;
+  const yesterdaySalesText = yesterday ? `أمس: ${formatCurrency(yesterday.sales)}` : '';
+  const yesterdayProfitText = yesterday ? `أمس: ${formatCurrency(yesterday.profit)}` : '';
+  const yesterdayCountText = yesterday ? `أمس: ${yesterday.count} فاتورة` : '';
 
   /* ──── Line Chart ──── */
   const lineChartData = {
@@ -239,7 +240,7 @@ export default function DashboardHome() {
             color="blue"
             change={salesChange}
             changePeriodLabel={periodLabel}
-            subtitle={lastDaySalesText ? `إجمالي ${chartDays} يوم (${lastDaySalesText})` : `إجمالي آخر ${chartDays} يوم`}
+            subtitle={yesterdaySalesText ? `إجمالي ${chartDays} يوم (${yesterdaySalesText})` : `إجمالي آخر ${chartDays} يوم`}
           />
           <SummaryCard
             title="صافي الربح"
@@ -248,7 +249,7 @@ export default function DashboardHome() {
             color={curProfit >= 0 ? 'emerald' : 'red'}
             change={profitChange}
             changePeriodLabel={periodLabel}
-            subtitle={lastDayProfitText ? `إجمالي ${chartDays} يوم (${lastDayProfitText})` : `إجمالي آخر ${chartDays} يوم`}
+            subtitle={yesterdayProfitText ? `إجمالي ${chartDays} يوم (${yesterdayProfitText})` : `إجمالي آخر ${chartDays} يوم`}
           />
           <SummaryCard
             title="عدد الفواتير"
@@ -258,7 +259,7 @@ export default function DashboardHome() {
             isCount
             change={countChange}
             changePeriodLabel={periodLabel}
-            subtitle={lastDayCountText ? `إجمالي ${chartDays} يوم (${lastDayCountText})` : `إجمالي آخر ${chartDays} يوم`}
+            subtitle={yesterdayCountText ? `إجمالي ${chartDays} يوم (${yesterdayCountText})` : `إجمالي آخر ${chartDays} يوم`}
           />
           <SummaryCard
             title="منتجات منخفضة المخزون"
