@@ -46,9 +46,16 @@ ChartJS.register(
   Filler
 );
 
+/* ─── حساب نسبة التغيير ─── */
+function pctChange(current: number, previous: number): number | null {
+  if (previous === 0 && current === 0) return 0;
+  if (previous === 0) return null; // لا يوجد أساس للمقارنة
+  return ((current - previous) / Math.abs(previous)) * 100;
+}
+
 export default function DashboardHome() {
   const [summary, setSummary] = useState<ReportSummaryData | null>(null);
-  const [dailyData, setDailyData] = useState<DailyDataPoint[]>([]);
+  const [allDailyData, setAllDailyData] = useState<DailyDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartDays, setChartDays] = useState(7);
 
@@ -56,14 +63,14 @@ export default function DashboardHome() {
     const fetchAll = async () => {
       setLoading(true);
       try {
+        // نجيب ضعف المدة عشان نقارن الفترة الحالية بالسابقة
         const [summaryRes, dailyRes] = await Promise.all([
           reportService.getSummary(),
-          reportService.getDaily(chartDays),
+          reportService.getDaily(chartDays * 2),
         ]);
         if (summaryRes.status) setSummary(summaryRes.data);
-        if (dailyRes.status) setDailyData(dailyRes.data);
+        if (dailyRes.status) setAllDailyData(dailyRes.data);
       } catch (error: any) {
-        // 402/403 = اشتراك — نتجاهلهم بهدوء
         if (error.response?.status !== 402 && error.response?.status !== 403) {
           console.error('Dashboard fetch error', error);
         }
@@ -74,16 +81,36 @@ export default function DashboardHome() {
     fetchAll();
   }, [chartDays]);
 
+  /* ──── تقسيم الفترات ──── */
+  const currentPeriod = allDailyData.slice(-chartDays);           // آخر N يوم
+  const previousPeriod = allDailyData.slice(0, chartDays);        // الـ N يوم قبلهم
+
+  const sum = (arr: DailyDataPoint[], key: keyof DailyDataPoint) =>
+    arr.reduce((s, d) => s + (d[key] as number), 0);
+
+  const curSales  = sum(currentPeriod, 'sales');
+  const prevSales = sum(previousPeriod, 'sales');
+  const curProfit = sum(currentPeriod, 'profit');
+  const prevProfit = sum(previousPeriod, 'profit');
+  const curCount  = sum(currentPeriod, 'count');
+  const prevCount = sum(previousPeriod, 'count');
+
+  const salesChange  = pctChange(curSales, prevSales);
+  const profitChange = pctChange(curProfit, prevProfit);
+  const countChange  = pctChange(curCount, prevCount);
+
+  const periodLabel = `عن الـ ${chartDays} يوم السابقين`;
+
   /* ──── Line Chart ──── */
   const lineChartData = {
-    labels: dailyData.map((d) => {
+    labels: currentPeriod.map((d) => {
       const date = new Date(d.date);
       return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
     }),
     datasets: [
       {
         label: 'المبيعات',
-        data: dailyData.map((d) => d.sales),
+        data: currentPeriod.map((d) => d.sales),
         borderColor: 'rgba(59, 130, 246, 1)',
         backgroundColor: 'rgba(59, 130, 246, 0.08)',
         fill: true,
@@ -95,7 +122,7 @@ export default function DashboardHome() {
       },
       {
         label: 'الربح',
-        data: dailyData.map((d) => d.profit),
+        data: currentPeriod.map((d) => d.profit),
         borderColor: 'rgba(16, 185, 129, 1)',
         backgroundColor: 'rgba(16, 185, 129, 0.08)',
         fill: true,
@@ -198,38 +225,44 @@ export default function DashboardHome() {
         </header>
 
         {/* ══════ Summary Cards ══════ */}
-        {fin && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <SummaryCard
-              title="صافي المبيعات"
-              value={fin.totalSales}
-              icon={<DollarSign className="text-blue-400" />}
-              color="blue"
-              subtitle={`${fin.salesCount} فاتورة`}
-            />
-            <SummaryCard
-              title="صافي الربح"
-              value={fin.netProfit}
-              icon={fin.netProfit >= 0 ? <TrendingUp className="text-emerald-400" /> : <TrendingDown className="text-red-400" />}
-              color={fin.netProfit >= 0 ? 'emerald' : 'red'}
-            />
-            <SummaryCard
-              title="عدد المبيعات"
-              value={fin.salesCount}
-              icon={<ShoppingCart className="text-purple-400" />}
-              color="purple"
-              isCount
-            />
-            <SummaryCard
-              title="منتجات منخفضة المخزون"
-              value={inv?.lowStockItems?.length ?? 0}
-              icon={<Package className="text-orange-400" />}
-              color="orange"
-              isCount
-              subtitle={`من أصل ${inv?.totalItems ?? 0} منتج`}
-            />
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <SummaryCard
+            title="صافي المبيعات"
+            value={curSales}
+            icon={<DollarSign className="text-blue-400" />}
+            color="blue"
+            change={salesChange}
+            changePeriodLabel={periodLabel}
+            subtitle={`آخر ${chartDays} يوم`}
+          />
+          <SummaryCard
+            title="صافي الربح"
+            value={curProfit}
+            icon={curProfit >= 0 ? <TrendingUp className="text-emerald-400" /> : <TrendingDown className="text-red-400" />}
+            color={curProfit >= 0 ? 'emerald' : 'red'}
+            change={profitChange}
+            changePeriodLabel={periodLabel}
+            subtitle={`آخر ${chartDays} يوم`}
+          />
+          <SummaryCard
+            title="عدد الفواتير"
+            value={curCount}
+            icon={<ShoppingCart className="text-purple-400" />}
+            color="purple"
+            isCount
+            change={countChange}
+            changePeriodLabel={periodLabel}
+            subtitle={`آخر ${chartDays} يوم`}
+          />
+          <SummaryCard
+            title="منتجات منخفضة المخزون"
+            value={inv?.lowStockItems?.length ?? 0}
+            icon={<Package className="text-orange-400" />}
+            color="orange"
+            isCount
+            subtitle={`من أصل ${inv?.totalItems ?? 0} منتج`}
+          />
+        </div>
 
         {/* ══════ Chart + Alerts Row ══════ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -259,7 +292,7 @@ export default function DashboardHome() {
               </div>
             </div>
             <div className="h-[300px]">
-              {dailyData.length > 0 ? (
+              {currentPeriod.length > 0 ? (
                 <Line data={lineChartData} options={lineChartOptions} />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-500">
@@ -347,7 +380,7 @@ export default function DashboardHome() {
         </div>
 
         {/* ══════ Quick Navigation Grid ══════ */}
-        <div>
+        {/* <div>
           <h2 className="text-xl font-bold text-white mb-4">روابط سريعة</h2>
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 sm:gap-6 gap-3">
             {navItems.map((item) => {
@@ -371,7 +404,7 @@ export default function DashboardHome() {
               );
             })}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
