@@ -14,12 +14,14 @@ import {
   FileText,
   Building2,
   User,
-  ShoppingBag
+  ShoppingBag,
+  MessageSquare,
 } from 'lucide-react';
 
 export const navItems = [
   { name: 'الرئيسية', href: '/', icon: Home },
   { name: 'لوحة التحكم', href: '/dashboard', icon: BarChart2 },
+  { name: 'الدردشة', href: '/ai', icon: MessageSquare, badge: 'جديد' },
   { name: 'المخزون', href: '/store', icon: LayoutDashboard },
   { name: 'المبيعات', href: '/sales', icon: ShoppingCart },
   { name: 'المناديب', href: '/representatives', icon: Users },

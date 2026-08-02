@@ -112,6 +112,11 @@ export default function Sidebar() {
                 >
                   <Icon size={20} />
                   <span>{item.name}</span>
+                  {item.badge ? (
+                    <span className="rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                      {item.badge}
+                    </span>
+                  ) : null}
                 </Link>
               );
             })}
