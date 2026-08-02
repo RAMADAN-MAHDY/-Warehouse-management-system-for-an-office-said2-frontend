@@ -11,6 +11,7 @@ type Conversation = {
   messageCount?: number;
 };
 
+// Component for displaying a list of AI conversations
 export default function ConversationList({
   selectedId,
   onSelect,
