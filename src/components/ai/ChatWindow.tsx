@@ -66,9 +66,9 @@ export default function ChatWindow({
 
         setInput('');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Send failed', err);
-      setError(err?.message || 'فشل إرسال الرسالة');
+      setError(err instanceof Error ? err.message : 'فشل إرسال الرسالة');
     } finally {
       setLoading(false);
     }
