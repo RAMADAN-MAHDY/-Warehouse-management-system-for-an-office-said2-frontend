@@ -53,18 +53,18 @@ export default function ConversationList({
   }, [reloadTrigger]);
 
   return (
-    <div className="w-full lg:max-w-xs shrink-0 rounded-3xl border border-gray-700 bg-slate-950 p-4 shadow-sm max-h-[calc(100vh-7rem)] overflow-hidden lg:overflow-visible">
+    <div className="w-full lg:max-w-xs shrink-0 rounded-3xl border border-slate-700 bg-slate-950 p-4 shadow-sm max-h-[calc(100vh-7rem)] overflow-hidden lg:overflow-visible">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="text-base font-semibold text-white">المحادثات</h3>
           <p className="text-sm text-slate-400">{loading ? 'جاري التحميل...' : `${conversations.length} محادثة`}</p>
         </div>
         <button
-          className="rounded-2xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-500"
+          className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-500"
           onClick={() => onSelect(null)}
           title="محادثة جديدة"
         >
-          جديد
+          محادثة جديدة
         </button>
       </div>
 
@@ -90,7 +90,7 @@ export default function ConversationList({
               key={c._id}
               className={`rounded-3xl border px-4 py-3 transition cursor-pointer ${
                 selectedId === String(c._id)
-                  ? 'border-blue-500 bg-blue-600/10 text-white'
+                  ? 'border-emerald-500 bg-emerald-600/10 text-white'
                   : 'border-transparent bg-slate-900/80 text-slate-200 hover:border-slate-600 hover:bg-slate-900'
               }`}
               onClick={() => onSelect(String(c._id))}

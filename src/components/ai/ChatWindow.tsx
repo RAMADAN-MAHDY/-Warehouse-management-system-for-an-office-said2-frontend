@@ -14,11 +14,11 @@ type Message = {
 export default function ChatWindow({
   conversationId,
   onConversationCreated,
-  onOpenConversations,
+  onBack,
 }: {
   conversationId?: string | null;
   onConversationCreated?: (id: string) => void;
-  onOpenConversations?: () => void;
+  onBack?: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -79,34 +79,37 @@ export default function ChatWindow({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden rounded-3xl border border-gray-700 bg-slate-950 shadow-sm">
-      <div className="border-b border-gray-800 bg-slate-900 px-5 py-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-white">
-              {currentConversationId ? 'محادثتك' : 'ابدأ محادثة جديدة'}
-            </h2>
-            <p className="text-sm text-slate-400">
-              {currentConversationId
-                ? 'استمر في الحوار أو ابدأ محادثة جديدة بالضغط على الزر.'
-                : 'اكتب رسالة لبدء دردشة مع المساعد.'}
-            </p>
+    <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 shadow-sm">
+      <div className="border-b border-slate-700 bg-slate-950 px-4 py-4 shadow-sm shadow-slate-900/20">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-200 transition hover:bg-slate-800 lg:hidden"
+              >
+                ←
+              </button>
+            )}
+            <div>
+              <h2 className="text-lg font-semibold text-white">دردشة المخزون</h2>
+              <p className="text-sm text-slate-400">
+                {currentConversationId
+                  ? 'اسأل عن حالة المخزون، الطلبات، أو التقارير.'
+                  : 'ابدأ محادثة جديدة وأحصل على المساعدة فوراً.'}
+              </p>
+            </div>
           </div>
-          {onOpenConversations && (
-            <button
-              type="button"
-              onClick={onOpenConversations}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 transition hover:border-blue-500 hover:bg-slate-800 lg:hidden"
-            >
-              عرض المحادثات
-            </button>
-          )}
+          <span className="hidden sm:inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs text-slate-300">
+            مصمم ليكون مألوف وسهل الاستخدام
+          </span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-slate-950">
         {messages.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-900/80 p-6 text-center text-sm text-slate-400">
+          <div className="rounded-[28px] border border-dashed border-slate-700 bg-slate-900/80 p-6 text-center text-sm text-slate-400">
             لا توجد رسائل بعد. ابدأ بطرح سؤال أو طلب.
           </div>
         ) : (
@@ -114,10 +117,10 @@ export default function ChatWindow({
             const isAssistant = m.role === 'assistant';
             return (
               <div key={i} className={`flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[90%] rounded-3xl px-4 py-3 text-sm shadow-sm ${
+                <div className={`max-w-[80%] rounded-[28px] px-4 py-3 text-sm shadow-[0_10px_30px_-20px_rgba(0,0,0,0.35)] ${
                   isAssistant
                     ? 'bg-slate-800 text-slate-100 border border-slate-700'
-                    : 'bg-blue-600 text-white border border-blue-500'
+                    : 'bg-slate-100 text-slate-950 border border-slate-200'
                 }`}>
                   <div className="prose prose-invert text-slate-100 max-w-full break-words">
                     {m.role === 'assistant' ? (
@@ -126,7 +129,7 @@ export default function ChatWindow({
                       <div>{m.content}</div>
                     )}
                   </div>
-                  <div className="mt-2 text-[11px] text-slate-400">
+                  <div className="mt-2 text-[10px] text-slate-500">
                     {m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}
                   </div>
                 </div>
@@ -137,7 +140,7 @@ export default function ChatWindow({
         <div ref={bottomRef} />
       </div>
 
-      <div className="border-t border-gray-800 bg-slate-900 p-4">
+      <div className="border-t border-slate-800 bg-slate-900/95 p-4">
         {error && (
           <div className="mb-3 rounded-2xl bg-red-900/80 px-4 py-3 text-sm text-red-200">
             {error}
@@ -147,7 +150,7 @@ export default function ChatWindow({
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="min-h-[90px] flex-1 resize-none rounded-3xl border border-gray-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-[90px] flex-1 resize-none rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="اكتب رسالتك هنا..."
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -161,7 +164,7 @@ export default function ChatWindow({
             <button
               onClick={send}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-3xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-[24px] bg-emerald-500 px-5 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'جاري...' : 'إرسال'}
             </button>

@@ -7,42 +7,37 @@ import ChatWindow from '@/components/ai/ChatWindow';
 export default function AIPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [reloadTrigger, setReloadTrigger] = useState<number>(0);
-  const [showConversationList, setShowConversationList] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [showList, setShowList] = useState(true);
 
   useEffect(() => {
-    const updateMobile = () => {
-      const mobile = window.innerWidth < 1024;
+    const media = window.matchMedia('(max-width: 1023px)');
+    const update = () => {
+      const mobile = media.matches;
       setIsMobile(mobile);
-      if (!mobile) setShowConversationList(true);
+      setShowList(mobile ? !selectedConversation : true);
     };
 
-    updateMobile();
-    window.addEventListener('resize', updateMobile);
-    return () => window.removeEventListener('resize', updateMobile);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile) {
-      setShowConversationList(!selectedConversation);
-    }
-  }, [isMobile, selectedConversation]);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [selectedConversation]);
 
   const handleSelectConversation = (id: string | null) => {
     setSelectedConversation(id);
-    if (isMobile) setShowConversationList(!id);
+    if (isMobile) setShowList(!id);
   };
 
   const handleConversationCreated = (id: string) => {
     setSelectedConversation(id);
     setReloadTrigger((s) => s + 1);
-    if (isMobile) setShowConversationList(false);
+    if (isMobile) setShowList(false);
   };
 
   return (
     <>
-      <main className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 p-3 lg:flex-row lg:p-4">
-        <div className={`${isMobile ? (showConversationList ? 'block' : 'hidden') : 'block'} w-full lg:max-w-xs`}>
+      <main className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 p-3 lg:grid lg:grid-cols-[320px_1fr] lg:p-4">
+        <div className={`${isMobile ? (showList ? 'block' : 'hidden') : 'block'} w-full lg:block`}>
           <ConversationList
             selectedId={selectedConversation}
             onSelect={handleSelectConversation}
@@ -50,11 +45,11 @@ export default function AIPage() {
           />
         </div>
 
-        <div className={`flex-1 min-h-0 ${isMobile && !showConversationList ? 'hidden' : 'block'}`}>
+        <div className={`${isMobile ? (showList ? 'hidden' : 'block') : 'block'} flex-1 min-h-0`}>
           <ChatWindow
             conversationId={selectedConversation}
             onConversationCreated={handleConversationCreated}
-            onOpenConversations={() => setShowConversationList(true)}
+            onBack={() => setShowList(true)}
           />
         </div>
       </main>
