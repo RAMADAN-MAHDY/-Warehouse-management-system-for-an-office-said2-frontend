@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { aiService } from '@/services/aiService';
 
 type Message = {
@@ -106,7 +108,13 @@ export default function ChatWindow({
                     ? 'bg-slate-800 text-slate-100 border border-slate-700'
                     : 'bg-blue-600 text-white border border-blue-500'
                 }`}>
-                  <div>{m.content}</div>
+                  <div className="prose prose-invert text-slate-100 max-w-full break-words">
+                    {m.role === 'assistant' ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                    ) : (
+                      <div>{m.content}</div>
+                    )}
+                  </div>
                   <div className="mt-2 text-[11px] text-slate-400">
                     {m.createdAt ? new Date(m.createdAt).toLocaleString() : ''}
                   </div>
