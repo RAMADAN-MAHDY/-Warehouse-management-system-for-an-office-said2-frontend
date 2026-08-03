@@ -17,19 +17,22 @@ export function useSubscription(fetchOnMount: boolean = true) {
       try {
         const plansRes = await subscriptionService.getPlans();
         if (plansRes.status) {
-          const fetchedPlans = plansRes.data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            icon: p.price > 200 ? <Crown className="w-8 h-8" /> : <Zap className="w-8 h-8" />,
-            features: p.features && p.features.length > 0 ? p.features : [
+          const fetchedPlans = plansRes.data.map((p: any) => {
+            const baseFeatures = p.features && p.features.length > 0 ? p.features : [
               `حد أقصى ${p.limits.maxItems} منتج`,
               `${p.limits.maxSales} عملية بيع/شراء شهرياً`,
               `${p.limits.maxExpenses} عملية تسجيل مصروفات`
-            ],
-            color: p.price > 200 ? 'amber' : 'blue',
-            popular: p.price > 200
-          }));
+            ];
+            return {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              icon: p.price > 200 ? <Crown className="w-8 h-8" /> : <Zap className="w-8 h-8" />,
+              features: [...baseFeatures, `حد توكنات AI ${p.limits.maxAiTokensPerCycle ?? 0}`],
+              color: p.price > 200 ? 'amber' : 'blue',
+              popular: p.price > 200
+            };
+          });
           setPlans(fetchedPlans);
         }
       } catch (planError: any) {

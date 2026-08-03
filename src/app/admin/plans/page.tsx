@@ -33,7 +33,7 @@ export default function AdminPlans() {
     name: '',
     price: 0,
     durationDays: 30,
-    limits: { maxItems: 200, maxSales: 200, maxExpenses: 200 },
+    limits: { maxItems: 200, maxSales: 200, maxExpenses: 200, maxAiTokensPerCycle: 50000 },
     features: [],
     isPublic: true
   });
@@ -96,7 +96,7 @@ export default function AdminPlans() {
       name: plan.name,
       price: plan.price,
       durationDays: plan.durationDays || 30,
-      limits: { ...plan.limits },
+      limits: { ...plan.limits, maxAiTokensPerCycle: plan.limits?.maxAiTokensPerCycle ?? 50000 },
       features: [...(plan.features || [])],
       isPublic: plan.isPublic
     });
@@ -182,6 +182,10 @@ export default function AdminPlans() {
                   <div className="flex items-center gap-2"><Wallet size={16} /> حد المصاريف:</div>
                   <span className="text-white font-bold">{plan.limits.maxExpenses}</span>
                 </div>
+                <div className="flex items-center justify-between text-gray-400 text-sm">
+                  <div className="flex items-center gap-2"><ShieldCheck size={16} /> حد توكنات AI:</div>
+                  <span className="text-white font-bold">{plan.limits.maxAiTokensPerCycle ?? 0}</span>
+                </div>
               </div>
 
               <div className="pt-6 border-t border-gray-700/50 mt-auto">
@@ -233,6 +237,10 @@ export default function AdminPlans() {
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 pr-2">أقصى عدد مصاريف</label>
                 <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxExpenses} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxExpenses: Number(e.target.value)}})} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400 pr-2">حد توكنات AI</label>
+                <input type="number" required className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-purple-500 transition-all" value={formData.limits.maxAiTokensPerCycle} onChange={(e) => setFormData({...formData, limits: {...formData.limits, maxAiTokensPerCycle: Number(e.target.value)}})} />
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-gray-400 pr-2">المدة (بالأيام)</label>

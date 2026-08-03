@@ -306,8 +306,9 @@ export default function AdminUsers() {
                         {user.subscription.planType === 'professional' ? <Crown size={14} className="text-amber-400" /> : <Zap size={14} className="text-blue-400" />}
                         <span className="capitalize">{user.subscription.planType}</span>
                       </div>
-                      <div className="flex justify-between text-[11px] text-gray-500">
+                      <div className="flex flex-col gap-2 text-[11px] text-gray-500">
                         <span>ينتهي في: {new Date(user.subscription.endDate).toLocaleDateString('ar-EG')}</span>
+                        <span>حد توكنات AI: {user.subscription?.limits?.maxAiTokensPerCycle ?? 'غير محدد'}</span>
                       </div>
                     </div>
                   ) : (
