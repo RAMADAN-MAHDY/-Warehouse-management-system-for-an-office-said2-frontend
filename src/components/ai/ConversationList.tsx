@@ -53,7 +53,7 @@ export default function ConversationList({
   }, [reloadTrigger]);
 
   return (
-    <div className="w-full max-w-xs shrink-0 rounded-3xl border border-gray-700 bg-slate-950 p-4 shadow-sm">
+    <div className="w-full lg:max-w-xs shrink-0 rounded-3xl border border-gray-700 bg-slate-950 p-4 shadow-sm max-h-[calc(100vh-7rem)] overflow-hidden lg:overflow-visible">
       <div className="flex items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="text-base font-semibold text-white">المحادثات</h3>

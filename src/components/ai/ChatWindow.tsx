@@ -14,9 +14,11 @@ type Message = {
 export default function ChatWindow({
   conversationId,
   onConversationCreated,
+  onOpenConversations,
 }: {
   conversationId?: string | null;
   onConversationCreated?: (id: string) => void;
+  onOpenConversations?: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -77,9 +79,9 @@ export default function ChatWindow({
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden rounded-3xl border border-gray-700 bg-slate-950 shadow-sm">
+    <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden rounded-3xl border border-gray-700 bg-slate-950 shadow-sm">
       <div className="border-b border-gray-800 bg-slate-900 px-5 py-4">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-white">
               {currentConversationId ? 'محادثتك' : 'ابدأ محادثة جديدة'}
@@ -90,6 +92,15 @@ export default function ChatWindow({
                 : 'اكتب رسالة لبدء دردشة مع المساعد.'}
             </p>
           </div>
+          {onOpenConversations && (
+            <button
+              type="button"
+              onClick={onOpenConversations}
+              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 transition hover:border-blue-500 hover:bg-slate-800 lg:hidden"
+            >
+              عرض المحادثات
+            </button>
+          )}
         </div>
       </div>
 
