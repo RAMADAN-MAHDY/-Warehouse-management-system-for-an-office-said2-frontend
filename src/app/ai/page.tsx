@@ -8,59 +8,67 @@ export default function AIPage() {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [reloadTrigger, setReloadTrigger] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [showList, setShowList] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1023px)');
     const update = () => {
       const mobile = media.matches;
       setIsMobile(mobile);
-      setShowList(mobile ? !selectedConversation : true);
+      setShowSidebar(!mobile);
     };
 
     update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
-  }, [selectedConversation]);
+  }, []);
 
   const handleSelectConversation = (id: string | null) => {
     setSelectedConversation(id);
-    if (isMobile) setShowList(!id);
+    if (isMobile) setShowSidebar(false);
   };
 
   const handleConversationCreated = (id: string) => {
     setSelectedConversation(id);
-    setReloadTrigger((s) => s + 1);
-    if (isMobile) setShowList(false);
+    setReloadTrigger((value) => value + 1);
+    if (isMobile) setShowSidebar(false);
   };
 
   return (
-    <>
-      <main className="flex min-h-[calc(100vh-5rem)] flex-col gap-4 p-3 lg:grid lg:grid-cols-[320px_1fr] lg:p-4">
-        <div className={`${isMobile ? (showList ? 'block' : 'hidden') : 'block'} w-full lg:block`}>
-          <ConversationList
-            selectedId={selectedConversation}
-            onSelect={handleSelectConversation}
-            reloadTrigger={reloadTrigger}
-          />
+    <main className="relative h-[calc(100vh-5rem)] overflow-hidden p-0 lg:p-4">
+      {isMobile && (
+        <button
+          type="button"
+          aria-label="إغلاق القائمة"
+          className={`fixed inset-0 z-30 bg-slate-950/70 transition ${showSidebar ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      <div className="flex h-full overflow-hidden rounded-[32px] border border-slate-800 bg-slate-950 lg:flex-row lg:gap-4">
+        <div
+          className={`absolute inset-y-0 left-0 z-40 w-[86vw] max-w-[320px] transition-transform duration-200 lg:static lg:w-[280px] lg:translate-x-0 ${
+            isMobile ? (showSidebar ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'
+          }`}
+        >
+          <div className="h-full w-full lg:rounded-[28px]">
+            <ConversationList
+              selectedId={selectedConversation}
+              onSelect={handleSelectConversation}
+              reloadTrigger={reloadTrigger}
+            />
+          </div>
         </div>
 
-        <div className={`${isMobile ? (showList ? 'hidden' : 'block') : 'block'} flex-1 min-h-0`}>
+        <div className="flex-1 min-h-0 lg:ml-0">
           <ChatWindow
             conversationId={selectedConversation}
             onConversationCreated={handleConversationCreated}
-            onBack={() => setShowList(true)}
+            onBack={() => setShowSidebar((value) => !value)}
+            isSidebarOpen={showSidebar}
           />
         </div>
-      </main>
-
-      <button
-        type="button"
-        onClick={() => handleSelectConversation(null)}
-        className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-2xl shadow-blue-600/20 transition hover:bg-blue-500 lg:left-6 lg:translate-x-0"
-      >
-        محادثة جديدة
-      </button>
-    </>
+      </div>
+    </main>
   );
 }

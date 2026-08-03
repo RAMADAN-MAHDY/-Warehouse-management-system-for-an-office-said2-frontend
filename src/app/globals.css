@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f172a;
+  --background: #020617;
   --foreground: #f8fafc;
 }
 
@@ -11,20 +11,99 @@ body {
 }
 
 .glass {
-  background: rgba(30, 41, 59, 0.7);
+  background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card {
-  background: rgba(31, 41, 55, 0.4);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(75, 85, 99, 0.3);
+  border: 1px solid rgba(75, 85, 99, 0.28);
 }
 
 .animate-in {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+.ai-markdown {
+  color: #f8fafc;
+}
+
+.ai-markdown h1,
+.ai-markdown h2,
+.ai-markdown h3,
+.ai-markdown h4,
+.ai-markdown h5,
+.ai-markdown h6 {
+  color: #f8fafc;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.ai-markdown p,
+.ai-markdown li,
+.ai-markdown blockquote,
+.ai-markdown td,
+.ai-markdown th {
+  color: #e2e8f0;
+  line-height: 1.75;
+}
+
+.ai-markdown a {
+  color: #34d399;
+  text-decoration: underline;
+}
+
+.ai-markdown ul,
+.ai-markdown ol {
+  padding-left: 1.2rem;
+  margin: 0.75rem 0;
+}
+
+.ai-markdown pre {
+  overflow-x: auto;
+  border-radius: 1rem;
+  border: 1px solid #334155;
+  background: #020617;
+  padding: 1rem;
+}
+
+.ai-markdown code {
+  border-radius: 0.4rem;
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  padding: 0.15rem 0.35rem;
+}
+
+.ai-markdown pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.ai-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+
+.ai-markdown th,
+.ai-markdown td {
+  border: 1px solid #334155;
+  padding: 0.5rem 0.75rem;
+}
+
+.ai-markdown blockquote {
+  border-left: 3px solid #34d399;
+  padding-left: 0.9rem;
+  opacity: 0.95;
+}
+
+.ai-markdown hr {
+  border-color: #334155;
+  margin: 1rem 0;
 }
 
 @keyframes fadeIn {
@@ -44,14 +123,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: #0f172a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #334155;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: #475569;
 }
