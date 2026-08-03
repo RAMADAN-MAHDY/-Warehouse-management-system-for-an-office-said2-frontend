@@ -35,7 +35,7 @@
 
 ## 📁 هيكل المجلدات المنظم (Project Structure)
 
-```text
+```text 
 src/
 ├── app/                # نظام التوجيه (App Router) والصفحات (Next.js 16)
 │   ├── (auth)/         # صفحات الدخول والتسجيل
