@@ -25,6 +25,7 @@ import { RootState } from '@/store';
 import { logout } from '@/store/slices/authSlice';
 import { subscriptionService, authService } from '@/services/api';
 import PricingCard, { PricingPlan } from '@/components/ui/PricingCard';
+import AIFeatureShowcase from '@/components/ai/AIFeatureShowcase';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -208,6 +209,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <AIFeatureShowcase />
 
       {/* Pricing Section */}
       <section id="pricing" className="py-12 border-t border-gray-800 bg-gray-950/40">
