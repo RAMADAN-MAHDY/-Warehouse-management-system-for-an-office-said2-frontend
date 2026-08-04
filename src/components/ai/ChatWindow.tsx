@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { aiService } from '@/services/aiService';
+import { getErrorMessage } from '@/lib/utils';
 import ChatHeader from './ChatHeader';
 import MessageBubble, { type Message } from './MessageBubble';
 import MessageInput from './MessageInput';
@@ -75,7 +76,7 @@ export default function ChatWindow({
       }
     } catch (err: unknown) {
       console.error('Send failed', err);
-      setError(err instanceof Error ? err.message : 'فشل إرسال الرسالة');
+      setError(getErrorMessage(err, 'فشل إرسال الرسالة'));
     } finally {
       setLoading(false);
     }

@@ -17,3 +17,17 @@ export function formatDate(date: string | Date) {
     dateStyle: 'medium',
   }).format(new Date(date));
 }
+
+export function getErrorMessage(error: unknown, fallbackMessage: string = 'حدث خطأ غير متوقع'): string {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const err = error as { response?: { data?: { message?: string } }; message?: string };
+    if (err.response?.data?.message) {
+      return err.response.data.message;
+    }
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallbackMessage;
+}
+

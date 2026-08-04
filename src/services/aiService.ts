@@ -35,6 +35,26 @@ function createAIClient() {
     return config;
   });
 
+  client.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      const serverMessage = error.response?.data?.message;
+      if (serverMessage) {
+        error.message = serverMessage;
+      }
+
+      if (error.response?.status === 402 && typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('subscription-error', {
+            detail: { type: 'expired', message: serverMessage || 'انتهت صلاحية باقة الذكاء الاصطناعي أو الاشتراك' },
+          })
+        );
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
   return client;
 }
 
