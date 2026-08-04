@@ -46,25 +46,27 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     } else if (error.response?.status === 402) {
       // Payment Required - Subscription ended
+      const msg = error.response.data?.message || error.response.data?.error?.message;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('subscription-error', { 
-          detail: { type: 'expired', message: error.response.data?.message } 
+          detail: { type: 'expired', message: msg } 
         }));
         
         if (window.location.pathname !== '/subscription') {
-          const errorMessage = error.response.data?.message || 'انتهت صلاحية اشتراكك، يرجى التجديد للمتابعة';
+          const errorMessage = msg || 'انتهت صلاحية اشتراكك، يرجى التجديد للمتابعة';
           const { toast } = await import('sonner');
           toast.error(errorMessage);
         }
       }
     } else if (error.response?.status === 403) {
       // Forbidden - Banned or unauthorized
+      const msg = error.response.data?.message || error.response.data?.error?.message;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('subscription-error', { 
-          detail: { type: 'banned', message: error.response.data?.message } 
+          detail: { type: 'banned', message: msg } 
         }));
 
-        const errorMessage = error.response.data?.message || 'تم حظر حسابك أو لا تملك الصلاحية للوصول';
+        const errorMessage = msg || 'تم حظر حسابك أو لا تملك الصلاحية للوصول';
         const { toast } = await import('sonner');
         toast.error(errorMessage);
       }

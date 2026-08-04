@@ -38,7 +38,12 @@ function createAIClient() {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      const serverMessage = error.response?.data?.message;
+      const resData = error.response?.data;
+      const serverMessage =
+        (resData?.error && typeof resData.error === 'object' ? resData.error.message : null) ||
+        resData?.message ||
+        (typeof resData?.error === 'string' ? resData.error : null);
+
       if (serverMessage) {
         error.message = serverMessage;
       }
