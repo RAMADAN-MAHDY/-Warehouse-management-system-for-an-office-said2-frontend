@@ -276,6 +276,10 @@ export const superAdminService = {
     const response = await axiosInstance.get('/api/superadmin/users');
     return response.data;
   },
+  getUserUsage: async (userId: string) => {
+    const response = await axiosInstance.get(`/api/superadmin/users/${userId}/usage`);
+    return response.data;
+  },
   updateUser: async (userId: string, data: { isBanned?: boolean; role?: string; reason?: string }) => {
     const response = await axiosInstance.put(`/api/superadmin/users/${userId}`, data);
     return response.data;

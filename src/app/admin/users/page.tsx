@@ -23,11 +23,13 @@ import {
   Settings2,
   Clock,
   Check,
-  FileText
+  FileText,
+  BarChart2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import UserUsageModal from '@/components/admin/UserUsageModal';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -35,6 +37,14 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Usage Modal State
+  const [usageModal, setUsageModal] = useState<{
+    show: boolean;
+    userId: string | null;
+    username?: string;
+    companyName?: string;
+  }>({ show: false, userId: null });
   
   // Modals state
   const [deleteModal, setDeleteModal] = useState<{show: boolean, userId: string, username: string}>({ show: false, userId: '', username: '' });
@@ -245,6 +255,20 @@ export default function AdminUsers() {
                     title={user.isBanned ? "إلغاء الحظر" : "حظر المستخدم"}
                   >
                     {user.isBanned ? <CheckCircle size={18} /> : <Ban size={18} />}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-xl border-gray-700 text-emerald-400 hover:bg-emerald-500/10"
+                    onClick={() => setUsageModal({
+                      show: true,
+                      userId: user._id,
+                      username: user.username,
+                      companyName: user.companyName
+                    })}
+                    title="استهلاك العميل والإحصائيات"
+                  >
+                    <BarChart2 size={18} />
                   </Button>
                   <Button 
                     variant="outline" 
@@ -482,6 +506,15 @@ export default function AdminUsers() {
             </div>
           </div>
         </Modal>
+
+        {/* User Usage Analytics Modal */}
+        <UserUsageModal
+          isOpen={usageModal.show}
+          onClose={() => setUsageModal({ show: false, userId: null })}
+          userId={usageModal.userId}
+          username={usageModal.username}
+          companyName={usageModal.companyName}
+        />
 
       </div>
     </>
