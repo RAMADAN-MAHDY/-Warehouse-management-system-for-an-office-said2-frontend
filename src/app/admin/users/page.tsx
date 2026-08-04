@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import UserUsageModal from '@/components/admin/UserUsageModal';
+import UserRoleModal from '@/components/admin/UserRoleModal';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -44,6 +45,14 @@ export default function AdminUsers() {
     userId: string | null;
     username?: string;
     companyName?: string;
+  }>({ show: false, userId: null });
+
+  // Role Modal State
+  const [roleModal, setRoleModal] = useState<{
+    show: boolean;
+    userId: string | null;
+    username?: string;
+    currentRole?: string;
   }>({ show: false, userId: null });
   
   // Modals state
@@ -273,6 +282,20 @@ export default function AdminUsers() {
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    className="rounded-xl border-gray-700 text-blue-400 hover:bg-blue-500/10"
+                    onClick={() => setRoleModal({
+                      show: true,
+                      userId: user._id,
+                      username: user.username,
+                      currentRole: user.role || 'admin'
+                    })}
+                    title="تعديل الصلاحية / الدور"
+                  >
+                    <ShieldCheck size={18} />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
                     className="rounded-xl border-gray-700 text-purple-400 hover:bg-purple-500/10"
                     onClick={() => {
                       setSubModal({
@@ -306,7 +329,21 @@ export default function AdminUsers() {
 
               <div className="space-y-4 flex-grow">
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-1">{user.username}</h3>
+                  <h3 className="text-xl font-bold text-white mb-1 flex items-center gap-2 flex-wrap">
+                    <span>{user.username}</span>
+                    {user.role === 'owner' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                        <Crown size={12} className="text-amber-400" />
+                        المالك
+                      </span>
+                    )}
+                    {user.role === 'superadmin' && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30">
+                        <ShieldCheck size={12} />
+                        سوبر أدمن
+                      </span>
+                    )}
+                  </h3>
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
                     <Building2 size={14} />
                     <span>{user.companyName}</span>
@@ -514,6 +551,16 @@ export default function AdminUsers() {
           userId={usageModal.userId}
           username={usageModal.username}
           companyName={usageModal.companyName}
+        />
+
+        {/* User Role Management Modal */}
+        <UserRoleModal
+          isOpen={roleModal.show}
+          onClose={() => setRoleModal({ show: false, userId: null })}
+          userId={roleModal.userId}
+          username={roleModal.username}
+          currentRole={roleModal.currentRole}
+          onSuccess={fetchUsers}
         />
 
       </div>
