@@ -255,7 +255,7 @@ export interface User {
   username: string;
   customerId: string;
   companyName: string;
-  role: 'superadmin' | 'admin' | 'editor' | 'viewer';
+  role: 'superadmin' | 'admin' | 'editor' | 'viewer' | 'owner';
   isBanned: boolean;
   createdAt?: string;
   updatedAt?: string;

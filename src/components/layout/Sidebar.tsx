@@ -121,7 +121,7 @@ export default function Sidebar() {
               );
             })}
 
-            {mounted && user?.role === 'superadmin' && (
+            {mounted && (user?.role === 'superadmin' || user?.role === 'owner') && (
               <>
                 <div className="pt-4 pb-2 px-4 text-xs font-bold text-gray-500 uppercase tracking-wider border-t border-gray-700 mt-4">
                   إدارة النظام
