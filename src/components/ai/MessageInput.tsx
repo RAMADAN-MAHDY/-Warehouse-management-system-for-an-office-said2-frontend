@@ -2,6 +2,8 @@
 
 import { SendHorizonal, Sparkles } from 'lucide-react';
 import React from 'react';
+import VoiceRecorderButton from './VoiceRecorderButton';
+import type { VoiceServiceError } from '@/services/voiceService';
 
 type MessageInputProps = {
   value: string;
@@ -9,13 +11,30 @@ type MessageInputProps = {
   error?: string | null;
   onChange: (value: string) => void;
   onSend: () => void;
+  onVoiceError?: (error: VoiceServiceError) => void;
 };
 
-export default function MessageInput({ value, loading, error, onChange, onSend }: MessageInputProps) {
+export default function MessageInput({
+  value,
+  loading,
+  error,
+  onChange,
+  onSend,
+  onVoiceError,
+}: MessageInputProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       onSend();
+    }
+  };
+
+  const handleTranscribed = (text: string) => {
+    // Fill text into input field for user review (NO automatic send)
+    if (value.trim()) {
+      onChange(`${value} ${text}`);
+    } else {
+      onChange(text);
     }
   };
 
@@ -32,16 +51,26 @@ export default function MessageInput({ value, loading, error, onChange, onSend }
           <div className="mt-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600/15 text-emerald-400">
             <Sparkles className="h-4 w-4" />
           </div>
+
           <textarea
             value={value}
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="اكتب رسالتك هنا..."
+            placeholder="اكتب رسالتك هنا أو استخدم الميكروفون..."
             disabled={loading}
             rows={1}
             aria-label="اكتب رسالة"
             className="max-h-40 min-h-[56px] flex-1 resize-none overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60"
           />
+
+          {/* Voice Input Button */}
+          <VoiceRecorderButton
+            onTranscribed={handleTranscribed}
+            onError={(err) => onVoiceError?.(err)}
+            disabled={loading}
+          />
+
+          {/* Send Button */}
           <button
             type="button"
             onClick={onSend}
@@ -52,6 +81,7 @@ export default function MessageInput({ value, loading, error, onChange, onSend }
             <SendHorizonal className="h-5 w-5" />
           </button>
         </div>
+
         <div className="flex items-center justify-between px-1 text-xs text-slate-500">
           <span>Enter لإرسال · Shift + Enter لسطر جديد</span>
           <span>{loading ? 'جارٍ التحضير...' : 'جاهز'}</span>
@@ -60,3 +90,4 @@ export default function MessageInput({ value, loading, error, onChange, onSend }
     </div>
   );
 }
+

@@ -3,10 +3,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { aiService } from '@/services/aiService';
 import { getErrorMessage } from '@/lib/utils';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
+import type { VoiceServiceError } from '@/services/voiceService';
 import ChatHeader from './ChatHeader';
 import MessageBubble, { type Message } from './MessageBubble';
 import MessageInput from './MessageInput';
 import WelcomeScreen from './WelcomeScreen';
+import VoiceRateLimitBanner from './VoiceRateLimitBanner';
 
 export default function ChatWindow({
   conversationId,
@@ -23,17 +26,29 @@ export default function ChatWindow({
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<VoiceServiceError | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(conversationId || null);
+
+  const {
+    playingMessageId,
+    loadingMessageId,
+    error: ttsError,
+    clearError: clearTtsError,
+    toggleSpeech,
+    stopSpeech,
+  } = useTextToSpeech();
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setCurrentConversationId(conversationId || null);
+    stopSpeech();
     if (conversationId) {
       void fetchMessages(conversationId);
     } else {
       setMessages([]);
     }
-  }, [conversationId]);
+  }, [conversationId, stopSpeech]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -55,6 +70,7 @@ export default function ChatWindow({
 
     setLoading(true);
     setError(null);
+    setVoiceError(null);
 
     try {
       const res = await aiService.sendMessage({ conversationId: currentConversationId || undefined, message: input });
@@ -82,6 +98,7 @@ export default function ChatWindow({
     }
   }
 
+  const activeVoiceError = voiceError || ttsError;
   const chatTitle = currentConversationId ? 'دردشة المخزون' : 'محادثة جديدة';
   const chatSubtitle = currentConversationId
     ? 'اسأل عن حالة المخزون، الطلبات، أو التقارير.'
@@ -96,13 +113,32 @@ export default function ChatWindow({
         mobileOpen={isSidebarOpen}
       />
 
-      <div className="flex-1 overflow-y-auto bg-slate-950 px-0 py-0 sm:px-0 sm:py-6 lg:px-6 ml-7">
+      <div className="flex-1 overflow-y-auto bg-slate-950 px-3 sm:px-6 py-4">
+        {activeVoiceError && (
+          <div className="mx-auto max-w-3xl mb-4">
+            <VoiceRateLimitBanner
+              error={activeVoiceError}
+              onClose={() => {
+                setVoiceError(null);
+                clearTtsError();
+              }}
+            />
+          </div>
+        )}
+
         {messages.length === 0 && !loading ? (
           <WelcomeScreen onSuggestionSelect={(value) => setInput(value)} />
         ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-2">
+          <div className="mx-auto flex max-w-3xl flex-col gap-3">
             {messages.map((message, index) => (
-              <MessageBubble key={`${message.role}-${index}`} message={message} />
+              <MessageBubble
+                key={`${message.role}-${index}`}
+                message={message}
+                messageIndex={index}
+                playingMessageId={playingMessageId}
+                loadingMessageId={loadingMessageId}
+                onToggleAudio={toggleSpeech}
+              />
             ))}
             {loading && (
               <div className="flex justify-start">
@@ -129,7 +165,9 @@ export default function ChatWindow({
         error={error}
         onChange={setInput}
         onSend={send}
+        onVoiceError={(err) => setVoiceError(err)}
       />
     </div>
   );
 }
+
