@@ -110,6 +110,10 @@ export default function ChatWindow({
         title={chatTitle}
         subtitle={chatSubtitle}
         onToggleSidebar={onBack}
+        onNewChat={() => {
+          setCurrentConversationId(null);
+          setMessages([]);
+        }}
         mobileOpen={isSidebarOpen}
       />
 

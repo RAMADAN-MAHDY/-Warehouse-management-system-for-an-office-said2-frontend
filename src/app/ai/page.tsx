@@ -45,10 +45,10 @@ export default function AIPage() {
         />
       )}
 
-      <div className="flex h-full overflow-hidden rounded-[32px] border border-slate-800 bg-slate-950 lg:flex-row lg:gap-4">
+      <div className="flex h-full overflow-hidden rounded-2xl lg:rounded-[32px] border border-slate-800 bg-slate-950 lg:flex-row lg:gap-4">
         <div
-          className={`absolute inset-y-0 left-0 z-40 w-[86vw] max-w-[320px] transition-transform duration-200 lg:static lg:w-[280px] lg:translate-x-0 ${
-            isMobile ? (showSidebar ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'
+          className={`absolute inset-y-0 right-0 z-40 w-[86vw] max-w-[320px] transition-transform duration-300 lg:static lg:w-[280px] lg:translate-x-0 ${
+            isMobile ? (showSidebar ? 'translate-x-0' : 'translate-x-full') : 'translate-x-0'
           }`}
         >
           <div className="h-full w-full lg:rounded-[28px]">
@@ -56,6 +56,7 @@ export default function AIPage() {
               selectedId={selectedConversation}
               onSelect={handleSelectConversation}
               reloadTrigger={reloadTrigger}
+              onClose={() => setShowSidebar(false)}
             />
           </div>
         </div>

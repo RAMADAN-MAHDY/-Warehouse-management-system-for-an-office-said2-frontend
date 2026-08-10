@@ -107,8 +107,8 @@ export default function VoiceRecorderButton({
           <span className="font-mono text-xs font-bold text-red-400">{formatDuration(recordingTime)}</span>
         </div>
 
-        {/* Live Audio Visualizer Bars */}
-        <div className="flex items-center gap-0.5 px-1.5 h-5">
+        {/* Live Audio Visualizer Bars (hidden on small mobile screens) */}
+        <div className="hidden sm:flex items-center gap-0.5 px-1.5 h-5">
           {audioLevels.map((level, idx) => (
             <span
               key={idx}
@@ -140,11 +140,11 @@ export default function VoiceRecorderButton({
       type="button"
       onClick={handleStart}
       disabled={disabled}
-      className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-900/90 text-slate-400 transition hover:border-emerald-500/50 hover:bg-slate-800 hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-900/90 text-slate-400 transition hover:border-emerald-500/50 hover:bg-slate-800 hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-50 shadow-md"
       title="تسجيل رسالة صوتية (STT)"
       aria-label="تسجيل رسالة صوتية"
     >
-      <Mic className="h-5 w-5" />
+      <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
     </button>
   );
 }
