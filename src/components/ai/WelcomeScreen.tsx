@@ -16,12 +16,12 @@ const suggestions = [
 
 export default function WelcomeScreen({ onSuggestionSelect }: WelcomeScreenProps) {
   return (
-    <div className="flex h-full items-center justify-center px-4 py-8">
-      <div className="w-full max-w-2xl rounded-[32px] border border-slate-800 bg-slate-900/70 p-8 text-center shadow-[0_20px_80px_-40px_rgba(0,0,0,0.95)]">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-600/15 text-emerald-400">
-          <Bot className="h-8 w-8" />
+    <div className="flex min-h-[70vh] sm:h-full items-center justify-center px-2 sm:px-4 py-4 sm:py-8">
+      <div className="w-full max-w-2xl rounded-2xl sm:rounded-[32px] border border-slate-800 bg-slate-900/70 p-4 sm:p-8 text-center shadow-[0_20px_80px_-40px_rgba(0,0,0,0.95)]">
+        <div className="mx-auto flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-emerald-600/15 text-emerald-400">
+          <Bot className="h-6 w-6 sm:h-8 sm:w-8" />
         </div>
-        <h3 className="mt-5 text-2xl font-semibold text-slate-100">مرحبًا بك في مساعد المخزون</h3>
+        <h3 className="mt-3 sm:mt-5 text-xl sm:text-2xl font-semibold text-slate-100">مرحبًا بك في مساعد المخزون</h3>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-400">
           اطرح سؤالًا عن المخزون أو المبيعات أو التقارير، وسأساعدك في الحصول على إجابة سريعة ومباشرة.
         </p>

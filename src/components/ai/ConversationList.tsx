@@ -16,10 +16,12 @@ export default function ConversationList({
   selectedId,
   onSelect,
   reloadTrigger,
+  onClose,
 }: {
   selectedId?: string | null;
   onSelect: (id: string | null) => void;
   reloadTrigger?: number;
+  onClose?: () => void;
 }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,6 +65,7 @@ export default function ConversationList({
         onSelect={onSelect}
         onCreateNew={() => onSelect(null)}
         onRetry={() => void load()}
+        onClose={onClose}
       />
     </div>
   );
