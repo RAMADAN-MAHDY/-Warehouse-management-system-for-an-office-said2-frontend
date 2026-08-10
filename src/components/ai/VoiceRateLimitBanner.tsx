@@ -33,7 +33,7 @@ export default function VoiceRateLimitBanner({ error, onClose }: VoiceRateLimitB
   }, [countdown]);
 
   const isRateLimit =
-    error.code?.startsWith('RATE_LIMIT') ||
+    (typeof error.code === 'string' && error.code.startsWith('RATE_LIMIT')) ||
     error.code === 'PROVIDER_RATE_LIMIT' ||
     Boolean(error.retryAfterSeconds);
 
