@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next dev",
+    "dev": "node api.js && cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next dev",
     "apply-logo": "node ./scripts/apply-logo.js",
-    "build": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next build",
-    "start": "next start",
+    "build": "node api.js && cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" next build",
+    "start": "node api.js && next start",
     "lint": "eslint",
     "clean": "rimraf .next"
   },
